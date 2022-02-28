@@ -19,5 +19,14 @@ namespace JStuff.GraphCreator
         {
             return value;
         }
+
+        public override Node Clone()
+        {
+            IntNode node = base.Clone() as IntNode;
+
+            node.value = value;
+
+            return node;
+        }
     }
 }

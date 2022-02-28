@@ -79,8 +79,8 @@ public static class Utilities
 
     public static bool InRange(this int i, int from, int to)
     {
-        if (i < from) return false;
-        if (i > to) return false;
+        if (i <= from) return false;
+        if (i >= to) return false;
         return true;
     }
 

@@ -15,3 +15,8 @@ public interface ISimpleNode
 
 }
 public interface ILink { }
+
+public interface ICachedLink
+{
+    bool ReEvaluate();
+}

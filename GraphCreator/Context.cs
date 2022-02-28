@@ -9,15 +9,18 @@ public class Context : ScriptableObject
 {
     // For Run mode
     private Dictionary<string, Link> indexer = new Dictionary<string, Link>();
+    [NonSerialized]public bool runmode = false;
 
     // For Editor mode
     public List<string> propertyNames = new List<string>();
     public List<string> propertyTypes = new List<string>();
     public Graph graph;
 
+    [NonSerialized]public bool isSetup = false;
+
     public bool Contains(string name)
     {
-        if (Application.isPlaying)
+        if (runmode)
         {
             return indexer.ContainsKey(name);
         } else
@@ -33,16 +36,18 @@ public class Context : ScriptableObject
 
     public void Clear()
     {
+        runmode = false;
+        indexer.Clear();
         propertyNames.Clear();
         propertyTypes.Clear();
     }
 
-    public void AddPropertyPort<T>(T value, string propertyName)
+    public void AddPropertyLink<T>(T value, string propertyName)
     {
         Direction direction = (graph.InputPortDirection == Direction.Input) ? Direction.Output : Direction.Input;
         //propertyName = $"[{typeof(T).Name}] {propertyName}";
         string propertyNameType = $"[{typeof(T).Name}] {propertyName}";
-        if (Application.isPlaying)
+        if (runmode)
         {
             if (!propertyNames.Contains(propertyName))
             {
@@ -69,7 +74,7 @@ public class Context : ScriptableObject
 
     public Link GetPropertyLink(string propertyName)
     {
-        if (!Application.isPlaying)
+        if (!runmode)
             throw new System.Exception("Cannot get a property that isn't initialized!");
 
         if (!Contains(propertyName))

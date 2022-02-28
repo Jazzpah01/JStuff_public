@@ -68,5 +68,14 @@ namespace JStuff.GraphCreator
                 propertyName = graph.sharedContext.propertyNames[0];
             }
         }
+
+        public override Node Clone()
+        {
+            PropertyNode retval = CreateInstance(this.GetType()) as PropertyNode;
+            retval.propertyName = propertyName;
+            retval.typeName = typeName;
+            retval.initialized = true;
+            return retval;
+        }
     }
 }

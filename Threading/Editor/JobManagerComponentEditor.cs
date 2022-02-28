@@ -34,5 +34,6 @@ public class JobManagerComponentEditor : Editor
 
         EditorGUILayout.PropertyField(managerData);
         EditorGUILayout.PropertyField(updateDelay);
+        serializedObject.ApplyModifiedProperties();
     }
 }

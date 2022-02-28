@@ -27,7 +27,7 @@ namespace JStuff.GraphCreator
             this.capacity = capacity;
             type = typeof(T);
             this.node = node;
-            this.index = index;
+            this.nodeIndex = index;
         }
 
         public void LinkPort(Link outputPort)

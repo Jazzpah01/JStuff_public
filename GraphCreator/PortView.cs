@@ -16,6 +16,7 @@ namespace JStuff.GraphCreator
         public Port.Capacity capacity;
         [SerializeField] private string portType;
         public int index;
+        public int graphIndex;
         public int UIIndex;
         [SerializeField] private bool isInput;
 
@@ -39,14 +40,14 @@ namespace JStuff.GraphCreator
             AssetDatabase.SaveAssets();
         }
 
-        public void LinkPort(PortView view)
+        public void ConnectPort(PortView view)
         {
             if (view.isInput)
-                throw new Exception("Cannot link to an input PortView.");
+                throw new Exception("Cannot connect to an input PortView.");
             if (!isInput)
-                throw new Exception("Cannot link from an output PortView.");
+                throw new Exception("Cannot connect from an output PortView.");
             if (capacity == Port.Capacity.Single && linked.Count > 0)
-                throw new Exception("Cannot link multiple to a single capacity input PortView.");
+                throw new Exception("Cannot connect multiple to a single capacity input PortView.");
 
             linked.Add(view);
             AssetDatabase.SaveAssets();

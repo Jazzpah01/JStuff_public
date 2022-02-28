@@ -8,4 +8,5 @@ public class BlockData
     public MeshData meshRendererData;
     public MeshData meshColliderData;
     public Color[] colormap;
+    public List<TerrainObject> terrainObjects;
 }

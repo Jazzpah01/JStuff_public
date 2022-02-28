@@ -19,5 +19,14 @@ namespace JStuff.GraphCreator
         {
             return value;
         }
+        public override Node Clone()
+        {
+            FloatNode node = base.Clone() as FloatNode;
+
+            node.value = value;
+
+            return node;
+        }
+
     }
 }

@@ -14,10 +14,12 @@ namespace JStuff.GraphCreator
         [HideInInspector] public bool initialized = false;
 
         [HideInInspector] public Vector2 nodePosition;
-        [HideInInspector] private List<Link> ports = new List<Link>();
+        [HideInInspector] public List<Link> links = new List<Link>();
         [HideInInspector] [SerializeReference] public List<PortView> portViews = new List<PortView>();
         [HideInInspector] public string guid;
         [HideInInspector] public Graph graph;
+
+        public int iteration = 0;
 
         public virtual StyleSheet StyleSheet => null;
 
@@ -51,6 +53,8 @@ namespace JStuff.GraphCreator
             Runtime = 0b100
         }
 
+        public virtual bool CacheOutput => false;
+
         public bool SignatureChanged
         {
             get
@@ -72,7 +76,7 @@ namespace JStuff.GraphCreator
         }
 
         protected abstract void SetupPorts();
-        public List<Link> Ports => ports;
+        public List<Link> Ports => links;
 
         public bool Valid { get => valid; set => valid = value; }
 
@@ -85,23 +89,24 @@ namespace JStuff.GraphCreator
             None,
             StringGeneration,
             PortViewGeneration,
-            PortGeneration
+            LinkGeneration
         }
 
-        public void InitializeNode()
+        public void UpdateNode()
         {
             if (!initialized)
             {
+                portSignature = "";
                 Initialize();
                 initialized = true;
             }
 
-            // Application.isPlaying, then do that
-            if (Application.isPlaying)
-            {
-                SetupPorts_Editor(InitPortStrategy.PortGeneration);
-                return;
-            }
+            //// Application.isPlaying, then do that
+            //if (Application.isPlaying)
+            //{
+            //    SetupPorts_Editor(InitPortStrategy.PortGeneration);
+            //    return;
+            //}
 
             // Check for change in port signature
             string oldPortSignature = portSignature;
@@ -125,6 +130,18 @@ namespace JStuff.GraphCreator
 
                 if (OnNodeChange != null)
                     OnNodeChange();
+            }
+        }
+
+        public void SetupLinks()
+        {
+            // Application.isPlaying, then do that
+            if (Application.isPlaying)
+            {
+                Debug.Log("Is playing!!!");
+                Debug.Log(CurrentPortSignature);
+                SetupPorts_Editor(InitPortStrategy.LinkGeneration);
+                return;
             }
         }
 
@@ -165,7 +182,7 @@ namespace JStuff.GraphCreator
                     portView = CreateInstance<PortView>();
                     AddPortView(portView, typeof(T).FullName, capacity, graph.InputPortDirection);
                     break;
-                case InitPortStrategy.PortGeneration when (portSetup & PortSetup.Runtime) != 0:
+                case InitPortStrategy.LinkGeneration when (portSetup & PortSetup.Runtime) != 0:
                     // Actual node port
                     InputMultiLink<T> nodePort = new InputMultiLink<T>();
                     AddLink<T>(nodePort, capacity, graph.InputPortDirection);
@@ -195,11 +212,19 @@ namespace JStuff.GraphCreator
                     portView = CreateInstance<PortView>();
                     AddPortView(portView, typeof(T).FullName, capacity, graph.InputPortDirection);
                     break;
-                case InitPortStrategy.PortGeneration when (portSetup & PortSetup.Runtime) != 0:
+                case InitPortStrategy.LinkGeneration when (portSetup & PortSetup.Runtime) != 0:
                     // Actual node port
-                    InputLink<T> nodePort = new InputLink<T>();
-                    AddLink<T>(nodePort, capacity, graph.InputPortDirection);
-                    return nodePort;
+                    InputLink<T> link = null;
+                    if (CacheOutput)
+                    {
+                        link = new InputLinkCached<T>();
+                    }
+                    else
+                    {
+                        link = new InputLink<T>();
+                    }
+                    AddLink<T>(link, capacity, graph.InputPortDirection);
+                    return link;
             }
             return null;
         }
@@ -227,12 +252,19 @@ namespace JStuff.GraphCreator
                     portView = CreateInstance<PortView>();
                     AddPortView(portView, typeof(T).FullName, capacity, direction);
                     break;
-                case InitPortStrategy.PortGeneration when (portSetup & PortSetup.Runtime) != 0:
-                    // Actual node port
-                    OutputLink<T> nodePort = new OutputLink<T>();
-                    AddLink<T>(nodePort, capacity, graph.InputPortDirection);
-                    nodePort.SubscribePort(function);
-                    return nodePort;
+                case InitPortStrategy.LinkGeneration when (portSetup & PortSetup.Runtime) != 0:
+                    // Actual node link
+                    OutputLink<T> link = null;
+                    if (CacheOutput)
+                    {
+                        link = new OutputLinkCached<T>();
+                    } else
+                    {
+                        link = new OutputLink<T>();
+                    }
+                    AddLink<T>(link, capacity, graph.InputPortDirection);
+                    link.SubscribePort(function);
+                    return link;
                     break;
             }
             return null;
@@ -243,8 +275,6 @@ namespace JStuff.GraphCreator
             Direction direction = graph.InputPortDirection == Direction.Input ? Direction.Output : Direction.Input;
             PortView portView;
 
-            Debug.Log("halllooo");
-
             switch (currentStrategy)
             {
                 case InitPortStrategy.StringGeneration:
@@ -253,11 +283,10 @@ namespace JStuff.GraphCreator
                 case InitPortStrategy.PortViewGeneration:
                     portView = CreateInstance<PortView>();
                     AddPortView(portView, graph.GetPropertyType(propertyName), Port.Capacity.Multi, direction);
-                    Debug.Log("Generation port view: " + Time.time);
                     break;
-                case InitPortStrategy.PortGeneration:
+                case InitPortStrategy.LinkGeneration:
                     Link link = graph.GetProperty(propertyName);
-                    ports.Add(link);
+                    links.Add(link);
                     return link;
                 default:
                     break;
@@ -284,8 +313,8 @@ namespace JStuff.GraphCreator
 
         private void AddLink<T>(Link nodePort, Port.Capacity capacity, Direction direction)
         {
-            nodePort.Init(this, ports.Count, graph.Orientation, direction, capacity);
-            ports.Add(nodePort);
+            nodePort.Init(this, links.Count, graph.Orientation, direction, capacity);
+            links.Add(nodePort);
             nodePort.Valid = true;
         }
 
@@ -293,36 +322,60 @@ namespace JStuff.GraphCreator
         {
             portView.Init(this, graph.Orientation, direction, capacity, type, portViews.Count);
             portView.Valid = true;
-            EditorUtility.SetDirty(portView);
-            AssetDatabase.AddObjectToAsset(portView, graph);
+            if (!Application.isPlaying)
+            {
+                EditorUtility.SetDirty(portView);
+                AssetDatabase.AddObjectToAsset(portView, graph);
+            }
             portViews.Add(portView);
-            AssetDatabase.SaveAssets();
+            if (!Application.isPlaying)
+            {
+                AssetDatabase.SaveAssets();
+            }
         }
 
-        public void LinkNodePorts()
+        public void ConnectLinks()
         {
-            if (ports == null || portViews == null || ports.Count != portViews.Count)
+            if (links == null || portViews == null || links.Count != portViews.Count)
                 throw new Exception("Wrong ports setup.");
 
-            for (int i = 0; i < ports.Count; i++)
+            for (int i = 0; i < links.Count; i++)
             {
-                ILinkable inputport = ports[i] as ILinkable;
-                if (inputport != null && portViews[i].linked.Count > 0)
+                ILinkable inputlink = links[i] as ILinkable;
+                if (inputlink != null && portViews[i].linked.Count > 0)
                 {
-                    foreach (PortView portView in portViews[i].linked)
+                    foreach (PortView otherPortView in portViews[i].linked)
                     {
-                        int otherIndex = portView.index;
-                        Link outputPort = portView.node.ports[otherIndex];
-                        inputport.LinkPort(outputPort);
+                        int otherIndex = otherPortView.index;
+                        Link outputPort = otherPortView.node.links[otherIndex];
+                        inputlink.LinkPort(outputPort);
                     }
                 }
             }
         }
 
+        public bool ReEvaluate()
+        {
+            bool retval = false;
+            foreach (Link l in links)
+            {
+                ICachedLink cl = l as ICachedLink;
+                if (cl != null)
+                {
+                    if (cl.ReEvaluate())
+                    {
+                        retval = true;
+                    }
+                }
+            }
+            return retval;
+        }
+
         public virtual Node Clone()
         {
-            Node node = Instantiate(this);
-            return node;
+            Node retval = CreateInstance(this.GetType()) as Node;
+
+            return retval;
         }
     }
 }

@@ -9,12 +9,14 @@ public class TerrainRoot : Node
     InputLink<MeshData> meshRendererData;
     InputLink<MeshData> meshColliderData;
     InputLink<Color[]> colormap;
+    InputLink<List<TerrainObject>> gameObjects;
 
     protected override void SetupPorts()
     {
         meshRendererData = AddInputLink<MeshData>();
         meshColliderData = AddInputLink<MeshData>();
         colormap = AddInputLink<Color[]>();
+        gameObjects = AddInputLink<List<TerrainObject>>();
     }
 
     public BlockData Evaluate()
@@ -23,6 +25,7 @@ public class TerrainRoot : Node
         blockData.meshRendererData = meshRendererData.Evaluate();
         blockData.meshColliderData = meshColliderData.Evaluate();
         blockData.colormap = colormap.Evaluate();
+        blockData.terrainObjects = gameObjects.Evaluate();
         return blockData;
     }
 }

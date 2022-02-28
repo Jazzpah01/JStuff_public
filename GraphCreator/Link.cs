@@ -9,7 +9,8 @@ namespace JStuff.GraphCreator
     public abstract class Link : IInvalid
     {
         public Node node;
-        public int index;
+        public int nodeIndex;
+        public int graphIndex;
         protected Orientation orientation;
         protected Direction direction;
         protected Port.Capacity capacity;

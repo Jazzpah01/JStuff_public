@@ -9,11 +9,31 @@ public class TerrainGraph : Graph
 {
 
     public float sizeOfChunk = 10;
+    public int seed = 42;
 
     PropertyPort<Vector2> chunkPosition;
     PropertyPort<Vector2> centerPosition;
     PropertyPort<bool> changed;
     PropertyPort<float> chunkSize;
+    PropertyPort<int> seedProperty;
+    PropertyPort<float> scale;
+    PropertyPort<float> zoom;
+
+    public float Zoom
+    {
+        set
+        {
+            zoom.cachedValue = value;
+        }
+    }
+
+    public float Scale
+    {
+        set
+        {
+            scale.cachedValue = value;
+        }
+    }
 
     public Vector2 ChunkPosition {
         set
@@ -32,16 +52,35 @@ public class TerrainGraph : Graph
         }
     }
 
+    public float ChunkSize
+    {
+        set
+        {
+            chunkSize.cachedValue = value;
+        }
+    }
+
+    public int Seed
+    {
+        set
+        {
+            seedProperty.cachedValue = value;
+        }
+    }
+
     public override Type RootNodeType => typeof(TerrainRoot);
     public override List<Type> NodeTypes
     {
         get
         {
             List<Type> types = new List<Type>();
-            types.Add(typeof(CreateHeightMap));
+            types.Add(typeof(EquilateralTriangleNode));
             types.Add(typeof(CreateMesh));
             types.Add(typeof(CreateColormap));
+            types.Add(typeof(SlopeColormap));
             types.Add(typeof(CommonNode));
+            types.Add(typeof(VectorDivNode));
+            types.Add(typeof(GrayScale));
             return types;
         }
     }
@@ -54,8 +93,12 @@ public class TerrainGraph : Graph
     protected override void SetupProperties()
     {
         chunkPosition = AddProperty<Vector2>(Vector2.zero, "chunkPosition", PropertyContext.Unique);
-        centerPosition = AddProperty<Vector2>(Vector2.zero, "centerPosition", PropertyContext.Shared);
+        centerPosition = AddProperty<Vector2>(Vector2.zero, "centerPosition", PropertyContext.Unique);
         changed = AddProperty<bool>(false, "changed", PropertyContext.Unique);
-        AddProperty<float>(sizeOfChunk, "chunkSize", PropertyContext.Shared);
+        chunkSize = AddProperty<float>(sizeOfChunk, "chunkSize", PropertyContext.Unique);
+        seedProperty = AddProperty<int>(seed, "seed", PropertyContext.Unique);
+        AddProperty<Vector2>(Vector2.zero, "offset", PropertyContext.Unique);
+        scale = AddProperty<float>(1, "scale", PropertyContext.Unique);
+        zoom = AddProperty<float>(100, "zoom", PropertyContext.Unique);
     }
 }

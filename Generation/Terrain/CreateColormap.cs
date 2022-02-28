@@ -28,4 +28,11 @@ public class CreateColormap : Node
 
         return output;
     }
+
+    public override Node Clone()
+    {
+        CreateColormap retval = base.Clone() as CreateColormap;
+        retval.color = color;
+        return retval;
+    }
 }

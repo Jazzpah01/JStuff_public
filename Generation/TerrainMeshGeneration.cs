@@ -40,7 +40,7 @@ namespace JStuff.Generation
         }
     }
 
-    public struct MeshData
+    public class MeshData
     {
         public MeshData(Vector3[] vertices, Vector2[] uv, int[] triangles)
         {

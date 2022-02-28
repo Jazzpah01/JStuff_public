@@ -168,7 +168,7 @@ public class SimpleGraphView : GraphView
 
                 PortView inputPortView = inputView.GetPortView(e.input);
 
-                inputPortView.LinkPort(outputView.GetPortView(e.output));
+                inputPortView.ConnectPort(outputView.GetPortView(e.output));
                 //AssetDatabase.AddObjectToAsset(inputView.GetPortView(e.input), graph);
                 EditorUtility.SetDirty(inputPortView);
                 EditorUtility.SetDirty(inputView.node);

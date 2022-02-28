@@ -23,13 +23,13 @@ namespace JStuff.GraphCreator
             this.capacity = capacity;
             type = typeof(T);
             this.node = node;
-            this.index = index;
+            this.nodeIndex = index;
         }
 
-        public void LinkPort(Link outputPort)
+        public void LinkPort(Link outputLink)
         {
-            IOutputLink<T> realPort = (IOutputLink<T>)outputPort;
-            linkedPort = realPort;
+            IOutputLink<T> realLink = (IOutputLink<T>)outputLink;
+            linkedPort = realLink;
         }
 
         public void RemoveLink()
@@ -37,7 +37,7 @@ namespace JStuff.GraphCreator
             linkedPort = null;
         }
 
-        public T Evaluate()
+        public virtual T Evaluate()
         {
             return linkedPort.Evaluate();
         }

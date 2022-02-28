@@ -9,6 +9,16 @@ public class TestGraph : Graph
 {
     public override Type RootNodeType => typeof(TestRoot);
 
+    PropertyPort<int> link;
+
+    public int Hello
+    {
+        set
+        {
+            link.cachedValue = value;
+        }
+    }
+
     public override List<Type> NodeTypes
     {
         get
@@ -26,7 +36,7 @@ public class TestGraph : Graph
         AddProperty<float>(0, "maxValue", PropertyContext.Unique);
         AddProperty<float>(30, "minValue", PropertyContext.Unique);
         AddProperty<int>(30, "current", PropertyContext.Unique);
-        AddProperty<int>(30, "hello", PropertyContext.Shared);
+        link = AddProperty<int>(30, "hello", PropertyContext.Shared);
     }
 
     public int Evaluate()

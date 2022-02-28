@@ -51,33 +51,52 @@ namespace JStuff.GraphCreator
 
         public void InitializeBaseGraph()
         {
+            initialized = false;
+
             foreach (PortView view in propertyPortViews)
             {
                 portViews.Remove(view);
-                AssetDatabase.RemoveObjectFromAsset(view);
+                if (!Application.isPlaying)
+                {
+                    AssetDatabase.RemoveObjectFromAsset(view);
+                }
             }
 
             if (sharedContext == null)
             {
                 sharedContext = CreateInstance<Context>();
                 sharedContext.graph = this;
-                EditorUtility.SetDirty(sharedContext);
-                AssetDatabase.AddObjectToAsset(sharedContext, this);
+                if (!Application.isPlaying)
+                {
+                    EditorUtility.SetDirty(sharedContext);
+                    AssetDatabase.AddObjectToAsset(sharedContext, this);
+                }
             }
 
             if (uniqueContext == null)
             {
                 uniqueContext = CreateInstance<Context>();
                 uniqueContext.graph = this;
-                EditorUtility.SetDirty(uniqueContext);
-                AssetDatabase.AddObjectToAsset(uniqueContext, this);
+                if (!Application.isPlaying)
+                {
+                    EditorUtility.SetDirty(uniqueContext);
+                    AssetDatabase.AddObjectToAsset(uniqueContext, this);
+                }
             }
 
             sharedContext.Clear();
             uniqueContext.Clear();
             SetupProperties();
 
-            AssetDatabase.SaveAssets();
+            if (!Application.isPlaying)
+            {
+                AssetDatabase.SaveAssets();
+            }
+        }
+
+        protected virtual void Initialize()
+        {
+
         }
 
         protected virtual void SetupProperties()
@@ -127,13 +146,14 @@ namespace JStuff.GraphCreator
             {
                 if (!portViews[i].Valid)
                 {
-                    AssetDatabase.RemoveObjectFromAsset(portViews[i]);
+                    if (!Application.isPlaying)
+                        AssetDatabase.RemoveObjectFromAsset(portViews[i]);
                     portViews.Remove(portViews[i]);
                     i--;
                 }
             }
-
-            AssetDatabase.SaveAssets();
+            if (!Application.isPlaying)
+                AssetDatabase.SaveAssets();
         }
 
         protected PropertyPort<T> AddProperty<T>(T value, string name, PropertyContext context)
@@ -144,15 +164,15 @@ namespace JStuff.GraphCreator
             switch (context)
             {
                 case PropertyContext.Unique:
-                    uniqueContext.AddPropertyPort(value, name);
-                    if (Application.isPlaying)
+                    uniqueContext.AddPropertyLink(value, name);
+                    if (uniqueContext.runmode)
                     {
                         return (PropertyPort<T>)uniqueContext.GetPropertyLink(name);
                     }
                     break;
                 case PropertyContext.Shared:
-                    sharedContext.AddPropertyPort(value, name);
-                    if (Application.isPlaying)
+                    sharedContext.AddPropertyLink(value, name);
+                    if (sharedContext.runmode)
                     {
                         return (PropertyPort<T>)sharedContext.GetPropertyLink(name);
                     }
@@ -174,23 +194,9 @@ namespace JStuff.GraphCreator
             }
             else
             {
-                throw new Exception("Property with the specified name doesn't exist: " + name);
+                throw new Exception("Property with the specified name doesn't exist: " + propertyName);
             }
         }
-
-        //public PropertyPort<T> GetProperty<T>(string name)
-        //{
-        //    if (privateContext.Contains(name))
-        //    {
-        //        return privateContext.GetPropertyLink<T>(name);
-        //    } else if (sharedContext.Contains(name))
-        //    {
-        //        return sharedContext.GetPropertyLink<T>(name);
-        //    } else
-        //    {
-        //        throw new Exception("Property with the specified name doesn't exist!");
-        //    }
-        //}
 
         public Link GetProperty(string name)
         {
@@ -213,27 +219,35 @@ namespace JStuff.GraphCreator
             if (!Application.isPlaying)
                 throw new Exception("Can only setup graph in runtime.");
 
+            Debug.Log(name);
             ProperyChanged = true;
             Debug.Log("Before property setup");
+            sharedContext.runmode = true;
+            uniqueContext.runmode = true;
             SetupProperties();
             Debug.Log("After property setup");
-            LinkPorts();
-        }
-
-        public Graph Clone()
-        {
-            return Instantiate(this);
-        }
-
-        public void LinkPorts()
-        {
             foreach (Node node in nodes)
             {
-                node.InitializeNode();
+                if (node.graph != this)
+                {
+                    Debug.LogWarning("Graph doesn't match!!!");
+                }
+                node.UpdateNode();
+            }
+            ConnectLinks();
+            Initialize();
+        }
+
+        public void ConnectLinks()
+        {
+
+            foreach (Node node in nodes)
+            {
+                node.SetupLinks();
             }
             foreach (Node node in nodes)
             {
-                node.LinkNodePorts();
+                node.ConnectLinks();
             }
         }
 
@@ -272,15 +286,18 @@ namespace JStuff.GraphCreator
             node.name = type.Name;
             node.guid = GUID.Generate().ToString();
             node.graph = this;
-            node.InitializeNode();
+            node.UpdateNode();
             nodes.Add(node);
             node.Valid = true;
 
             if (type == RootNodeType)
             {
                 rootNode = node;
-                EditorUtility.SetDirty(this);
-                AssetDatabase.SaveAssets();
+                if (!Application.isPlaying)
+                {
+                    EditorUtility.SetDirty(this);
+                    AssetDatabase.SaveAssets();
+                }
             }
 
             foreach (PortView portView in node.portViews)
@@ -290,8 +307,32 @@ namespace JStuff.GraphCreator
                 portViews.Add(portView);
             }
 
-            AssetDatabase.AddObjectToAsset(node, this);
-            AssetDatabase.SaveAssets();
+            if (!Application.isPlaying)
+            {
+                AssetDatabase.AddObjectToAsset(node, this);
+                AssetDatabase.SaveAssets();
+            }
+
+            return node;
+        }
+
+        public Node CreateNode(Node node)
+        {
+            node.name = node.GetType().Name;
+            node.guid = GUID.Generate().ToString();
+            node.graph = this;
+            node.UpdateNode();
+            nodes.Add(node);
+            node.Valid = true;
+
+            if (node.GetType() == RootNodeType)
+            {
+                rootNode = node;
+            }
+            foreach (PortView portView in node.portViews)
+            {
+                portViews.Add(portView);
+            }
 
             return node;
         }
@@ -302,14 +343,17 @@ namespace JStuff.GraphCreator
             {
                 if (node.SignatureChanged)
                 {
-                    node.InitializeNode();
+                    node.UpdateNode();
                     foreach (PortView view in node.portViews)
                     {
                         portViews.Add(view);
                     }
                 }
             }
-            AssetDatabase.SaveAssets();
+            if (!Application.isPlaying)
+            {
+                AssetDatabase.SaveAssets();
+            }
             InitializeBaseGraph();
             CleanupPortViews();
         }
@@ -325,6 +369,7 @@ namespace JStuff.GraphCreator
             foreach (PortView portView in node.portViews)
             {
                 portViews.Remove(portView);
+
                 AssetDatabase.RemoveObjectFromAsset(portView);
             }
 
@@ -341,180 +386,87 @@ namespace JStuff.GraphCreator
         {
             AssetDatabase.SaveAssets();
         }
+
+        public Graph Clone()
+        {
+            Graph retval = CreateInstance(this.GetType()) as Graph;
+            retval.InitializeBaseGraph();
+            retval.name = name + "(Clone)";
+            //retval.initialized = false;
+
+            //retval.uniqueContext = CreateInstance(typeof(Context)) as Context;
+            //retval.uniqueContext.graph = retval;
+            //retval.sharedContext = CreateInstance(typeof(Context)) as Context;
+            //retval.sharedContext.graph = retval;
+
+            //retval.sharedContext.Clear();
+            //retval.sharedContext.runmode = false;
+            //retval.uniqueContext.Clear();
+            //retval.uniqueContext.runmode = false;
+            //retval.SetupProperties();
+
+            for (int i = 0; i < portViews.Count; i++)
+            {
+                portViews[i].graphIndex = i;
+            }
+
+            List<List<int>> connections = new List<List<int>>();
+            for (int i = 0; i < portViews.Count; i++)
+            {
+                connections.Add(new List<int>());
+                for (int j = 0; j < portViews[i].linked.Count; j++)
+                {
+                    connections[i].Add(portViews[i].linked[j].graphIndex);
+                }
+            }
+
+            retval.portViews.Clear();
+            retval.nodes.Clear();
+            retval.rootNode = null;
+
+            for (int i = 0; i < nodes.Count; i++)
+            {
+                retval.CreateNode(nodes[i].Clone());
+
+                retval.nodes[i].graph = retval;
+            }
+
+            //retval.rootNode = retval.nodes[0];
+
+            for (int i = 0; i < retval.portViews.Count; i++)
+            {
+                retval.portViews[i].UnLinkAll();
+                foreach (int connection in connections[i])
+                {
+                    retval.portViews[i].ConnectPort(retval.portViews[connection]);
+                }
+            }
+
+            retval.initialized = true;
+            return retval;
+        }
+
+        public override string ToString()
+        {
+            string retval = "";
+
+            retval += $"GraphCreator Graph. Name: {this.name}\r\n";
+
+            retval += $"Root node: {rootNode.name}\r\n";
+
+            retval += $"Nodes ({nodes.Count}):\r\n";
+
+            for (int i = 0; i < nodes.Count; i++)
+            {
+                retval += $"Node: {nodes[i].name}. GUID: {nodes[i].guid}\r\n";
+            }
+            retval += $"PortViews ({portViews.Count}):\r\n";
+            for (int i = 0; i < portViews.Count; i++)
+            {
+                retval += $"Portview: {portViews[i].name}. GUID of node: {portViews[i].node.guid}\r\n";
+            }
+
+            return retval;
+        }
     }
 }
-
-
-
-/*
-[SerializeReference] public List<string> graphPropertyNames = new List<string>();
-    private Dictionary<string, object> propertyDictionary = new Dictionary<string, object>();
-
-
-
-    public object GetProperty(string propertyName)
-    {
-        if (!propertyDictionary.ContainsKey(propertyName))
-            throw new System.Exception("No property exists with that name, or it is not set.");
-
-        return propertyDictionary[propertyName];
-    }
-
-    public void SetProperty(string propertyName, object value)
-    {
-        if (!graphPropertyNames.Contains(propertyName))
-            throw new System.Exception("No property exists with that name.");
-
-        if (propertyDictionary.ContainsKey(propertyName))
-        {
-            propertyDictionary[propertyName] = value;
-        } else
-        {
-            propertyDictionary.Add(propertyName, value);
-        }
-    }
-
-    public void AddProperty(string propertyName)
-    {
-        if (graphPropertyNames.Contains(propertyName))
-            throw new System.Exception("Cannot have multiple properties with the same name.");
-
-        graphPropertyNames.Add(propertyName);
-    }
-
-
-*/
-
-
-/*
-bad code for cleaning up:
-//List<PortView> safePortViews = new List<PortView>();
-        //
-        //foreach (SimpleNode node in nodes)
-        //{
-        //    foreach (PortView portView in node.portViews)
-        //    {
-        //        safePortViews.Add(portView);
-        //    }
-        //}
-        //
-        //for (int i = 0; i < portViews.Count; i++)
-        //{
-        //    if (!safePortViews.Contains(portViews[i]))
-        //    {
-        //        Debug.Log("Portview to be removed!: " + portViews[i]);
-        //        foreach (SimpleNode node in nodes)
-        //        {
-        //            foreach (PortView nodePortView in node.portViews)
-        //            {
-        //                if (nodePortView.LinkedWith(portViews[i]))
-        //                {
-        //                    nodePortView.UnLink(portViews[i]);
-        //                }
-        //            }
-        //        }
-        //
-        //        PortView portView = portViews[i];
-        //        portViews.Remove(portViews[i]);
-        //        //DestroyImmediate(portView, true);
-        //        //EditorUtility.SetDirty(this);
-        //        AssetDatabase.RemoveObjectFromAsset(portView);
-        //        i--;
-        //    }
-        //    AssetDatabase.SaveAssets();
-        //}
-
-
-
-
-
-
-
-
-
-
-
-
-
-    public SimpleNodePort AddProperty<T>(T value, string name)
-    {
-        Direction direction = (InputPortDirection == Direction.Input) ? Direction.Output : Direction.Input;
-
-        if (Application.isPlaying)
-        {
-            // Actual node port
-            PropertyPort<T> nodePort = null;
-            nodePort = new PropertyPort<T>();
-            nodePort.Init(null, propertyPorts.Count, Orientation, direction, Port.Capacity.Multi);
-            nodePort.graph = this;
-            this.propertyPorts.Add(nodePort);
-            this.propertyValues.Add(value);
-            return nodePort;
-        }
-        else
-        {
-            // Editor port view
-            PortView portView = ScriptableObject.CreateInstance<PortView>();
-            portView.Init(null, Orientation, direction, Port.Capacity.Multi, typeof(T), portViews.Count);
-            propertyNames.Add(name);
-            propertyPortViews.Add(portView);
-            propertyTypes.Add(typeof(T));
-            propertyIndexMap.Add(name, numberOfProperties);
-            numberOfProperties++;
-            EditorUtility.SetDirty(portView);
-            AssetDatabase.AddObjectToAsset(portView, this);
-            AssetDatabase.SaveAssets();
-            //portViews.Add(portView);
-        }
-        return null;
-    }
-*/
-
-//for (int i = 0; i < nodes.Count; i++)
-//{
-//    PropertyNode node = nodes[i] as PropertyNode;
-//    bool removePropertyNode = false;
-//    if (node != null && !propertyIndexMap.ContainsKey(node.name))
-//    {
-//        Debug.Log("Removing node!");
-//        removePropertyNode = true;
-//    } else if (node != null && 
-//        (node.index >= propertyNames.Count ||
-//        node.name != propertyNames[node.index] ||
-//        node.typeName != propertyTypes[node.index].FullName))
-//    {
-//        Debug.Log("Removing node!");
-//        node.index = propertyIndexMap[node.name];
-//
-//        if (node.typeName != propertyTypes[node.index].FullName)
-//        {
-//            Debug.Log(node.typeName + " - " + propertyTypes[node.index].FullName);
-//            removePropertyNode = true;
-//        }
-//    }
-//
-//    if (removePropertyNode)
-//    {
-//        Debug.Log("Removing node!");
-//        foreach (PortView view in portViews)
-//        {
-//            if (view.LinkedWith(node.portViews[0]))
-//            {
-//                view.UnLink(node.portViews[0]);
-//            }
-//        }
-//
-//        DeleteNode(node);
-//        i--;
-//    }
-//}
-
-
-//public PortView GetPortView<T>(int index)
-//{
-//    Direction direction = (InputPortDirection == Direction.Input) ? Direction.Output : Direction.Input;
-//
-//    
-//
-//    return propertypo
-//}
