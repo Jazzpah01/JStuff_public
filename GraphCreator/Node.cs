@@ -21,7 +21,11 @@ namespace JStuff.GraphCreator
 
         public int iteration = 0;
 
+        public string linkDescription = "";
+
         public virtual StyleSheet StyleSheet => null;
+
+        public int Length => Mathf.Max(links.Count, portViews.Count);
 
         // Can use node.outputContainer/inputContainer for ports
         // Can use node.titleContainer for node
@@ -161,7 +165,7 @@ namespace JStuff.GraphCreator
 
         }
 
-        protected InputMultiLink<T> AddInputMultiLink<T>(PortSetup portSetup = PortSetup.Editor | PortSetup.Signature | PortSetup.Runtime)
+        protected InputMultiLink<T> AddInputMultiLink<T>(string portName = "default", PortSetup portSetup = PortSetup.Editor | PortSetup.Signature | PortSetup.Runtime)
         {
             Port.Capacity capacity = Port.Capacity.Multi;
             PortView portView;
@@ -170,7 +174,7 @@ namespace JStuff.GraphCreator
                 case InitPortStrategy.None when (portSetup & PortSetup.Editor) != 0:
                     // Editor port view
                     portView = CreateInstance<PortView>();
-                    AddPortView(portView, typeof(T).FullName, capacity, graph.InputPortDirection);
+                    AddPortView(portView, typeof(T).FullName, capacity, graph.InputPortDirection, portName);
                     break;
                 case InitPortStrategy.None:
                     throw new Exception("Cannot setup ports with None strategy!");
@@ -180,7 +184,7 @@ namespace JStuff.GraphCreator
                 case InitPortStrategy.PortViewGeneration when (portSetup & PortSetup.Editor) != 0:
                     // Editor port view
                     portView = CreateInstance<PortView>();
-                    AddPortView(portView, typeof(T).FullName, capacity, graph.InputPortDirection);
+                    AddPortView(portView, typeof(T).FullName, capacity, graph.InputPortDirection, portName);
                     break;
                 case InitPortStrategy.LinkGeneration when (portSetup & PortSetup.Runtime) != 0:
                     // Actual node port
@@ -191,7 +195,7 @@ namespace JStuff.GraphCreator
             return null;
         }
 
-        protected InputLink<T> AddInputLink<T>(PortSetup portSetup = PortSetup.Editor | PortSetup.Signature | PortSetup.Runtime)
+        protected InputLink<T> AddInputLink<T>(string portName = "default", PortSetup portSetup = PortSetup.Editor | PortSetup.Signature | PortSetup.Runtime)
         {
             Port.Capacity capacity = Port.Capacity.Single;
             PortView portView;
@@ -200,7 +204,7 @@ namespace JStuff.GraphCreator
                 case InitPortStrategy.None when (portSetup & PortSetup.Editor) != 0:
                     // Editor port view
                     portView = CreateInstance<PortView>();
-                    AddPortView(portView, typeof(T).FullName, capacity, graph.InputPortDirection);
+                    AddPortView(portView, typeof(T).FullName, capacity, graph.InputPortDirection, portName);
                     break;
                 case InitPortStrategy.None:
                     throw new Exception("Cannot setup ports with None strategy!");
@@ -210,7 +214,7 @@ namespace JStuff.GraphCreator
                 case InitPortStrategy.PortViewGeneration when (portSetup & PortSetup.Editor) != 0:
                     // Editor port view
                     portView = CreateInstance<PortView>();
-                    AddPortView(portView, typeof(T).FullName, capacity, graph.InputPortDirection);
+                    AddPortView(portView, typeof(T).FullName, capacity, graph.InputPortDirection, portName);
                     break;
                 case InitPortStrategy.LinkGeneration when (portSetup & PortSetup.Runtime) != 0:
                     // Actual node port
@@ -229,7 +233,7 @@ namespace JStuff.GraphCreator
             return null;
         }
 
-        protected OutputLink<T> AddOutputLink<T>(OutputFunction<T> function, Port.Capacity capacity = Port.Capacity.Multi,
+        protected OutputLink<T> AddOutputLink<T>(OutputFunction<T> function, Port.Capacity capacity = Port.Capacity.Multi, string portName = "default",
             PortSetup portSetup = PortSetup.Editor | PortSetup.Signature | PortSetup.Runtime)
         {
             Direction direction = graph.InputPortDirection == Direction.Input ? Direction.Output : Direction.Input;
@@ -240,7 +244,7 @@ namespace JStuff.GraphCreator
                 case InitPortStrategy.None when (portSetup & PortSetup.Editor) != 0:
                     // Editor port view
                     portView = CreateInstance<PortView>();
-                    AddPortView(portView, typeof(T).FullName, capacity, direction);
+                    AddPortView(portView, typeof(T).FullName, capacity, direction, portName);
                     break;
                 case InitPortStrategy.None:
                     throw new Exception("Cannot setup ports with None strategy!");
@@ -250,7 +254,7 @@ namespace JStuff.GraphCreator
                 case InitPortStrategy.PortViewGeneration when (portSetup & PortSetup.Editor) != 0:
                     // Editor port view
                     portView = CreateInstance<PortView>();
-                    AddPortView(portView, typeof(T).FullName, capacity, direction);
+                    AddPortView(portView, typeof(T).FullName, capacity, direction, portName);
                     break;
                 case InitPortStrategy.LinkGeneration when (portSetup & PortSetup.Runtime) != 0:
                     // Actual node link
@@ -282,7 +286,7 @@ namespace JStuff.GraphCreator
                     break;
                 case InitPortStrategy.PortViewGeneration:
                     portView = CreateInstance<PortView>();
-                    AddPortView(portView, graph.GetPropertyType(propertyName), Port.Capacity.Multi, direction);
+                    AddPortView(portView, graph.GetPropertyType(propertyName), Port.Capacity.Multi, direction, propertyName);
                     break;
                 case InitPortStrategy.LinkGeneration:
                     Link link = graph.GetProperty(propertyName);
@@ -318,7 +322,7 @@ namespace JStuff.GraphCreator
             nodePort.Valid = true;
         }
 
-        private void AddPortView(PortView portView, string type, Port.Capacity capacity, Direction direction)
+        private void AddPortView(PortView portView, string type, Port.Capacity capacity, Direction direction, string portName)
         {
             portView.Init(this, graph.Orientation, direction, capacity, type, portViews.Count);
             portView.Valid = true;
@@ -374,6 +378,7 @@ namespace JStuff.GraphCreator
         public virtual Node Clone()
         {
             Node retval = CreateInstance(this.GetType()) as Node;
+            retval.nodePosition = this.nodePosition;
 
             return retval;
         }

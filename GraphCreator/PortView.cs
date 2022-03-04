@@ -18,6 +18,7 @@ namespace JStuff.GraphCreator
         public int index;
         public int graphIndex;
         public int UIIndex;
+        public string portName;
         [SerializeField] private bool isInput;
 
         public List<PortView> linked = new List<PortView>();
@@ -28,8 +29,9 @@ namespace JStuff.GraphCreator
 
         public bool Valid { get => isValid; set => isValid = value; }
 
-        public void Init(Node node, Orientation orientation, Direction direction, Port.Capacity capacity, string portTypeName, int index)
+        public void Init(Node node, Orientation orientation, Direction direction, Port.Capacity capacity, string portTypeName, int index, string portName = "default")
         {
+            name = $"{direction} Port: {portTypeName}";
             this.node = node;
             this.orientation = orientation;
             this.direction = direction;
@@ -37,6 +39,13 @@ namespace JStuff.GraphCreator
             portType = portTypeName;
             this.index = index;
             isInput = direction == Direction.Input;
+            if (portName == "default")
+            {
+                Type t = Type.GetType(portType);
+                if (t!= null)
+                    this.portName = Type.GetType(portType).Name;
+            }
+                
             AssetDatabase.SaveAssets();
         }
 

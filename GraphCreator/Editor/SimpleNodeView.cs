@@ -47,6 +47,7 @@ public class SimpleNodeView : gvNode, INodeView
         foreach (PortView port in node.portViews)
         {
             Port p = InstantiatePort(port.orientation, port.direction.Get(), port.capacity, port.PortType);
+            p.portName = port.portName;
             ports.Add(p);
             portData.Add(p, port);
 

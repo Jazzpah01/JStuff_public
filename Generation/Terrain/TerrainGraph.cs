@@ -81,6 +81,8 @@ public class TerrainGraph : Graph
             types.Add(typeof(CommonNode));
             types.Add(typeof(VectorDivNode));
             types.Add(typeof(GrayScale));
+            types.Add(typeof(RandomTerrainObjects));
+            types.Add(typeof(Uniform2DPoints));
             return types;
         }
     }

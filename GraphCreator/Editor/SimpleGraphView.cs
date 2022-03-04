@@ -38,6 +38,8 @@ public class SimpleGraphView : GraphView
             return;
         }
 
+        evt.menu.AppendAction("ReloadGraph", delegate { graph.ResetPorts(); PopulateView(graph); OnNodeSelected(FindNodeView(graph.rootNode)); });
+
         for (int i = 0; i < graph.numberOfProperties; i++)
         {
             string propertyName = graph.propertyNames[i];
@@ -57,13 +59,15 @@ public class SimpleGraphView : GraphView
     private void AddMenuType(ContextualMenuPopulateEvent evt, Type t)
     {
         var types = TypeCache.GetTypesDerivedFrom(t);
+        Vector2 localMousePos = evt.localMousePosition;
+        Vector2 actualGraphPosition = viewTransform.matrix.inverse.MultiplyPoint(localMousePos);
         foreach (var type in types)
         {
-            evt.menu.AppendAction($"[{type.BaseType.Name}] {type.Name}", (a) => CreateNode(type));
+            evt.menu.AppendAction($"[{type.BaseType.Name}] {type.Name}", (a) => CreateNode(type, actualGraphPosition));
         }
         if (!t.IsAbstract)
         {
-            evt.menu.AppendAction($"[{t.BaseType.Name}] {t.Name}", (a) => CreateNode(t));
+            evt.menu.AppendAction($"[{t.BaseType.Name}] {t.Name}", (a) => CreateNode(t, actualGraphPosition));
         }
     }
 
@@ -118,14 +122,6 @@ public class SimpleGraphView : GraphView
                     edge.output.portType = port.PortType;
                     AddElement(edge);
                 }
-                //SimpleNode inputnode = port.node;
-                //SimpleNode outputnode = port.linked.node;
-                //
-                //Edge edge = FindNodeView(inputnode).GetPort(port).ConnectTo(FindNodeView(outputnode).GetPort(port.linked));
-                ////edge.input.portType TODO
-                //edge.input.portType = port.PortType;
-                //edge.output.portType = port.PortType;
-                //AddElement(edge);
             }
         }
     }
@@ -190,11 +186,12 @@ public class SimpleGraphView : GraphView
         CreateNodeView(node);
     }
 
-    protected void CreateNode(Type type)
+    protected void CreateNode(Type type, Vector2 position = new Vector2())
     {
         Node node = graph.CreateNode(type);
         if (node == null)
             throw new Exception("Node is null.");
+        node.nodePosition = position;
         CreateNodeView(node);
     }
 

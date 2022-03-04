@@ -9,23 +9,28 @@ public class TerrainRoot : Node
     InputLink<MeshData> meshRendererData;
     InputLink<MeshData> meshColliderData;
     InputLink<Color[]> colormap;
-    InputLink<List<TerrainObject>> gameObjects;
+    InputLink<List<TerrainObject>> terrainObjects;
 
     protected override void SetupPorts()
     {
         meshRendererData = AddInputLink<MeshData>();
         meshColliderData = AddInputLink<MeshData>();
-        colormap = AddInputLink<Color[]>();
-        gameObjects = AddInputLink<List<TerrainObject>>();
+        colormap = AddInputLink<Color[]>(portName: "Colormap");
+        terrainObjects = AddInputLink<List<TerrainObject>>(portName: "List<TerrainObject>");
     }
 
     public BlockData Evaluate()
     {
+        iteration++;
         BlockData blockData = new BlockData();
-        blockData.meshRendererData = meshRendererData.Evaluate();
-        blockData.meshColliderData = meshColliderData.Evaluate();
-        blockData.colormap = colormap.Evaluate();
-        blockData.terrainObjects = gameObjects.Evaluate();
+        if (meshRendererData != null)
+            blockData.meshRendererData = meshRendererData.Evaluate();
+        if (meshColliderData != null)
+            blockData.meshColliderData = meshColliderData.Evaluate();
+        if (colormap != null)
+            blockData.colormap = colormap.Evaluate();
+        if (terrainObjects != null)
+            blockData.terrainObjects = terrainObjects.Evaluate();
         return blockData;
     }
 }

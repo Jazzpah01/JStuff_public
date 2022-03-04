@@ -17,7 +17,7 @@ public class SimpleGraphEditor : EditorWindow
         //SimpleGraph obj = Selection.activeObject as SimpleGraph;
         if (obj != null)
         {
-            obj.InitializeBaseGraph();
+            obj.UpdateGraph();
             OpenWindow();
             return true;
         }
@@ -38,13 +38,11 @@ public class SimpleGraphEditor : EditorWindow
 
         // Import UXML
         var visualTree = AssetDatabase.LoadAssetAtPath<VisualTreeAsset>("Assets/JStuff_public/GraphCreator/Editor/SimpleGraphEditor.uxml");
-        //var visualTree = AssetDatabase.LoadAssetAtPath<VisualTreeAsset>("SimpleGraphEditor.uxml");
         visualTree.CloneTree(root);
 
         // A stylesheet can be added to a VisualElement.
         // The style will be applied to the VisualElement and all of its children.
         var styleSheet = AssetDatabase.LoadAssetAtPath<StyleSheet>("Assets/JStuff_public/GraphCreator/Editor/SimpleGraphEditor.uss");
-        //var styleSheet = AssetDatabase.LoadAssetAtPath<StyleSheet>("SimpleGraphEditor.uss");
         root.styleSheets.Add(styleSheet);
 
         graphView = root.Q<SimpleGraphView>();
