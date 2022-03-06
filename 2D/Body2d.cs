@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using UnityEngine;
 using JStuff.Utilities;
-using JStuff.Collection;
+using JStuff.Collections;
 
 namespace JStuff.TwoD.Platformer
 {

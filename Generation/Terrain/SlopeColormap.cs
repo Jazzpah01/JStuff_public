@@ -4,6 +4,7 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using JStuff.Utilities;
+using JStuff.Collections;
 
 namespace JStuff.Generation.Terrain
 {

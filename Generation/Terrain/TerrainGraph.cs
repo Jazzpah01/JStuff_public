@@ -7,7 +7,7 @@ using JStuff.Generation;
 
 namespace JStuff.Generation.Terrain
 {
-    [CreateAssetMenu(menuName = "Assets/JStuff/Terrain Graph")]
+    [CreateAssetMenu(menuName = "JStuff/Terrain Graph")]
 
     public class TerrainGraph : Graph
     {

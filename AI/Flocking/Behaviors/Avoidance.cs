@@ -4,7 +4,7 @@ using UnityEngine;
 
 namespace JStuff.AI.Flocking
 {
-    [CreateAssetMenu(menuName = "Assets/Flock/Behavior/Avoidance")]
+    [CreateAssetMenu(menuName = "JStuff/Flock/Behavior/Avoidance")]
     public class Avoidance : FlockingBehavior
     {
         public float range;

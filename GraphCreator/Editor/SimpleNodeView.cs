@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using UnityEditor.Experimental.GraphView;
 using UnityEngine.UIElements;
 using UnityEngine;
-using JStuff.Collection;
+using JStuff.Collections;
 using System;
 using gvNode = UnityEditor.Experimental.GraphView.Node;
 using gvDirection = UnityEditor.Experimental.GraphView.Direction;

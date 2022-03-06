@@ -4,7 +4,6 @@ using UnityEngine;
 
 namespace JStuff.Generation
 {
-    [CreateAssetMenu(menuName = "JStuff/ColorMapping")]
     public class ColorMapping : ScriptableObject
     {
         [System.Serializable]

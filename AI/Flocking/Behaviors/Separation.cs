@@ -4,7 +4,7 @@ using UnityEngine;
 
 namespace JStuff.AI.Flocking
 {
-    [CreateAssetMenu(menuName = "Assets/Flock/Behavior/Separation")]
+    [CreateAssetMenu(menuName = "JStuff/Flock/Behavior/Separation")]
     public class Separation : FlockingBehavior
     {
         public float distance;

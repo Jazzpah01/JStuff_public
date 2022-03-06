@@ -3,80 +3,86 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
-[System.Serializable]
-public class DropDownList
+namespace JStuff.Collections
 {
-    [SerializeField] public List<string> values = new List<string>();
-    [SerializeField] private string _value;
-    [SerializeField] private int _index;
+    [Serializable]
 
-    public Action<string> OnValueChanged = null;
-
-    public string value
+    public class DropDownList
     {
-        get
+        [SerializeField] public List<string> values = new List<string>();
+        [SerializeField] private string _value;
+        [SerializeField] private int _index;
+
+        public Action<string> OnValueChanged = null;
+
+        public string value
         {
-            return _value;
-        }
-        set
-        {
-            if (values.Contains(value))
+            get
             {
-                _value = value;
-                _index = values.IndexOf(value);
-                if (OnValueChanged != null)
-                {
-                    OnValueChanged(_value);
-                }
-            } else
-            {
-                throw new System.Exception("Value does not exist in list: " + value);
+                return _value;
             }
-            
-        }
-    }
-    public int index
-    {
-        get
-        {
-            return _index;
-        }
-        set
-        {
-            if (values.Count > value)
+            set
             {
-                _index = value;
-                _value = values[value];
-                if (OnValueChanged != null)
+                if (values.Contains(value))
                 {
-                    OnValueChanged(_value);
+                    _value = value;
+                    _index = values.IndexOf(value);
+                    if (OnValueChanged != null)
+                    {
+                        OnValueChanged(_value);
+                    }
                 }
-            } else
-            {
-                throw new System.Exception("Index does not exist in list: " + value);
+                else
+                {
+                    throw new Exception("Value does not exist in list: " + value);
+                }
+
             }
         }
-    }
-
-    public void Add(string v)
-    {
-        if (values.Contains(v))
+        public int index
         {
-            throw new System.Exception("Cannot add multiples of same value of: " + v);
+            get
+            {
+                return _index;
+            }
+            set
+            {
+                if (values.Count > value)
+                {
+                    _index = value;
+                    _value = values[value];
+                    if (OnValueChanged != null)
+                    {
+                        OnValueChanged(_value);
+                    }
+                }
+                else
+                {
+                    throw new Exception("Index does not exist in list: " + value);
+                }
+            }
         }
 
-        values.Add(v);
-    }
+        public void Add(string v)
+        {
+            if (values.Contains(v))
+            {
+                throw new Exception("Cannot add multiples of same value of: " + v);
+            }
 
-    public void Clear()
-    {
-        _value = "";
-        _index = 0;
-        values.Clear();
-    }
+            values.Add(v);
+        }
 
-    public bool Contains(string value)
-    {
-        return values.Contains(value);
+        public void Clear()
+        {
+            _value = "";
+            _index = 0;
+            values.Clear();
+        }
+
+        public bool Contains(string value)
+        {
+            return values.Contains(value);
+        }
     }
 }

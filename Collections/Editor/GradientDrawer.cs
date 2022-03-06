@@ -3,6 +3,7 @@ using UnityEngine;
 using UnityEditor;
 using System.Reflection;
 using System;
+using JStuff.Collections;
 
 //https://github.com/SebLague/Gradient-Editor
 [CustomPropertyDrawer(typeof(CustomGradient))]

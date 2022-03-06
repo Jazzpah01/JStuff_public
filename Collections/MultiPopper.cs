@@ -3,7 +3,7 @@ using System.Collections;
 using System.Collections.Generic;
 using System;
 
-namespace JStuff.Collection
+namespace JStuff.Collections
 {
     /// <summary>
     /// A Dictionary where elements can only be accessed in bulk.

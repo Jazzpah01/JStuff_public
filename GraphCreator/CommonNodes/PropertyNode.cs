@@ -5,6 +5,7 @@ using UnityEditor.Experimental.GraphView;
 using UnityEditor;
 using System;
 using UnityEngine.UIElements;
+using JStuff.Collections;
 
 namespace JStuff.GraphCreator
 {

@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using UnityEngine;
 
-namespace JStuff.Collection
+namespace JStuff.Collections
 {
     public interface ICondition<T>
     {

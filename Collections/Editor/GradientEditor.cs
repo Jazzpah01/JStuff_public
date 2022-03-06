@@ -2,6 +2,7 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEditor;
+using JStuff.Collections;
 
 //https://github.com/SebLague/Gradient-Editor
 public class GradientEditor : EditorWindow

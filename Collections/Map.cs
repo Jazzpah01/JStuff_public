@@ -2,7 +2,7 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
-namespace JStuff.Collection
+namespace JStuff.Collections
 {
     /// <summary>
     /// https://stackoverflow.com/questions/10966331/two-way-bidirectional-dictionary-in-c

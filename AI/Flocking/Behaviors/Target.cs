@@ -4,7 +4,7 @@ using UnityEngine;
 
 namespace JStuff.AI.Flocking
 {
-    [CreateAssetMenu(menuName = "Assets/Flock/Behavior/Target")]
+    [CreateAssetMenu(menuName = "JStuff/Flock/Behavior/Target")]
     public class Target : FlockingBehavior
     {
         public Vector2 targetOffset;
