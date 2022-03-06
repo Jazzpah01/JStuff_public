@@ -53,13 +53,13 @@ namespace JStuff.Generation
 
         public Gradient colorHeightGradient;
         public Gradient colorSlopeGradient;
-        public InterpolateFunction slopeInterpolate;
+        public InterpolationCurve slopeInterpolate;
         public Gradient grayScaleGradient;
 
         public float distanceFactor;
         public float heightDifferenceFactor;
 
-        public InterpolateFunction distanceToDepthMultiplier;
+        public InterpolationCurve distanceToDepthMultiplier;
 
         private Chunk[] chunks;
         private GameObject parentChunk;
@@ -71,7 +71,7 @@ namespace JStuff.Generation
 
         private List<MultiLine> roads = new List<MultiLine>();
 
-        public InterpolateFunction roadFunction;
+        public InterpolationCurve roadFunction;
 
         public bool enableRoads = false;
         public int roadGraphSize = 100;

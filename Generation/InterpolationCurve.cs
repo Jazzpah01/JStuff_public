@@ -5,7 +5,7 @@ using UnityEngine;
 namespace JStuff.Generation
 {
     [System.Serializable]
-    public class InterpolateFunction
+    public class InterpolationCurve
     {
         public AnimationCurve curve;
         public float factor = 1;

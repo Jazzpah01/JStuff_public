@@ -15,14 +15,14 @@ namespace JStuff.Generation
         public const float universalMaxSlope = 33f;
 
         public Gradient sedimentsOnHeight;
-        public InterpolateFunction foliageOnTemp;
-        public InterpolateFunction foliageOnHeight;
-        public InterpolateFunction tempOnHeight;
-        public InterpolateFunction snowOnTemp;
-        public InterpolateFunction slope;
-        public InterpolateFunction grassOnFoliage;
+        public InterpolationCurve foliageOnTemp;
+        public InterpolationCurve foliageOnHeight;
+        public InterpolationCurve tempOnHeight;
+        public InterpolationCurve snowOnTemp;
+        public InterpolationCurve slope;
+        public InterpolationCurve grassOnFoliage;
 
-        public InterpolateFunction grassOnGrass;
+        public InterpolationCurve grassOnGrass;
 
         public float greenFactor = 1f;
 

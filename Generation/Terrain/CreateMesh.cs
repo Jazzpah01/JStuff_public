@@ -4,34 +4,37 @@ using UnityEngine;
 using JStuff.GraphCreator;
 using JStuff.Generation;
 
-public class CreateMesh : Node
+namespace JStuff.Generation.Terrain
 {
-    InputLink<HeightMap> hmInput;
-    InputLink<float> meshSizeInput;
-    InputLink<float> scaleInput;
-    OutputLink<MeshData> output;
-    OutputLink<int> sizeOutput;
-
-    public override bool CacheOutput => true;
-
-    protected override void SetupPorts()
+    public class CreateMesh : Node
     {
-        hmInput = AddInputLink<HeightMap>();
-        meshSizeInput = AddInputLink<float>();
-        scaleInput = AddInputLink<float>();
-        output = AddOutputLink<MeshData>(Evaluate);
-        sizeOutput = AddOutputLink<int>(EveluateSize);
-    }
+        InputLink<HeightMap> hmInput;
+        InputLink<float> meshSizeInput;
+        InputLink<float> scaleInput;
+        OutputLink<MeshData> output;
+        OutputLink<int> sizeOutput;
 
-    private MeshData Evaluate()
-    {
-        MeshData data = TerrainMeshGeneration.GenerateMesh(hmInput.Evaluate(), meshSizeInput.Evaluate(), scaleInput.Evaluate());
-        return data;
-    }
+        public override bool CacheOutput => true;
 
-    private int EveluateSize()
-    {
-        MeshData data = TerrainMeshGeneration.GenerateMesh(hmInput.Evaluate(), meshSizeInput.Evaluate(), scaleInput.Evaluate());
-        return data.vertices.Length;
+        protected override void SetupPorts()
+        {
+            hmInput = AddInputLink<HeightMap>();
+            meshSizeInput = AddInputLink<float>();
+            scaleInput = AddInputLink<float>();
+            output = AddOutputLink(Evaluate);
+            sizeOutput = AddOutputLink(EveluateSize);
+        }
+
+        private MeshData Evaluate()
+        {
+            MeshData data = TerrainMeshGeneration.GenerateMesh(hmInput.Evaluate(), meshSizeInput.Evaluate(), scaleInput.Evaluate());
+            return data;
+        }
+
+        private int EveluateSize()
+        {
+            MeshData data = TerrainMeshGeneration.GenerateMesh(hmInput.Evaluate(), meshSizeInput.Evaluate(), scaleInput.Evaluate());
+            return data.vertices.Length;
+        }
     }
 }

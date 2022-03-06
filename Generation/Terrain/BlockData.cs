@@ -1,12 +1,14 @@
-using JStuff.Generation;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
-public class BlockData
+namespace JStuff.Generation.Terrain
 {
-    public MeshData meshRendererData;
-    public MeshData meshColliderData;
-    public Color[] colormap;
-    public List<TerrainObject> terrainObjects;
+    public class BlockData
+    {
+        public MeshData meshRendererData;
+        public MeshData meshColliderData;
+        public Color[] colormap;
+        public List<TerrainObject> terrainObjects;
+    }
 }
