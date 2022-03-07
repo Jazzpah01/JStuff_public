@@ -3,7 +3,7 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using Debug = UnityEngine.Debug;
-using JStuff.Randomness;
+using JStuff.Random;
 using JStuff.Threading;
 using System;
 using System.Diagnostics;
@@ -608,11 +608,11 @@ namespace JStuff.Generation
                         float r1 = x - Mathf.Floor(x);
                         float r2 = z - Mathf.Floor(z);
 
-                        go.transform.eulerAngles = new Vector3(0, RandomGenerator.NormalValue(r1, r2) * 360, 0);
+                        go.transform.eulerAngles = new Vector3(0, Generator.NormalValue(r1, r2) * 360, 0);
 
                         go.transform.localScale = Vector3.one *
                             (mother.climate.foliage[i].defaultScale +
-                             RandomGenerator.Value(r1, r2) * mother.climate.foliage[i].scalevariance);
+                             Generator.Value(r1, r2) * mother.climate.foliage[i].scalevariance);
 
                         foliage[i].Add(go);
                     }

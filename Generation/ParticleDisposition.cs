@@ -106,7 +106,7 @@ namespace JStuff.Generation
             bool found = false;
             while (!found)
             {
-                switch (Random.Range(0, 4))
+                switch (UnityEngine.Random.Range(0, 4))
                 {
                     case 0:
                         if (x < nmap.GetLength(0) - 1)
@@ -139,7 +139,7 @@ namespace JStuff.Generation
         {
             int size = map.GetLength(0);
 
-            (int x, int y) point = (Random.Range(0, size), Random.Range(0, size));
+            (int x, int y) point = (UnityEngine.Random.Range(0, size), UnityEngine.Random.Range(0, size));
             for (int i = 0; i < amount; i++)
             {
                 (int incx, int incy, int inc) = increase(map, point.x, point.y);
@@ -157,12 +157,12 @@ namespace JStuff.Generation
         {
             int size = map.GetLength(0);
 
-            (int x, int y) point = (Random.Range(0, size), Random.Range(0, size));
+            (int x, int y) point = (UnityEngine.Random.Range(0, size), UnityEngine.Random.Range(0, size));
             for (int i = 0; i < amount; i++)
             {
                 (int incx, int incy, int inc) = increase(map, point.x, point.y);
                 map[incx, incy] += inc;
-                point = (Random.Range(0, size), Random.Range(0, size));
+                point = (UnityEngine.Random.Range(0, size), UnityEngine.Random.Range(0, size));
             }
 
             return map;

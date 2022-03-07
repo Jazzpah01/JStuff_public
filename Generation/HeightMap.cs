@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using UnityEngine;
 using System;
 using JStuff.AI.Pathfinding;
-using JStuff.Randomness;
+using JStuff.Random;
 
 namespace JStuff.Generation
 {
@@ -407,7 +407,7 @@ namespace JStuff.Generation
                     if (map[i, j] < minHeight || map[i, j] > maxHeight)
                         continue;
 
-                    float r = RandomGenerator.Value(map[0, 0], map[j, i]);
+                    float r = Generator.Value(map[0, 0], map[j, i]);
 
                     if (j < Width-1 && map[i, j + 1] >= minHeight && map[i, j + 1] <= maxHeight && Mathf.Abs(map[i, j] - map[i, j + 1]) < maxHeightDifference)
                         retval.AddEdge(retval.GetVertices()[j + i * Width], 

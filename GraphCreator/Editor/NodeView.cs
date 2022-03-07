@@ -9,18 +9,19 @@ using gvNode = UnityEditor.Experimental.GraphView.Node;
 using gvDirection = UnityEditor.Experimental.GraphView.Direction;
 using JStuff.GraphCreator;
 using Node = JStuff.GraphCreator.Node;
+using Direction = JStuff.GraphCreator.Direction;
 
 [Serializable]
-public class SimpleNodeView : gvNode, INodeView
+public class NodeView : gvNode, INodeView
 {
     public Node node;
     public List<Port> ports = new List<Port>();
     public Map<Port, PortView> portData = new Map<Port, PortView>();
-    public SimpleGraphView graphView;
+    public GraphView graphView;
 
-    public Action<SimpleNodeView> OnNodeSelected;
+    public Action<NodeView> OnNodeSelected;
 
-    public SimpleNodeView(Node node, SimpleGraphView parent)
+    public NodeView(Node node, GraphView parent)
     {
         this.node = node;
         title = node.name;

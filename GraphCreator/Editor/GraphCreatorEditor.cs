@@ -5,9 +5,9 @@ using UnityEngine.UIElements;
 using JStuff.GraphCreator;
 
 
-public class SimpleGraphEditor : EditorWindow
+public class GraphCreatorEditor : EditorWindow
 {
-    SimpleGraphView graphView;
+    GraphView graphView;
     InspectorView inspectorView;
 
     [OnOpenAsset(1)]
@@ -24,11 +24,11 @@ public class SimpleGraphEditor : EditorWindow
         return false;
     }
 
-    [MenuItem("Window/SimpleGraphEditor/Editor ...")]
+    [MenuItem("Window/GraphCreator/Editor ...")]
     public static void OpenWindow()
     {
-        SimpleGraphEditor wnd = GetWindow<SimpleGraphEditor>();
-        wnd.titleContent = new GUIContent("SimpleGraphEditor");
+        GraphCreatorEditor wnd = GetWindow<GraphCreatorEditor>();
+        wnd.titleContent = new GUIContent("Graph Editor");
     }
 
     public void CreateGUI()
@@ -45,7 +45,7 @@ public class SimpleGraphEditor : EditorWindow
         var styleSheet = AssetDatabase.LoadAssetAtPath<StyleSheet>("Assets/JStuff_public/GraphCreator/Editor/SimpleGraphEditor.uss");
         root.styleSheets.Add(styleSheet);
 
-        graphView = root.Q<SimpleGraphView>();
+        graphView = root.Q<GraphView>();
         inspectorView = root.Q<InspectorView>();
         graphView.OnNodeSelected = OnNodeSelectionChanged;
 
@@ -61,7 +61,7 @@ public class SimpleGraphEditor : EditorWindow
         }
     }
 
-    void OnNodeSelectionChanged(SimpleNodeView nodeView)
+    void OnNodeSelectionChanged(NodeView nodeView)
     {
         if (nodeView == null)
             return;

@@ -4,6 +4,8 @@ using UnityEditor.Experimental.GraphView;
 using UnityEngine;
 using System;
 using JStuff.GraphCreator;
+using gvDirection = UnityEditor.Experimental.GraphView.Direction;
+using Direction = JStuff.GraphCreator.Direction;
 
 public class Context : ScriptableObject
 {
@@ -45,7 +47,6 @@ public class Context : ScriptableObject
     public void AddPropertyLink<T>(T value, string propertyName)
     {
         Direction direction = (graph.InputPortDirection == Direction.Input) ? Direction.Output : Direction.Input;
-        //propertyName = $"[{typeof(T).Name}] {propertyName}";
         string propertyNameType = $"[{typeof(T).Name}] {propertyName}";
         if (runmode)
         {

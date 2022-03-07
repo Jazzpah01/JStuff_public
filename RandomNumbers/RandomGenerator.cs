@@ -3,9 +3,9 @@ using System.Collections.Generic;
 using UnityEngine;
 using System;
 
-namespace JStuff.Randomness
+namespace JStuff.Random
 {
-    public static class RandomGenerator
+    public static class Generator
     {
         private static int[] numbers;
         private static int index;

@@ -5,8 +5,12 @@ using UnityEditor.Experimental.GraphView;
 using UnityEngine;
 using UnityEngine.UIElements;
 
-public interface INodeView
+namespace JStuff.GraphCreator
 {
-    Port GetPort(PortView port);
-    UnityEditor.Experimental.GraphView.Node Node { get; }
+    public interface INodeView
+    {
+        Port GetPort(PortView port);
+        UnityEditor.Experimental.GraphView.Node Node { get; }
+    }
 }
+

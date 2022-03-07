@@ -1,7 +1,7 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
-using JStuff.Randomness;
+using JStuff.Random;
 using System;
 
 namespace JStuff.Generation
@@ -23,15 +23,15 @@ namespace JStuff.Generation
                 }
             }
 
-            float r2 = RandomGenerator.NormalValue(r1, r1 * r1);
-            float r3 = RandomGenerator.NormalValue(r1, r2);
+            float r2 = Generator.NormalValue(r1, r1 * r1);
+            float r3 = Generator.NormalValue(r1, r2);
 
             for (int i = 0; i < amount; i++)
             {
                 Vector2 newpoint = new Vector2(r2, r3) * size;
-                r1 = 1 - RandomGenerator.NormalValue(r2, r3);
-                r2 = RandomGenerator.NormalValue(r1, r3);
-                r3 = RandomGenerator.NormalValue(r1, r2);
+                r1 = 1 - Generator.NormalValue(r2, r3);
+                r2 = Generator.NormalValue(r1, r3);
+                r3 = Generator.NormalValue(r1, r2);
                 if ((ignoreRadius && LegalPoint_IgnoreRadius(pointOf, newpoint, pointRadius, size)) || LegalPoint(pointOf, newpoint, pointRadius, size))
                 {
                     points.Add(newpoint);
@@ -47,15 +47,15 @@ namespace JStuff.Generation
         {
             List<Vector2> points = new List<Vector2>();
 
-            float r2 = RandomGenerator.NormalValue(r1, r1 * r1);
-            float r3 = RandomGenerator.NormalValue(r1, r2);
+            float r2 = Generator.NormalValue(r1, r1 * r1);
+            float r3 = Generator.NormalValue(r1, r2);
 
             for (int i = 0; i < amount; i++)
             {
                 points.Add(new Vector2(r2, r3) * size);
-                r1 = RandomGenerator.NormalValue(r2, r3);
-                r2 = RandomGenerator.NormalValue(r1, r3);
-                r3 = RandomGenerator.NormalValue(r1, r2);
+                r1 = Generator.NormalValue(r2, r3);
+                r2 = Generator.NormalValue(r1, r3);
+                r3 = Generator.NormalValue(r1, r2);
             }
 
             return points;

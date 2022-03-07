@@ -30,7 +30,7 @@ namespace JStuff.AI.Flocking
 
             Vector2 v = (Vector2)trans.position - (Vector2)boid.transform.position;
             float r = 1 - 2 * distance / (v.magnitude + distance);
-            return (dist != 0) ? r * v.normalized : r * new Vector2(Random.Range(-1, 1), Random.Range(-1, 1)).normalized;
+            return (dist != 0) ? r * v.normalized : r * new Vector2(UnityEngine.Random.Range(-1, 1), UnityEngine.Random.Range(-1, 1)).normalized;
         }
     }
 }

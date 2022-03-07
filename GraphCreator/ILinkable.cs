@@ -3,10 +3,13 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
-public interface ILinkable
+namespace JStuff.GraphCreator
 {
-    ILink LinkedPort { get; }
-    void LinkPort(Link outputPort);
-    void RemoveLink();
+    public interface ILinkable
+    {
+        ILink LinkedPort { get; }
+        void LinkPort(Link outputPort);
+        void RemoveLink();
+    }
+    public delegate T OutputFunction<T>();
 }
-public delegate T OutputFunction<T>();

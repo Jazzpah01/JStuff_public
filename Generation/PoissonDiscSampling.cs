@@ -1,7 +1,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
-using JStuff.Randomness;
+using JStuff.Random;
 
 namespace JStuff.Generation
 {
@@ -21,17 +21,17 @@ namespace JStuff.Generation
             spawnPoints.Add(sampleRegionSize / 2);
             while (spawnPoints.Count > 0)
             {
-                int spawnIndex = (int)(RandomGenerator.NormalValue(seed0, seed1) * spawnPoints.Count).Clamp(0, spawnPoints.Count-1);
+                int spawnIndex = (int)(Generator.NormalValue(seed0, seed1) * spawnPoints.Count).Clamp(0, spawnPoints.Count-1);
                 Vector2 spawnCentre = spawnPoints[spawnIndex];
                 bool candidateAccepted = false;
 
                 for (int i = 0; i < numSamplesBeforeRejection; i++)
                 {
-                    float angle = RandomGenerator.NormalValue(seed0, seed1) * Mathf.PI * 2;
-                    seed0 = RandomGenerator.NormalValue(angle, seed0);
-                    seed1 = RandomGenerator.NormalValue(seed1, seed0);
+                    float angle = Generator.NormalValue(seed0, seed1) * Mathf.PI * 2;
+                    seed0 = Generator.NormalValue(angle, seed0);
+                    seed1 = Generator.NormalValue(seed1, seed0);
                     Vector2 dir = new Vector2(Mathf.Sin(angle), Mathf.Cos(angle));
-                    Vector2 candidate = spawnCentre + dir * (RandomGenerator.NormalValue(seed0, seed1) * radius + radius);
+                    Vector2 candidate = spawnCentre + dir * (Generator.NormalValue(seed0, seed1) * radius + radius);
                     if (IsValid(candidate, sampleRegionSize, cellSize, radius, points, grid))
                     {
                         points.Add(candidate);

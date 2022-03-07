@@ -19,7 +19,7 @@ namespace JStuff.Generation
 
             if (seed > 0)
             {
-                Random.InitState(seed);
+                UnityEngine.Random.InitState(seed);
             }
 
             Diamond(h, (0, size - 1), (0, size - 1), var);
@@ -56,7 +56,7 @@ namespace JStuff.Generation
             }
 
             heightmap[midX, midY] =
-                (p1 + p2 + p3 + p4) / pn + (Random.value * 2 - 1) * heightDiff * ((float)size / (float)heightmap.GetLength(0));
+                (p1 + p2 + p3 + p4) / pn + (UnityEngine.Random.value * 2 - 1) * heightDiff * ((float)size / (float)heightmap.GetLength(0));
 
             if (size > 1)
             {
@@ -79,7 +79,7 @@ namespace JStuff.Generation
 
             heightmap[midX, midY] =
                 (heightmap[X.start, Y.start] + heightmap[X.end, Y.start] +
-                heightmap[X.start, Y.end] + heightmap[X.end, Y.end]) / 4 + (Random.value * 2 - 1) * heightDiff * ((float)size / (float)heightmap.GetLength(0)) * 1.41f;
+                heightmap[X.start, Y.end] + heightmap[X.end, Y.end]) / 4 + (UnityEngine.Random.value * 2 - 1) * heightDiff * ((float)size / (float)heightmap.GetLength(0)) * 1.41f;
 
             if (size > 1)
             {

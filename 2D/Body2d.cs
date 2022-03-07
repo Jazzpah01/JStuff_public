@@ -25,7 +25,7 @@ namespace JStuff.TwoD.Platformer
 
         private Vector2 velocity;
 
-        public bool grounded;
+        [System.NonSerialized]public bool grounded;
         private bool ceiled;
 
         private float horizontalInput;
@@ -45,11 +45,16 @@ namespace JStuff.TwoD.Platformer
         private int fallInputBuffer = 0;
         private float jumpFactor = 0;
 
+        private int _colliderFlags;
+        private int _platformFlags;
+
         private bool fall = false;
 
         private List<IBodyModifier> filters = new List<IBodyModifier>();
 
         public delegate void StateObserved(Body2d body);
+
+        private Vector2 maxSpeed;
 
         public bool GroundOnSpawn
         {
@@ -206,6 +211,11 @@ namespace JStuff.TwoD.Platformer
 
             data.initialGravityAcceleration = GravetyAcceleration;
 
+            _colliderFlags = ColliderController.GetFlags(data.ColliderFlags);
+            _platformFlags = ColliderController.GetFlags(data.PlatformFlags);
+
+            maxSpeed = boxCollider.size * gameObject.transform.lossyScale / 2;
+
             if (boxCollider == null)
                 boxCollider = gameObject.GetComponent<BoxCollider2D>();
             if (data.groundOnSpawn && boxCollider == null)
@@ -222,8 +232,8 @@ namespace JStuff.TwoD.Platformer
                 transform.Translate(Vector2.down);
 
                 // Detect collision
-                Collider2D[] hits = ColliderController.OverlapBoxAllWithFlags(transform.position, boxCollider.size, data.ColliderFlags);
-                Collider2D[] hitsPlatform = ColliderController.OverlapBoxAllWithFlags(transform.position, boxCollider.size, data.PlatformFlags);
+                Collider2D[] hits = ColliderController.OverlapBoxAllWithFlags(transform.position, boxCollider.size, _colliderFlags);
+                Collider2D[] hitsPlatform = ColliderController.OverlapBoxAllWithFlags(transform.position, boxCollider.size, _platformFlags);
                 grounded = false;
                 ceiled = false;
 
@@ -379,8 +389,8 @@ namespace JStuff.TwoD.Platformer
 
             // Detect collision
             Vector3 boxOffset = new Vector2(boxCollider.offset.x, boxCollider.offset.y);
-            Collider2D[] hits = ColliderController.OverlapBoxAllWithFlags(boxCollider.transform.position, boxCollider.size, data.ColliderFlags);
-            Collider2D[] hitsPlatform = ColliderController.OverlapBoxAllWithFlags(boxCollider.transform.position, boxCollider.size, data.PlatformFlags);
+            Collider2D[] hits = ColliderController.OverlapBoxAllWithFlags(boxCollider.transform.position, boxCollider.size, _colliderFlags);
+            Collider2D[] hitsPlatform = ColliderController.OverlapBoxAllWithFlags(boxCollider.transform.position, boxCollider.size, _platformFlags);
             grounded = false;
             ceiled = false;
 

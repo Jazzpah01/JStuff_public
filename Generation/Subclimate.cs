@@ -1,7 +1,7 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
-using JStuff.Randomness;
+using JStuff.Random;
 using System;
 using JStuff.Generation;
 
@@ -111,7 +111,7 @@ namespace JStuff.Generation
 
             float seed1 = colormap[0].g;
             float seed2 = colormap[colormap.Length-1].g;
-            float seed3 = RandomGenerator.NormalValue(seed1, seed2);
+            float seed3 = Generator.NormalValue(seed1, seed2);
 
             List<Vector2> retval = new List<Vector2>();
 
@@ -120,14 +120,14 @@ namespace JStuff.Generation
                 int x = Mathf.FloorToInt(p.x * colormapWidth);
                 int y = Mathf.FloorToInt(p.y * colormapWidth);
 
-                if (grassOnGrass.Evaluate(colormap[x + y * colormapWidth].g - colormap[x + y * colormapWidth].b) >= RandomGenerator.NormalValue(seed1, seed2) / grassLikelihood)
+                if (grassOnGrass.Evaluate(colormap[x + y * colormapWidth].g - colormap[x + y * colormapWidth].b) >= Generator.NormalValue(seed1, seed2) / grassLikelihood)
                 {
                     retval.Add(p);
                 }
 
-                seed1 = RandomGenerator.NormalValue(seed2, seed3);
-                seed2 = RandomGenerator.NormalValue(seed1, seed3);
-                seed3 = RandomGenerator.NormalValue(seed1, seed2);
+                seed1 = Generator.NormalValue(seed2, seed3);
+                seed2 = Generator.NormalValue(seed1, seed3);
+                seed3 = Generator.NormalValue(seed1, seed2);
             }
 
             return retval;
@@ -172,7 +172,7 @@ namespace JStuff.Generation
                 if (green < foliage[foliageIndex].optimalGreenHeight)
                 {
                     if (green.Remap(foliage[foliageIndex].minGreenHeight, foliage[foliageIndex].optimalGreenHeight, 0, 1) >
-                        RandomGenerator.NormalValue(green, heightmap[0, 0]))
+                        Generator.NormalValue(green, heightmap[0, 0]))
                     {
                         retval.Add(points[i]);
                     }
@@ -180,7 +180,7 @@ namespace JStuff.Generation
                 else
                 {
                     if (green.Remap(foliage[foliageIndex].minGreenHeight, foliage[foliageIndex].optimalGreenHeight, 0, 1) >
-                        RandomGenerator.NormalValue(green, heightmap[0, 0]))
+                        Generator.NormalValue(green, heightmap[0, 0]))
                     {
                         retval.Add(points[i]);
                     }

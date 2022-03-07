@@ -9,7 +9,7 @@ namespace JStuff.Generation
     {
         public int NoiseRandom(int value)
         {
-            return Random.Range(-1, 1) + value;
+            return UnityEngine.Random.Range(-1, 1) + value;
         }
 
         //public enum ParticleDopStrategy

@@ -1,4 +1,4 @@
-﻿using JStuff.Randomness;
+﻿using JStuff.Random;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
@@ -64,19 +64,19 @@ namespace JStuff.Generation
             float distance = (a.v - b.v).magnitude;
 
 
-            r = RandomGenerator.Value(a.r, b.r);
+            r = Generator.Value(a.r, b.r);
             newheight = heightFunction(a, b, r);
             if (newheight < -1) newheight = -1;
             if (newheight > 1) newheight = 1;
             Vertex ab = new Vertex((a.v + b.v) / 2, newheight, r);
 
-            r = RandomGenerator.Value(a.r, c.r);
+            r = Generator.Value(a.r, c.r);
             newheight = heightFunction(a, c, r);
             if (newheight < -1) newheight = -1;
             if (newheight > 1) newheight = 1;
             Vertex ac = new Vertex((a.v + c.v) / 2, newheight, r);
 
-            r = RandomGenerator.Value(b.r, c.r);
+            r = Generator.Value(b.r, c.r);
             newheight = heightFunction(b, c, r);
             if (newheight < -1) newheight = -1;
             if (newheight > 1) newheight = 1;
@@ -117,17 +117,17 @@ namespace JStuff.Generation
             float distance = (a.v - b.v).magnitude;
 
 
-            r = RandomGenerator.Value(a.r, b.r) - 0.05f;
+            r = Generator.Value(a.r, b.r) - 0.05f;
             newheight = Interpolation.ValueInterpolation((a.h + b.h) / 2, r, distance, funcd);
             newheight = Interpolation.ValueInterpolation(newheight, r, Mathf.Abs(a.h - b.h), funch);
             Vertex ab = new Vertex((a.v + b.v) / 2, newheight, r);
 
-            r = RandomGenerator.Value(a.r, c.r) - 0.05f;
+            r = Generator.Value(a.r, c.r) - 0.05f;
             newheight = Interpolation.ValueInterpolation((a.h + c.h) / 2, r, distance, funcd);
             newheight = Interpolation.ValueInterpolation(newheight, r, Mathf.Abs(a.h - c.h), funch);
             Vertex ac = new Vertex((a.v + c.v) / 2, newheight, r);
 
-            r = RandomGenerator.Value(b.r, c.r) - 0.05f;
+            r = Generator.Value(b.r, c.r) - 0.05f;
             newheight = Interpolation.ValueInterpolation((b.h + c.h) / 2, r, distance, funcd);
             newheight = Interpolation.ValueInterpolation(newheight, r, Mathf.Abs(b.h - c.h), funch);
             Vertex bc = new Vertex((b.v + c.v) / 2, newheight, r);
@@ -167,19 +167,19 @@ namespace JStuff.Generation
             float distance = (a.v - b.v).magnitude;
 
 
-            r = RandomGenerator.Value(a.r, b.r);
+            r = Generator.Value(a.r, b.r);
             newheight = (a.h + b.h) / 2 + r * (distance * distVar + Mathf.Abs(a.h - b.h) * heightVar);
             if (newheight < -1) newheight = -1;
             if (newheight > 1) newheight = 1;
             Vertex ab = new Vertex((a.v + b.v) / 2, newheight, r);
 
-            r = RandomGenerator.Value(a.r, c.r);
+            r = Generator.Value(a.r, c.r);
             newheight = (a.h + c.h) / 2 + r * (distance * distVar + Mathf.Abs(a.h - c.h) * heightVar);
             if (newheight < -1) newheight = -1;
             if (newheight > 1) newheight = 1;
             Vertex ac = new Vertex((a.v + c.v) / 2, newheight, r);
 
-            r = RandomGenerator.Value(b.r, c.r);
+            r = Generator.Value(b.r, c.r);
             newheight = (b.h + c.h) / 2 + r * (distance * distVar + Mathf.Abs(b.h - c.h) * heightVar);
             if (newheight < -1) newheight = -1;
             if (newheight > 1) newheight = 1;
@@ -217,11 +217,11 @@ namespace JStuff.Generation
                 return (a.h + b.h + c.h) / 3;
             }
 
-            float r = RandomGenerator.Value(a.r, b.r);
+            float r = Generator.Value(a.r, b.r);
             Vertex ab_v = new Vertex((a.v + b.v) / 2, (a.h + b.h) / 2 + r * (a.v - b.v).magnitude * heightVar, r);
-            r = RandomGenerator.Value(a.r, c.r);
+            r = Generator.Value(a.r, c.r);
             Vertex ac_v = new Vertex((a.v + c.v) / 2, (a.h + c.h) / 2 + r * (a.v - b.v).magnitude * heightVar, r);
-            r = RandomGenerator.Value(b.r, c.r);
+            r = Generator.Value(b.r, c.r);
             Vertex bc_v = new Vertex((b.v + c.v) / 2, (b.h + c.h) / 2 + r * (a.v - b.v).magnitude * heightVar, r);
 
             // River flow up or down

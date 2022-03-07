@@ -3,8 +3,11 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UIElements.Experimental;
 
-public enum Direction
+namespace JStuff.GraphCreator
 {
-    Input,
-    Output
+    public enum Direction
+    {
+        Input,
+        Output
+    }
 }

@@ -6,7 +6,7 @@ namespace JStuff.TwoD.Platformer
 {
     public static class ColliderController
     {
-        private static bool HasColliderFlag(Collider2D collier, string f)
+        private static bool HasColliderFlag(Collider2D collier, int f)
         {
             GameObject go = collier.gameObject;
             CustomFlags co = go.GetComponent<CustomFlags>();
@@ -16,95 +16,29 @@ namespace JStuff.TwoD.Platformer
                 return false;
             }
 
-            return co.HasFlag(f);
+            return ((f & co.Flags) != 0);
         }
 
-        public static Collider2D[] OverlapBoxAllWithFlag(Vector2 point, Vector2 size, string flag)
+        public static Collider2D[] OverlapBoxAllWithFlags(Vector2 point, Vector2 size, int flags)
         {
             Collider2D[] hits = Physics2D.OverlapBoxAll(point, size, 0);
             List<Collider2D> filter = new List<Collider2D>();
             foreach (Collider2D hit in hits)
             {
-                if (HasColliderFlag(hit, flag))
+                if (HasColliderFlag(hit, flags))
                     filter.Add(hit);
             }
             return filter.ToArray();
         }
-        public static Collider2D[] OverlapBoxAllWithFlags(Vector2 point, Vector2 size, List<string> flags)
+
+        public static int GetFlags(List<ColliderFlag> colliderFlags)
         {
-            Collider2D[] hits = Physics2D.OverlapBoxAll(point, size, 0);
-            List<Collider2D> filter = new List<Collider2D>();
-            foreach (Collider2D hit in hits)
+            int retval = 0;
+            foreach (ColliderFlag item in colliderFlags)
             {
-                foreach (string s in flags)
-                {
-                    if (HasColliderFlag(hit, s))
-                        filter.Add(hit);
-                }
+                retval = retval | 0b1 << item.uniqueIndex;
             }
-            return filter.ToArray();
+            return retval;
         }
     }
-
-
-
-
-    /*
-     * 
-     * 
-     * 
-    public class ColliderController : MonoBehaviour
-    {
-        [SerializeField]
-        public ColliderFlags flags;
-
-        public enum Flag
-        {
-            Solid, Flower, Body, Unit, Player, Enemy, Projectile, Platform, Flammable
-        }
-
-        private static bool HasColliderFlag(Collider2D collier, Flag f)
-        {
-            GameObject go = collier.gameObject;
-            ColliderController co = go.GetComponent<ColliderController>();
-
-            if (co == null || co.flags == null)
-                return false;//throw new System.Exception("GameObject of collider doesn't have ColliderController!");
-
-            switch (f)
-            {
-                case Flag.Solid:
-                    return co.flags.Solid;
-                    break;
-                case Flag.Player:
-                    return co.flags.Player;
-                    break;
-                case Flag.Flower:
-                    return co.flags.Flower;
-                    break;
-                case Flag.Unit:
-                    return co.flags.Unit;
-                case Flag.Platform:
-                    return co.flags.Platform;
-                case Flag.Enemy:
-                    return co.flags.Enemy;
-                case Flag.Flammable:
-                    return co.flags.Flammable;
-                default:
-                    throw new System.Exception("Flag not implemented: " + f.ToString());
-            }
-        }
-
-        public static Collider2D[] OverlapBoxAllWithFlag(Vector2 point, Vector2 size, Flag flag)
-        {
-            Collider2D[] hits = Physics2D.OverlapBoxAll(point, size, 0);
-            List<Collider2D> filter = new List<Collider2D>();
-            foreach (Collider2D hit in hits){
-                if (HasColliderFlag(hit, flag))
-                    filter.Add(hit);
-            }
-            return filter.ToArray();
-        }
-    }
-     */
 }

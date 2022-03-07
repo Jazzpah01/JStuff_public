@@ -9,15 +9,15 @@ using System.Linq;
 using JStuff.GraphCreator;
 using Node = JStuff.GraphCreator.Node;
 
-public class SimpleGraphView : GraphView
+public class GraphView : UnityEditor.Experimental.GraphView.GraphView
 {
-    public new class UxmlFactory : UxmlFactory<SimpleGraphView, UxmlTraits> { }
+    public new class UxmlFactory : UxmlFactory<GraphView, UxmlTraits> { }
 
     public Graph graph;
 
-    public Action<SimpleNodeView> OnNodeSelected;
+    public Action<NodeView> OnNodeSelected;
 
-    public SimpleGraphView()
+    public GraphView()
     {
         Insert(0, new GridBackground());
 
@@ -126,9 +126,9 @@ public class SimpleGraphView : GraphView
         }
     }
 
-    SimpleNodeView FindNodeView(Node node)
+    NodeView FindNodeView(Node node)
     {
-        return GetNodeByGuid(node.guid) as SimpleNodeView;
+        return GetNodeByGuid(node.guid) as NodeView;
     }
 
     private GraphViewChange OnGraphViewChanged(GraphViewChange graphViewChange)
@@ -137,7 +137,7 @@ public class SimpleGraphView : GraphView
         {
             foreach (GraphElement element in graphViewChange.elementsToRemove)
             {
-                SimpleNodeView view = element as SimpleNodeView;
+                NodeView view = element as NodeView;
                 if (view != null)
                 {
                     graph.DeleteNode(view.node);
@@ -146,8 +146,8 @@ public class SimpleGraphView : GraphView
                 Edge edge = element as Edge;
                 if (edge != null)
                 {
-                    SimpleNodeView inputNode = (SimpleNodeView)edge.input.node;
-                    SimpleNodeView outputNode = (SimpleNodeView)edge.output.node;
+                    NodeView inputNode = (NodeView)edge.input.node;
+                    NodeView outputNode = (NodeView)edge.output.node;
 
                     //aview.portData.Forward[edge.input].linked = null;
                     inputNode.portData.Forward[edge.input].UnLink(outputNode.portData.Forward[edge.output]);
@@ -159,8 +159,8 @@ public class SimpleGraphView : GraphView
         {
             foreach (Edge e in graphViewChange.edgesToCreate)
             {
-                SimpleNodeView inputView = (SimpleNodeView)e.input.node;
-                SimpleNodeView outputView = (SimpleNodeView)e.output.node;
+                NodeView inputView = (NodeView)e.input.node;
+                NodeView outputView = (NodeView)e.output.node;
 
                 PortView inputPortView = inputView.GetPortView(e.input);
 
@@ -197,7 +197,7 @@ public class SimpleGraphView : GraphView
 
     void CreateNodeView(Node node)
     {
-        SimpleNodeView nodeView = new SimpleNodeView(node, this);
+        NodeView nodeView = new NodeView(node, this);
         nodeView.OnNodeSelected = OnNodeSelected;
         AddElement(nodeView);
     }

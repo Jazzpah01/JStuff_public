@@ -2,10 +2,13 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
-public interface IInvalid
+namespace JStuff.GraphCreator
 {
-    public bool Valid
+    public interface IInvalid
     {
-        get; set;
+        public bool Valid
+        {
+            get; set;
+        }
     }
 }

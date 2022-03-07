@@ -6,7 +6,7 @@ using System.Diagnostics;
 using Debug = UnityEngine.Debug;
 using UnityEngine.Profiling;
 using JStuff.Threading;
-using JStuff.Randomness;
+using JStuff.Random;
 using JStuff.AI.Pathfinding;
 
 namespace JStuff.Generation
@@ -110,7 +110,7 @@ namespace JStuff.Generation
                 GridGraph G = new GridGraph();
 
                 G.Construct<float>(h.GetSlopeMap(),
-                    (a, b) => Mathf.Abs(a - b) * Mathf.Abs(a - b) * Mathf.Abs(a - b) * roadSlopeMultiplyer + roadBaseWeight + RandomGenerator.NormalValue(Mathf.Abs(a), Mathf.Abs(b)) * roadRandom,
+                    (a, b) => Mathf.Abs(a - b) * Mathf.Abs(a - b) * Mathf.Abs(a - b) * roadSlopeMultiplyer + roadBaseWeight + Generator.NormalValue(Mathf.Abs(a), Mathf.Abs(b)) * roadRandom,
                     (a, b) => true,//(Mathf.Abs(a - b) < roadMaxSlope && a > roadMinHeight && b > roadMinHeight),
                     false,
                     Vector2.zero,

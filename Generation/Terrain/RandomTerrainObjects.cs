@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using UnityEngine;
 using JStuff.GraphCreator;
 using JStuff.Generation;
-using JStuff.Randomness;
+using JStuff.Random;
 
 namespace JStuff.Generation.Terrain
 {
@@ -37,7 +37,7 @@ namespace JStuff.Generation.Terrain
             {
                 float scale = sizeInput.Evaluate() / hm.Length;
 
-                int index = (int)Mathf.Clamp(RandomGenerator.NormalValue(1.0f / seedInput.Evaluate(), 0.512623f) * prefabs.Count, 0, prefabs.Count);
+                int index = (int)Mathf.Clamp(Generator.NormalValue(1.0f / seedInput.Evaluate(), 0.512623f) * prefabs.Count, 0, prefabs.Count);
                 retval.Add(new TerrainObject(prefabs[index], new Vector3(v.x, hm[(int)(v.x * scale), (int)(v.y * scale)], v.y)));
             }
 
