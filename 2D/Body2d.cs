@@ -98,7 +98,6 @@ namespace JStuff.TwoD.Platformer
                     velocity.y = data.verticalBounce * -velocity.y;
                     if (data.gravityAcceleration < 0)
                         activeJackalFrames = data.jackalFrames;
-                    Debug.Log("BOUNCE");
                 }
             }
         }
