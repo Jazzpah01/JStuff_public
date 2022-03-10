@@ -6,7 +6,7 @@ using UnityEngine;
 
 namespace JStuff.Generation.Terrain
 {
-    public class GrayScale : Node
+    public class GrayScale : GenerateColormap
     {
         InputLink<MeshData> inputMeshData;
         OutputLink<Color[]> colormapOutput;

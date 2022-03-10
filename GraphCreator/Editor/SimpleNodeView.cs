@@ -12,16 +12,16 @@ using Node = JStuff.GraphCreator.Node;
 using Direction = JStuff.GraphCreator.Direction;
 
 [Serializable]
-public class NodeView : gvNode, INodeView
+public class SimpleNodeView : gvNode, INodeView
 {
     public Node node;
     public List<Port> ports = new List<Port>();
     public Map<Port, PortView> portData = new Map<Port, PortView>();
-    public GraphView graphView;
+    public SimpleGraphView graphView;
 
-    public Action<NodeView> OnNodeSelected;
+    public Action<SimpleNodeView> OnNodeSelected;
 
-    public NodeView(Node node, GraphView parent)
+    public SimpleNodeView(Node node, SimpleGraphView parent)
     {
         this.node = node;
         title = node.name;

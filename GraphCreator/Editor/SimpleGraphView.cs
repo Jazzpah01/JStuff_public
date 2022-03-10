@@ -9,15 +9,15 @@ using System.Linq;
 using JStuff.GraphCreator;
 using Node = JStuff.GraphCreator.Node;
 
-public class GraphView : UnityEditor.Experimental.GraphView.GraphView
+public class SimpleGraphView : UnityEditor.Experimental.GraphView.GraphView
 {
-    public new class UxmlFactory : UxmlFactory<GraphView, UxmlTraits> { }
+    public new class UxmlFactory : UxmlFactory<SimpleGraphView, UxmlTraits> { }
 
     public Graph graph;
 
-    public Action<NodeView> OnNodeSelected;
+    public Action<SimpleNodeView> OnNodeSelected;
 
-    public GraphView()
+    public SimpleGraphView()
     {
         Insert(0, new GridBackground());
 
@@ -40,16 +40,6 @@ public class GraphView : UnityEditor.Experimental.GraphView.GraphView
 
         evt.menu.AppendAction("ReloadGraph", delegate { graph.ResetPorts(); PopulateView(graph); OnNodeSelected(FindNodeView(graph.rootNode)); });
 
-        for (int i = 0; i < graph.numberOfProperties; i++)
-        {
-            string propertyName = graph.propertyNames[i];
-            int index = i;
-
-            Debug.Log(index);
-
-            evt.menu.AppendAction($"[Property] {propertyName}", (a) => CreatePropertyNode(index));
-        }
-
         foreach (Type type in graph.NodeTypes)
         {
             AddMenuType(evt, type);
@@ -61,13 +51,32 @@ public class GraphView : UnityEditor.Experimental.GraphView.GraphView
         var types = TypeCache.GetTypesDerivedFrom(t);
         Vector2 localMousePos = evt.localMousePosition;
         Vector2 actualGraphPosition = viewTransform.matrix.inverse.MultiplyPoint(localMousePos);
-        foreach (var type in types)
+        GetNodePath(evt, t, actualGraphPosition);
+        //foreach (var type in types)
+        //{
+        //    evt.menu.AppendAction($"{type.BaseType.Name} / {type.Name}", (a) => CreateNode(type, actualGraphPosition));
+        //}
+        //if (!t.IsAbstract)
+        //{
+        //    evt.menu.AppendAction($"[{t.BaseType.Name}] {t.Name}", (a) => CreateNode(t, actualGraphPosition));
+        //}
+    }
+
+    private void GetNodePath(ContextualMenuPopulateEvent evt, Type type, Vector2 pos, string path = "")
+    {
+        if (!type.IsAbstract)
         {
-            evt.menu.AppendAction($"[{type.BaseType.Name}] {type.Name}", (a) => CreateNode(type, actualGraphPosition));
-        }
-        if (!t.IsAbstract)
+            evt.menu.AppendAction($"{path}{type.Name}", (a) => CreateNode(type, pos));
+        } else
         {
-            evt.menu.AppendAction($"[{t.BaseType.Name}] {t.Name}", (a) => CreateNode(t, actualGraphPosition));
+            var types = TypeCache.GetTypesDerivedFrom(type);
+            foreach (var t in types)
+            {
+                if (t.BaseType == type)
+                {
+                    GetNodePath(evt, t, pos, $"{path}{type.Name}/");
+                }
+            }
         }
     }
 
@@ -126,9 +135,9 @@ public class GraphView : UnityEditor.Experimental.GraphView.GraphView
         }
     }
 
-    NodeView FindNodeView(Node node)
+    SimpleNodeView FindNodeView(Node node)
     {
-        return GetNodeByGuid(node.guid) as NodeView;
+        return GetNodeByGuid(node.guid) as SimpleNodeView;
     }
 
     private GraphViewChange OnGraphViewChanged(GraphViewChange graphViewChange)
@@ -137,7 +146,7 @@ public class GraphView : UnityEditor.Experimental.GraphView.GraphView
         {
             foreach (GraphElement element in graphViewChange.elementsToRemove)
             {
-                NodeView view = element as NodeView;
+                SimpleNodeView view = element as SimpleNodeView;
                 if (view != null)
                 {
                     graph.DeleteNode(view.node);
@@ -146,8 +155,8 @@ public class GraphView : UnityEditor.Experimental.GraphView.GraphView
                 Edge edge = element as Edge;
                 if (edge != null)
                 {
-                    NodeView inputNode = (NodeView)edge.input.node;
-                    NodeView outputNode = (NodeView)edge.output.node;
+                    SimpleNodeView inputNode = (SimpleNodeView)edge.input.node;
+                    SimpleNodeView outputNode = (SimpleNodeView)edge.output.node;
 
                     //aview.portData.Forward[edge.input].linked = null;
                     inputNode.portData.Forward[edge.input].UnLink(outputNode.portData.Forward[edge.output]);
@@ -159,8 +168,8 @@ public class GraphView : UnityEditor.Experimental.GraphView.GraphView
         {
             foreach (Edge e in graphViewChange.edgesToCreate)
             {
-                NodeView inputView = (NodeView)e.input.node;
-                NodeView outputView = (NodeView)e.output.node;
+                SimpleNodeView inputView = (SimpleNodeView)e.input.node;
+                SimpleNodeView outputView = (SimpleNodeView)e.output.node;
 
                 PortView inputPortView = inputView.GetPortView(e.input);
 
@@ -197,7 +206,7 @@ public class GraphView : UnityEditor.Experimental.GraphView.GraphView
 
     void CreateNodeView(Node node)
     {
-        NodeView nodeView = new NodeView(node, this);
+        SimpleNodeView nodeView = new SimpleNodeView(node, this);
         nodeView.OnNodeSelected = OnNodeSelected;
         AddElement(nodeView);
     }

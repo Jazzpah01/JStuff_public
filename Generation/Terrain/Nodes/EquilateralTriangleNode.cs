@@ -6,7 +6,7 @@ using JStuff.Generation;
 
 namespace JStuff.Generation.Terrain
 {
-    public class EquilateralTriangleNode : Node
+    public class EquilateralTriangleNode : GenerateHeightMap
     {
         public int size = 65;
         public int depth = 9;
@@ -26,7 +26,7 @@ namespace JStuff.Generation.Terrain
         protected override void SetupPorts()
         {
             seedInput = AddInputLink<int>();
-            offset = AddInputLink<Vector2>();
+            offset = AddInputLink<Vector2>("Vector2");
             output = AddOutputLink(GenerateHeightMap, UnityEditor.Experimental.GraphView.Port.Capacity.Multi);
         }
 

@@ -6,7 +6,7 @@ using JStuff.Generation;
 
 namespace JStuff.Generation.Terrain
 {
-    public class CreateMesh : Node
+    public class StandardMesh : GenerateMesh
     {
         InputLink<HeightMap> hmInput;
         InputLink<float> meshSizeInput;

@@ -4,7 +4,7 @@ using UnityEngine;
 
 namespace JStuff.GraphCreator
 {
-    public class MultiplyNode : SingleMath
+    public class DivideNode : SingleMath
     {
         InputLink<float> v1;
         InputLink<float> v2;

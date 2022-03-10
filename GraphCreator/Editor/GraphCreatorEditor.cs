@@ -7,7 +7,7 @@ using JStuff.GraphCreator;
 
 public class GraphCreatorEditor : EditorWindow
 {
-    GraphView graphView;
+    SimpleGraphView graphView;
     InspectorView inspectorView;
 
     [OnOpenAsset(1)]
@@ -45,7 +45,7 @@ public class GraphCreatorEditor : EditorWindow
         var styleSheet = AssetDatabase.LoadAssetAtPath<StyleSheet>("Assets/JStuff_public/GraphCreator/Editor/SimpleGraphEditor.uss");
         root.styleSheets.Add(styleSheet);
 
-        graphView = root.Q<GraphView>();
+        graphView = root.Q<SimpleGraphView>();
         inspectorView = root.Q<InspectorView>();
         graphView.OnNodeSelected = OnNodeSelectionChanged;
 
@@ -61,7 +61,7 @@ public class GraphCreatorEditor : EditorWindow
         }
     }
 
-    void OnNodeSelectionChanged(NodeView nodeView)
+    void OnNodeSelectionChanged(SimpleNodeView nodeView)
     {
         if (nodeView == null)
             return;

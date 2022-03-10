@@ -79,15 +79,9 @@ namespace JStuff.Generation.Terrain
             get
             {
                 List<Type> types = new List<Type>();
-                types.Add(typeof(EquilateralTriangleNode));
-                types.Add(typeof(CreateMesh));
-                types.Add(typeof(CreateColormap));
-                types.Add(typeof(SlopeColormap));
                 types.Add(typeof(CommonNode));
-                types.Add(typeof(VectorDivNode));
-                types.Add(typeof(GrayScale));
-                types.Add(typeof(RandomTerrainObjects));
-                types.Add(typeof(Uniform2DPoints));
+                types.Add(typeof(MathNode));
+                types.Add(typeof(Generation));
                 return types;
             }
         }

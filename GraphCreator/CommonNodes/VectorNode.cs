@@ -13,7 +13,7 @@ namespace JStuff.GraphCreator
 
         protected override void SetupPorts()
         {
-            link = AddOutputLink<Vector2>(Evaluate);
+            link = AddOutputLink<Vector2>(Evaluate, portName: "Vector2");
         }
 
         private Vector2 Evaluate()

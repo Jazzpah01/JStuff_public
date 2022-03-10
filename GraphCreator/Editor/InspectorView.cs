@@ -15,7 +15,7 @@ public class InspectorView : VisualElement
 
     }
 
-    internal void UpdateSelection(NodeView nodeView)
+    internal void UpdateSelection(SimpleNodeView nodeView)
     {
         Clear();
 

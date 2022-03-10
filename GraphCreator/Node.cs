@@ -27,6 +27,8 @@ namespace JStuff.GraphCreator
 
         public int Length => Mathf.Max(links.Count, portViews.Count);
 
+        public virtual string path => this.GetType().Name;
+
         // Can use node.outputContainer/inputContainer for ports
         // Can use node.titleContainer for node
         public virtual void OnGUIStart(INodeView nodeView)
@@ -299,6 +301,27 @@ namespace JStuff.GraphCreator
             return null;
         }
 
+        protected Link AddPropertyInputLink(string propertyName)
+        {
+            Direction direction = graph.InputPortDirection == Direction.Input ? Direction.Output : Direction.Input;
+            PortView portView;
+
+            switch (currentStrategy)
+            {
+                case InitPortStrategy.StringGeneration:
+                    AddLinkSignature("PropertyInputLink<" + graph.GetPropertyType(propertyName) + ">");
+                    break;
+                case InitPortStrategy.LinkGeneration:
+                    Link link = graph.GetProperty(propertyName);
+                    links.Add(link);
+                    return link;
+                default:
+                    break;
+
+            }
+            return null;
+        }
+
         public void AddLinkSignature(Type type)
         {
             if (currentStrategy != InitPortStrategy.StringGeneration)
@@ -324,7 +347,7 @@ namespace JStuff.GraphCreator
 
         private void AddPortView(PortView portView, string type, Port.Capacity capacity, Direction direction, string portName)
         {
-            portView.Init(this, graph.Orientation, direction, capacity, type, portViews.Count);
+            portView.Init(this, graph.Orientation, direction, capacity, type, portViews.Count, portName);
             portView.Valid = true;
             if (!Application.isPlaying)
             {

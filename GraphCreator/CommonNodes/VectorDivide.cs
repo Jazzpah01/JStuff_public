@@ -3,9 +3,9 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
-namespace JStuff.Generation.Terrain
+namespace JStuff.GraphCreator
 {
-    public class VectorDivNode : Node
+    public class VectorDivide : VectorMath
     {
         InputLink<Vector2> vector;
         InputLink<float> devisor;
@@ -13,9 +13,9 @@ namespace JStuff.Generation.Terrain
 
         protected override void SetupPorts()
         {
-            vector = AddInputLink<Vector2>();
+            vector = AddInputLink<Vector2>(portName: "Vector2");
             devisor = AddInputLink<float>();
-            output = AddOutputLink(Evaluate);
+            output = AddOutputLink(Evaluate, portName: "Vector2");
         }
 
         public Vector2 Evaluate()

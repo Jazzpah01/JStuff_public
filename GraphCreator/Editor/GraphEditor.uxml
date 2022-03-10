@@ -1,0 +1,10 @@
+<ui:UXML xmlns:ui="UnityEngine.UIElements" xmlns:uie="UnityEditor.UIElements" xsi="http://www.w3.org/2001/XMLSchema-instance" engine="UnityEngine.UIElements" editor="UnityEditor.UIElements" noNamespaceSchemaLocation="../../../UIElementsSchema/UIElements.xsd" editor-extension-mode="True">
+    <SplitView fixed-pane-initial-dimension="700">
+        <SimpleGraphView focusable="true" style="flex-grow: 1; width: auto; height: auto;">
+            <ui:Label text="Graph View&#10;" display-tooltip-when-elided="true" enable-rich-text="false" style="background-color: rgb(34, 34, 34); -unity-background-image-tint-color: rgb(255, 255, 255); font-size: 15px; color: rgb(196, 196, 196); width: auto;" />
+        </SimpleGraphView>
+        <InspectorView focusable="false" style="width: auto; opacity: 1;">
+            <ui:Label text="Inspector" display-tooltip-when-elided="true" enable-rich-text="false" style="background-color: rgb(34, 34, 34); height: 16px; flex-shrink: 0; flex-grow: 0; font-size: 15px;" />
+        </InspectorView>
+    </SplitView>
+</ui:UXML>

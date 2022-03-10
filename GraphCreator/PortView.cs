@@ -44,6 +44,9 @@ namespace JStuff.GraphCreator
                 Type t = Type.GetType(portType);
                 if (t!= null)
                     this.portName = Type.GetType(portType).Name;
+            } else
+            {
+                this.portName = portName;
             }
                 
             AssetDatabase.SaveAssets();

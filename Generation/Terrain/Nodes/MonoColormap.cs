@@ -5,7 +5,7 @@ using UnityEngine;
 
 namespace JStuff.Generation.Terrain
 {
-    public class CreateColormap : Node
+    public class MonoColormap : GenerateColormap
     {
         public Color color;
 
@@ -33,7 +33,7 @@ namespace JStuff.Generation.Terrain
 
         public override Node Clone()
         {
-            CreateColormap retval = base.Clone() as CreateColormap;
+            MonoColormap retval = base.Clone() as MonoColormap;
             retval.color = color;
             return retval;
         }

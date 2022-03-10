@@ -7,7 +7,7 @@ using JStuff.Random;
 
 namespace JStuff.Generation.Terrain
 {
-    public class Uniform2DPoints : Node
+    public class Uniform2DPoints : GeneratePoints
     {
         InputLink<int> seedInput;
         InputLink<float> radiusInput;
