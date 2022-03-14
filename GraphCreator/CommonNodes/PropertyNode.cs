@@ -55,10 +55,9 @@ namespace JStuff.GraphCreator
         {
             propertyName = value;
             graph.UpdateNodes();
-            Debug.Log("Updated!");
         }
 
-        public override void Initialize()
+        protected override void SetupNode()
         {
             if (graph.uniqueContext.Length > 0)
             {
@@ -72,10 +71,10 @@ namespace JStuff.GraphCreator
 
         public override Node Clone()
         {
-            PropertyNode retval = CreateInstance(this.GetType()) as PropertyNode;
+            PropertyNode retval = base.Clone() as PropertyNode;
             retval.propertyName = propertyName;
             retval.typeName = typeName;
-            retval.initialized = true;
+            retval.isSetup = true;
             return retval;
         }
     }

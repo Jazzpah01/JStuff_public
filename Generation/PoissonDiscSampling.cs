@@ -21,7 +21,8 @@ namespace JStuff.Generation
             spawnPoints.Add(sampleRegionSize / 2);
             while (spawnPoints.Count > 0)
             {
-                int spawnIndex = (int)(Generator.NormalValue(seed0, seed1) * spawnPoints.Count).Clamp(0, spawnPoints.Count-1);
+                int spawnIndex = (int)(Generator.NormalValue(seed0, seed1) * spawnPoints.Count);
+                spawnIndex = spawnIndex.Clamp(0, spawnPoints.Count);
                 Vector2 spawnCentre = spawnPoints[spawnIndex];
                 bool candidateAccepted = false;
 

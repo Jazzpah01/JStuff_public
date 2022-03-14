@@ -16,7 +16,7 @@ namespace JStuff.Collections
         public bool randomizeColour;
 
         [SerializeField]
-        List<ColourKey> keys = new List<ColourKey>();
+        public List<ColourKey> keys = new List<ColourKey>();
 
         public CustomGradient()
         {
@@ -144,5 +144,23 @@ namespace JStuff.Collections
             }
         }
 
+        public CustomGradient Clone()
+        {
+            CustomGradient retval = new CustomGradient();
+
+            retval.AddKey(Color.black, 1);
+            retval.RemoveKey(0);
+            retval.RemoveKey(0);
+
+            for (int i = 0; i < keys.Count; i++)
+            {
+                retval.AddKey(keys[i].Colour, keys[i].Time);
+            }
+
+            retval.RemoveKey(retval.keys.Count - 1);
+            retval.blendMode = blendMode;
+
+            return retval;
+        }
     }
 }

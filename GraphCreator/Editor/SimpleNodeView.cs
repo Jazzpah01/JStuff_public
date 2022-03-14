@@ -91,6 +91,10 @@ public class SimpleNodeView : gvNode, INodeView
     public override void OnUnselected()
     {
         base.OnUnselected();
+        if (OnNodeSelected != null)
+        {
+            OnNodeSelected.Invoke(null);
+        }
         node.OnGUIUnselected(this);
     }
 

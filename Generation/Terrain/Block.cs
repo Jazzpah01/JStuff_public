@@ -16,9 +16,11 @@ namespace JStuff.Generation.Terrain
 
         BlockData currentData;
 
-        Vector3 targetPosition;
+        public Vector3 targetPosition;
 
         public bool waitingJobResult = false;
+
+        public List<GameObject> terrainObjects = new List<GameObject>();
 
         private void Start()
         {
@@ -32,11 +34,7 @@ namespace JStuff.Generation.Terrain
             this.material = material;
 
             this.graph = graph;
-            graph.SetupGraph();
-            graph.ChunkSize = worldTerrain.chunkSize;
-            graph.Scale = worldTerrain.scale;
-            graph.Seed = worldTerrain.seed;
-            graph.Zoom = worldTerrain.zoom;
+            graph.InitializeGraph();
 
             terrain = worldTerrain;
         }
@@ -61,10 +59,8 @@ namespace JStuff.Generation.Terrain
 
         public void UpdateBlock(Vector3 centerPosition, Vector3 newPosition)
         {
-            Debug.Log("Position: " + newPosition);
             graph.CenterPosition = new Vector2(centerPosition.x, centerPosition.z);
             graph.ChunkPosition = new Vector2(newPosition.x, newPosition.z);
-            Debug.Log("Calculating!");
             targetPosition = newPosition;
             waitingJobResult = true;
 
@@ -90,7 +86,22 @@ namespace JStuff.Generation.Terrain
 
             meshFilter.sharedMesh = mesh;
 
-            Debug.Log(currentData.meshRendererData.vertices.Length);
+            if (currentData.terrainObjects != null)
+            {
+                foreach (GameObject go in terrainObjects)
+                {
+                    Destroy(go);
+                }
+                terrainObjects.Clear();
+
+                foreach (TerrainObject obj in currentData.terrainObjects)
+                {
+                    GameObject nobj = Instantiate(obj.prefab);
+                    nobj.transform.position = obj.position + targetPosition;
+                    nobj.transform.rotation = obj.rotation;
+                    terrainObjects.Add(nobj);
+                }
+            }
         }
 
         public void SetPosition(Vector3 position)

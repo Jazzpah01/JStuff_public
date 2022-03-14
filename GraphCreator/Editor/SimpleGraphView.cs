@@ -17,6 +17,8 @@ public class SimpleGraphView : UnityEditor.Experimental.GraphView.GraphView
 
     public Action<SimpleNodeView> OnNodeSelected;
 
+    SimpleNodeView selectedNode;
+
     public SimpleGraphView()
     {
         Insert(0, new GridBackground());
@@ -38,7 +40,13 @@ public class SimpleGraphView : UnityEditor.Experimental.GraphView.GraphView
             return;
         }
 
-        evt.menu.AppendAction("ReloadGraph", delegate { graph.ResetPorts(); PopulateView(graph); OnNodeSelected(FindNodeView(graph.rootNode)); });
+        evt.menu.AppendAction("Reload Graph", delegate { graph.ResetPorts(); PopulateView(graph); OnNodeSelected(FindNodeView(graph.rootNode)); });
+
+        if (selectedNode != null)
+        {
+            Node node = selectedNode.node;
+            evt.menu.AppendAction("Dublicate Node", delegate { DublicateNode(node); OnNodeSelected(FindNodeView(node)); });
+        }
 
         foreach (Type type in graph.NodeTypes)
         {
@@ -52,14 +60,6 @@ public class SimpleGraphView : UnityEditor.Experimental.GraphView.GraphView
         Vector2 localMousePos = evt.localMousePosition;
         Vector2 actualGraphPosition = viewTransform.matrix.inverse.MultiplyPoint(localMousePos);
         GetNodePath(evt, t, actualGraphPosition);
-        //foreach (var type in types)
-        //{
-        //    evt.menu.AppendAction($"{type.BaseType.Name} / {type.Name}", (a) => CreateNode(type, actualGraphPosition));
-        //}
-        //if (!t.IsAbstract)
-        //{
-        //    evt.menu.AppendAction($"[{t.BaseType.Name}] {t.Name}", (a) => CreateNode(t, actualGraphPosition));
-        //}
     }
 
     private void GetNodePath(ContextualMenuPopulateEvent evt, Type type, Vector2 pos, string path = "")
@@ -95,6 +95,9 @@ public class SimpleGraphView : UnityEditor.Experimental.GraphView.GraphView
         graphViewChanged -= OnGraphViewChanged;
         DeleteElements(graphElements);
         graphViewChanged += OnGraphViewChanged;
+
+        OnNodeSelected -= NodeSelected;
+        OnNodeSelected += NodeSelected;
 
         // Create node view
         graph.UpdateNodes();
@@ -195,16 +198,17 @@ public class SimpleGraphView : UnityEditor.Experimental.GraphView.GraphView
         CreateNodeView(node);
     }
 
-    protected void CreateNode(Type type, Vector2 position = new Vector2())
+    public void CreateNode(Type type, Vector2 position = new Vector2())
     {
         Node node = graph.CreateNode(type);
         if (node == null)
             throw new Exception("Node is null.");
-        node.nodePosition = position;
-        CreateNodeView(node);
+        if (position != Vector2.zero)
+            node.nodePosition = position;
+        CreateNodeView(node, position);
     }
 
-    void CreateNodeView(Node node)
+    public void CreateNodeView(Node node, Vector2 position = new Vector2())
     {
         SimpleNodeView nodeView = new SimpleNodeView(node, this);
         nodeView.OnNodeSelected = OnNodeSelected;
@@ -217,5 +221,18 @@ public class SimpleGraphView : UnityEditor.Experimental.GraphView.GraphView
             return;
 
         graph.SaveAsset();
+    }
+    
+    public void DublicateNode(Node node)
+    {
+        Node nnode = graph.CreateNode(node.Clone());
+        if (nnode == null)
+            throw new Exception("Node is null.");
+        CreateNodeView(nnode, node.nodePosition + Vector2.one * 10);
+    }
+
+    public void NodeSelected(SimpleNodeView nodeView)
+    {
+        selectedNode = nodeView;
     }
 }

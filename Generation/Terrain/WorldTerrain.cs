@@ -31,6 +31,11 @@ namespace JStuff.Generation.Terrain
 
         private void Start()
         {
+            chunkSize = graph.chunkSize;
+            scale = graph.scale;
+            seed = graph.seed;
+            zoom = graph.zoom;
+
             Populate();
         }
 
@@ -51,7 +56,8 @@ namespace JStuff.Generation.Terrain
                 {
                     GameObject go = new GameObject("Chunk" + (i + j * chunkAmount));
                     go.transform.parent = parentChunk.transform;
-                    go.transform.position = centerChunk + new Vector3(i - chunkAmount / 2, 0, j - chunkAmount / 2) * chunkSize;
+                    go.transform.position = centerChunk + new Vector3(i - terrainHalfsize, 0, j - terrainHalfsize) * chunkSize;
+                    //go.transform.position = new Vector3(30 * chunkSize, 0, 30 * chunkSize);
                     Block c = go.AddComponent<Block>();
                     c.Initialize(this, (TerrainGraph)graph.Clone(), material);
                     blocks[i + j * chunkAmount] = c;
@@ -59,15 +65,25 @@ namespace JStuff.Generation.Terrain
             }
 
             UpdateAll(centerChunk);
+            //DynamicUpdate(centerChunk, new Vector3(30 * chunkSize, 0, 30 * chunkSize));
         }
 
         public void UpdateAll(Vector3 newCenterChunk)
         {
-            for (int i = 0; i < Mathf.Sqrt(blocks.Length); i++)
+            //for (int i = 0; i < terrainHalfsize * 2 + 1; i++)
+            //{
+            //    for (int j = 0; j < terrainHalfsize * 2 + 1; j++)
+            //    {
+            //        //newPositions.Enqueue(newCenterChunk + new Vector3(i - Mathf.Sqrt(blocks.Length) / 2, 0, j - Mathf.Sqrt(blocks.Length) / 2) * chunkSize);
+            //        newPositions.Enqueue(newCenterChunk + new Vector3(i - terrainHalfsize, 0, j - terrainHalfsize) * chunkSize);
+            //    }
+            //}
+            for (int i = -terrainHalfsize; i < terrainHalfsize + 1; i++)
             {
-                for (int j = 0; j < Mathf.Sqrt(blocks.Length); j++)
+                for (int j = -terrainHalfsize; j < terrainHalfsize + 1; j++)
                 {
-                    newPositions.Enqueue(newCenterChunk + new Vector3(i - Mathf.Sqrt(blocks.Length) / 2, 0, j - Mathf.Sqrt(blocks.Length) / 2) * chunkSize);
+                    //newPositions.Enqueue(newCenterChunk + new Vector3(i - Mathf.Sqrt(blocks.Length) / 2, 0, j - Mathf.Sqrt(blocks.Length) / 2) * chunkSize);
+                    newPositions.Enqueue(newCenterChunk + new Vector3(i, 0, j) * chunkSize);
                 }
             }
             foreach (Block c in blocks)
@@ -90,8 +106,55 @@ namespace JStuff.Generation.Terrain
 
             if (centerChunk != newCenterChunk)
             {
-                UpdateAll(newCenterChunk);
+                DynamicUpdate(newCenterChunk, centerChunk);
+                centerChunk = newCenterChunk;
             }
+
+        }
+
+        private void DynamicUpdate(Vector3 newCenterChunk, Vector3 oldCenterChunk)
+        {
+            //int x_diff = Mathf.RoundToInt(Mathf.Abs((oldCenterChunk - newCenterChunk).x)/chunkSize);
+            //int y_diff = Mathf.RoundToInt(Mathf.Abs((oldCenterChunk - newCenterChunk).y)/chunkSize);
+
+
+
+            List<Block> blocksToUpdate = new List<Block>();
+            List<Block> blocksToKeep = new List<Block>();
+
+            for (int i = -terrainHalfsize; i < terrainHalfsize + 1; i++)
+            {
+                for (int j = -terrainHalfsize; j < terrainHalfsize + 1; j++)
+                {
+                    Vector3 diffPosition = newCenterChunk + new Vector3(i * chunkSize, 0, j * chunkSize) - oldCenterChunk;
+
+                    (int x, int y) diffPos = ChunkPosition(diffPosition);
+
+                    if (Mathf.Abs(diffPos.x) > terrainHalfsize || Mathf.Abs(diffPos.y) > terrainHalfsize)
+                    {
+                        newPositions.Enqueue(newCenterChunk + new Vector3(i * chunkSize, 0, j * chunkSize));
+                    }
+                }
+            }
+
+            (int x, int y) newPos = ChunkPosition(newCenterChunk);
+
+            foreach (Block b in blocks)
+            {
+                (int x, int y) blockPos = ChunkPosition(b.targetPosition);
+
+                (int x, int y) diffPos = ChunkPosition(new Vector2(Mathf.Abs(b.targetPosition.x - newCenterChunk.x), Mathf.Abs(b.targetPosition.z - newCenterChunk.z)));
+
+                if (diffPos.x > terrainHalfsize || diffPos.y > terrainHalfsize)
+                {
+                    b.UpdateBlock(newCenterChunk, newPositions.Dequeue());
+                } else
+                {
+                    b.UpdateBlock(newCenterChunk, b.targetPosition);
+                }
+            }
+
+            
         }
 
         private void IncrementalUpdate(Vector3 newCenterChunk, Vector3 oldCenterChunk)
@@ -151,6 +214,27 @@ namespace JStuff.Generation.Terrain
             }
 
             centerChunk = newCenterChunk;
+        }
+
+        private (int x, int y) ChunkPosition(Vector2 pos)
+        {
+            int x_ = Mathf.RoundToInt(pos.x / chunkSize);
+            int y_ = Mathf.RoundToInt(pos.y / chunkSize);
+
+            return (x_, y_);
+        }
+
+        private (int x, int y) ChunkPosition(Vector3 pos)
+        {
+            int x_ = Mathf.RoundToInt(pos.x / chunkSize);
+            int y_ = Mathf.RoundToInt(pos.z / chunkSize);
+
+            return (x_, y_);
+        }
+
+        private Vector2 ChunkPosition((int x, int y) pos)
+        {
+            return new Vector2(pos.x * chunkSize, pos.y * chunkSize);
         }
     }
 }

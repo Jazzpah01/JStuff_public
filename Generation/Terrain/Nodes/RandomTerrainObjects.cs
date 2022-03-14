@@ -13,6 +13,7 @@ namespace JStuff.Generation.Terrain
 
         InputLink<int> seedInput;
         InputLink<float> sizeInput;
+        InputLink<float> scaleInput;
         InputLink<HeightMap> heightmapInput;
         InputLink<List<Vector2>> pointsInput;
         OutputLink<List<TerrainObject>> output;
@@ -23,22 +24,29 @@ namespace JStuff.Generation.Terrain
         {
             seedInput = AddInputLink<int>();
             sizeInput = AddInputLink<float>();
+            scaleInput = AddInputLink<float>();
             heightmapInput = AddInputLink<HeightMap>();
-            pointsInput = AddInputLink<List<Vector2>>();
-            output = AddOutputLink(Evaluate);
+            pointsInput = AddInputLink<List<Vector2>>(portName: "List<Vector2>");
+            output = AddOutputLink(Evaluate, portName: "TerrainObjects");
         }
 
         public List<TerrainObject> Evaluate()
         {
             List<TerrainObject> retval = new List<TerrainObject>();
             HeightMap hm = heightmapInput.Evaluate();
+            float s = hm.Length / sizeInput.Evaluate();
+            float scale = scaleInput.Evaluate();
+
+            float nseed0 = 1.0f / seedInput.Evaluate();
+            float nseed1 = Generator.NormalValue(nseed0, 0.512623f);
 
             foreach (Vector2 v in pointsInput.Evaluate())
             {
-                float scale = sizeInput.Evaluate() / hm.Length;
+                nseed0 = Generator.NormalValue(nseed0, nseed1);
+                nseed1 = Generator.NormalValue(nseed0, nseed1);
 
-                int index = (int)Mathf.Clamp(Generator.NormalValue(1.0f / seedInput.Evaluate(), 0.512623f) * prefabs.Count, 0, prefabs.Count);
-                retval.Add(new TerrainObject(prefabs[index], new Vector3(v.x, hm[(int)(v.x * scale), (int)(v.y * scale)], v.y)));
+                int index = (int)Mathf.Clamp(nseed0 * prefabs.Count, 0, prefabs.Count-1);
+                retval.Add(new TerrainObject(prefabs[index], new Vector3(v.x, hm[(int)(v.x * s), (int)(v.y * s)] * scale, v.y)));
             }
 
             return retval;

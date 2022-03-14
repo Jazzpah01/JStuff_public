@@ -9,18 +9,19 @@ namespace JStuff.Generation.Terrain
     {
         public Color color;
 
-        InputLink<int> sizeInput;
+        InputLink<MeshData> meshData;
         OutputLink<Color[]> colormapOutput;
 
         protected override void SetupPorts()
         {
-            sizeInput = AddInputLink<int>();
+            meshData = AddInputLink<MeshData>();
             colormapOutput = AddOutputLink(Evaluate);
         }
 
         Color[] Evaluate()
         {
-            int size = sizeInput.Evaluate();
+            MeshData data = meshData.Evaluate();
+            int size = data.vertices.Length;
             Color[] output = new Color[size];
 
             for (int i = 0; i < size; i++)

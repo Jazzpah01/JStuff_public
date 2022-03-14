@@ -9,6 +9,7 @@ public class GraphCreatorEditor : EditorWindow
 {
     SimpleGraphView graphView;
     InspectorView inspectorView;
+    SimpleNodeView selectedNodeView;
 
     [OnOpenAsset(1)]
     public static bool OnOpenAsset(int instanceID, int line)
@@ -63,9 +64,10 @@ public class GraphCreatorEditor : EditorWindow
 
     void OnNodeSelectionChanged(SimpleNodeView nodeView)
     {
-        if (nodeView == null)
-            return;
+        //if (nodeView == null)
+        //    return;
 
+        selectedNodeView = nodeView;
         inspectorView.UpdateSelection(nodeView);
     }
 }

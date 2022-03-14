@@ -11,7 +11,7 @@ namespace JStuff.GraphCreator
     [Serializable]
     public abstract class Node : ScriptableObject, ISimpleNode, IInvalid
     {
-        [HideInInspector] public bool initialized = false;
+        [HideInInspector] public bool isSetup = false;
 
         [HideInInspector] public Vector2 nodePosition;
         [HideInInspector] public List<Link> links = new List<Link>();
@@ -82,6 +82,7 @@ namespace JStuff.GraphCreator
         }
 
         protected abstract void SetupPorts();
+        protected virtual void SetupNode() { }
         public List<Link> Ports => links;
 
         public bool Valid { get => valid; set => valid = value; }
@@ -100,11 +101,11 @@ namespace JStuff.GraphCreator
 
         public void UpdateNode()
         {
-            if (!initialized)
+            if (!isSetup)
             {
                 portSignature = "";
-                Initialize();
-                initialized = true;
+                SetupNode();
+                isSetup = true;
             }
 
             //// Application.isPlaying, then do that
@@ -144,8 +145,6 @@ namespace JStuff.GraphCreator
             // Application.isPlaying, then do that
             if (Application.isPlaying)
             {
-                Debug.Log("Is playing!!!");
-                Debug.Log(CurrentPortSignature);
                 SetupPorts_Editor(InitPortStrategy.LinkGeneration);
                 return;
             }
@@ -276,7 +275,7 @@ namespace JStuff.GraphCreator
             return null;
         }
 
-        protected Link AddPropertyLink(string propertyName)
+        protected Link AddPropertyLink(string propertyName, bool asOutput = true)
         {
             Direction direction = graph.InputPortDirection == Direction.Input ? Direction.Output : Direction.Input;
             PortView portView;
@@ -287,12 +286,18 @@ namespace JStuff.GraphCreator
                     AddLinkSignature("PropertyLink<" + graph.GetPropertyType(propertyName) + ">");
                     break;
                 case InitPortStrategy.PortViewGeneration:
-                    portView = CreateInstance<PortView>();
-                    AddPortView(portView, graph.GetPropertyType(propertyName), Port.Capacity.Multi, direction, propertyName);
+                    if (asOutput)
+                    {
+                        portView = CreateInstance<PortView>();
+                        AddPortView(portView, graph.GetPropertyType(propertyName), Port.Capacity.Multi, direction, propertyName);
+                    }
                     break;
                 case InitPortStrategy.LinkGeneration:
                     Link link = graph.GetProperty(propertyName);
-                    links.Add(link);
+                    if (asOutput)
+                    {
+                        links.Add(link);
+                    }
                     return link;
                 default:
                     break;

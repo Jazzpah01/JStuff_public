@@ -12,22 +12,39 @@ namespace JStuff.Generation.Terrain
     public class TerrainGraph : Graph
     {
 
-        public float sizeOfChunk = 10;
+        public float chunkSize = 10;
         public int seed = 42;
+        public float zoom = 50;
+        public float scale = 1;
 
-        PropertyPort<Vector2> chunkPosition;
-        PropertyPort<Vector2> centerPosition;
-        PropertyPort<bool> changed;
-        PropertyPort<float> chunkSize;
+        PropertyPort<Vector2> chunkPositionProperty;
+        PropertyPort<Vector2> centerPositionProperty;
+        PropertyPort<float> chunkSizeProperty;
         PropertyPort<int> seedProperty;
-        PropertyPort<float> scale;
-        PropertyPort<float> zoom;
+        PropertyPort<float> scaleProperty;
+        PropertyPort<float> zoomProperty;
 
         public float Zoom
         {
             set
             {
-                zoom.cachedValue = value;
+                if (initialized)
+                {
+                    zoomProperty.cachedValue = value;
+                } else
+                {
+                    zoom = value;
+                }
+            }
+            get
+            {
+                if (initialized)
+                {
+                    return zoomProperty.cachedValue;
+                } else
+                {
+                    return zoom;
+                }
             }
         }
 
@@ -35,7 +52,25 @@ namespace JStuff.Generation.Terrain
         {
             set
             {
-                scale.cachedValue = value;
+                if (initialized)
+                {
+                    scaleProperty.cachedValue = value;
+                }
+                else
+                {
+                    scale = value;
+                }
+            }
+            get
+            {
+                if (initialized)
+                {
+                    return scaleProperty.cachedValue;
+                }
+                else
+                {
+                    return scale;
+                }
             }
         }
 
@@ -43,8 +78,15 @@ namespace JStuff.Generation.Terrain
         {
             set
             {
-                changed.cachedValue = true;
-                chunkPosition.cachedValue = value;
+                if (!initialized)
+                    throw new System.Exception("Cannot set chunk position of uninitialized graph!");
+                chunkPositionProperty.cachedValue = value;
+            }
+            get
+            {
+                if (!initialized)
+                    throw new System.Exception("Cannot get chunk position of uninitialized graph!");
+                return chunkPositionProperty.cachedValue;
             }
         }
 
@@ -52,8 +94,15 @@ namespace JStuff.Generation.Terrain
         {
             set
             {
-                changed.cachedValue = true;
-                centerPosition.cachedValue = value;
+                if (!initialized)
+                    throw new System.Exception("Cannot set center position of uninitialized graph!");
+                centerPositionProperty.cachedValue = value;
+            }
+            get
+            {
+                if (!initialized)
+                    throw new System.Exception("Cannot get center position of uninitialized graph!");
+                return centerPositionProperty.cachedValue;
             }
         }
 
@@ -61,7 +110,25 @@ namespace JStuff.Generation.Terrain
         {
             set
             {
-                chunkSize.cachedValue = value;
+                if (initialized)
+                {
+                    chunkSizeProperty.cachedValue = value;
+                }
+                else
+                {
+                    chunkSize = value;
+                }
+            }
+            get
+            {
+                if (initialized)
+                {
+                    return chunkSizeProperty.cachedValue;
+                }
+                else
+                {
+                    return chunkSize;
+                }
             }
         }
 
@@ -69,7 +136,25 @@ namespace JStuff.Generation.Terrain
         {
             set
             {
-                seedProperty.cachedValue = value;
+                if (initialized)
+                {
+                    seedProperty.cachedValue = value;
+                }
+                else
+                {
+                    seed = value;
+                }
+            }
+            get
+            {
+                if (initialized)
+                {
+                    return seedProperty.cachedValue;
+                }
+                else
+                {
+                    return seed;
+                }
             }
         }
 
@@ -82,6 +167,7 @@ namespace JStuff.Generation.Terrain
                 types.Add(typeof(CommonNode));
                 types.Add(typeof(MathNode));
                 types.Add(typeof(Generation));
+                types.Add(typeof(TerrainUtility));
                 return types;
             }
         }
@@ -93,14 +179,25 @@ namespace JStuff.Generation.Terrain
 
         protected override void SetupProperties()
         {
-            chunkPosition = AddProperty(Vector2.zero, "chunkPosition", PropertyContext.Unique);
-            centerPosition = AddProperty(Vector2.zero, "centerPosition", PropertyContext.Unique);
-            changed = AddProperty(false, "changed", PropertyContext.Unique);
-            chunkSize = AddProperty(sizeOfChunk, "chunkSize", PropertyContext.Unique);
+            chunkPositionProperty = AddProperty(Vector2.zero, "chunkPosition", PropertyContext.Unique);
+            centerPositionProperty = AddProperty(Vector2.zero, "centerPosition", PropertyContext.Unique);
+            chunkSizeProperty = AddProperty(chunkSize, "chunkSize", PropertyContext.Unique);
             seedProperty = AddProperty(seed, "seed", PropertyContext.Unique);
             AddProperty(Vector2.zero, "offset", PropertyContext.Unique);
-            scale = AddProperty<float>(1, "scale", PropertyContext.Unique);
-            zoom = AddProperty<float>(100, "zoom", PropertyContext.Unique);
+            scaleProperty = AddProperty<float>(scale, "scale", PropertyContext.Unique);
+            zoomProperty = AddProperty<float>(zoom, "zoom", PropertyContext.Unique);
+        }
+
+        public override Graph Clone()
+        {
+            TerrainGraph retval = base.Clone() as TerrainGraph;
+
+            retval.ChunkSize = ChunkSize;
+            retval.Scale = Scale;
+            retval.Zoom = Zoom;
+            retval.Seed = Seed;
+
+            return retval;
         }
     }
 }

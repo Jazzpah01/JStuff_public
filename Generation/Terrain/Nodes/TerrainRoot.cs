@@ -18,20 +18,20 @@ namespace JStuff.Generation.Terrain
             meshRendererData = AddInputLink<MeshData>();
             meshColliderData = AddInputLink<MeshData>();
             colormap = AddInputLink<Color[]>(portName: "Colormap");
-            terrainObjects = AddInputLink<List<TerrainObject>>(portName: "List<TerrainObject>");
+            terrainObjects = AddInputLink<List<TerrainObject>>(portName: "TerrainObjects");
         }
 
         public BlockData Evaluate()
         {
             iteration++;
             BlockData blockData = new BlockData();
-            if (meshRendererData != null)
+            if (meshRendererData.linkedPort != null)
                 blockData.meshRendererData = meshRendererData.Evaluate();
-            if (meshColliderData != null)
+            if (meshColliderData.linkedPort != null)
                 blockData.meshColliderData = meshColliderData.Evaluate();
-            if (colormap != null)
+            if (colormap.linkedPort != null)
                 blockData.colormap = colormap.Evaluate();
-            if (terrainObjects != null)
+            if (terrainObjects.linkedPort != null)
                 blockData.terrainObjects = terrainObjects.Evaluate();
             return blockData;
         }

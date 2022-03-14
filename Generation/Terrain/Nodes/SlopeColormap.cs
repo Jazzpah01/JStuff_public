@@ -12,20 +12,24 @@ namespace JStuff.Generation.Terrain
     {
         public CustomGradient flatGradient;
         public CustomGradient slopeGradient;
-        public Color slopeColor;
         public InterpolationCurve interpolateFunction;
-        public float maxSlope;
+        public float maxSlope = 10;
 
         InputLink<MeshData> inputMeshData;
-        OutputLink<Color[]> colormapOutput;
         InputLink<float> maxHeightInput;
+        OutputLink<Color[]> colormapOutput;
 
         protected override void SetupPorts()
         {
             inputMeshData = AddInputLink<MeshData>();
-            colormapOutput = AddOutputLink(Evaluate);
             maxHeightInput = AddInputLink<float>();
+            colormapOutput = AddOutputLink(Evaluate, portName: "Colormap");
         }
+
+        //public override void Initialize()
+        //{
+        //    interpolateFunction.PreEvaluate();
+        //}
 
         private Color[] Evaluate()
         {
@@ -71,16 +75,11 @@ namespace JStuff.Generation.Terrain
 
                     float t = interpolateFunction.Evaluate((currentSlope / maxSlope).Clamp(0.0f, 1.0f));
 
-                    //Debug.Log($"x: {x}. y: {y}. index: {x + y * size}.");
-                    //Debug.Log($"Current slope: {currentSlope}. Max slope: {maxSlope}. t: {t}. other t: {(currentSlope / maxSlope).Clamp(0.0f, 1.0f)}");
-
                     float ht = Mathf.Abs(data.vertices[x + z * size].y + maxHeight) / (2 * maxHeight);
-                    //ht = data.vertices[x + z * size].y.Clamp(0, 1);
 
                     Color c = flatGradient.Evaluate(Mathf.Clamp(ht, 0, 1));
                     Color c2 = slopeGradient.Evaluate(Mathf.Clamp(ht, 0, 1));
 
-                    //colormap[(size - x - 1) + z * size] = c;// = Color.Lerp(c, c2, t);
                     colormap[x + z * size] = Color.Lerp(c, c2, t);
                 }
             }
@@ -90,9 +89,12 @@ namespace JStuff.Generation.Terrain
 
         public override Node Clone()
         {
-            // NOT DONE
             SlopeColormap retval = base.Clone() as SlopeColormap;
-            retval.slopeGradient = new CustomGradient();
+            retval.slopeGradient = slopeGradient.Clone();
+            retval.flatGradient = flatGradient.Clone();
+            interpolateFunction.PreEvaluate();
+            retval.interpolateFunction = interpolateFunction;
+            retval.maxSlope = maxSlope;
             return retval;
         }
     }

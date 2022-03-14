@@ -30,6 +30,7 @@ namespace JStuff.GraphCreator
         [NonSerialized] public bool ProperyChanged = true;
         public int numberOfProperties;
 
+        public bool isSetup = false;
         public bool initialized = false;
 
         public List<string> propertyValues = new List<string>();
@@ -49,9 +50,9 @@ namespace JStuff.GraphCreator
         public Context uniqueContext;
         public Context sharedContext;
 
-        public void InitializeBaseGraph()
+        public void Setup()
         {
-            initialized = false;
+            isSetup = false;
 
             Clear();
 
@@ -75,7 +76,7 @@ namespace JStuff.GraphCreator
 
             SetupProperties();
 
-            initialized = true;
+            isSetup = true;
 
             if (!Application.isPlaying)
             {
@@ -85,9 +86,9 @@ namespace JStuff.GraphCreator
 
         public void UpdateGraph()
         {
-            if (!initialized)
+            if (!isSetup)
             {
-                InitializeBaseGraph();
+                Setup();
             }
             else
             {
@@ -159,14 +160,12 @@ namespace JStuff.GraphCreator
                 {
                     continue;
                 }
-                Debug.Log(view);
                 foreach (PortView linked in view.linked.ToArray())
                 {
                     if (linked == null)
                     {
                         continue;
                     }
-                    Debug.Log(linked);
                     if (!linked.Valid)
                     {
                         view.UnLink(linked);
@@ -246,33 +245,35 @@ namespace JStuff.GraphCreator
             }
         }
 
-        public void SetupGraph()
+        public void InitializeGraph()
         {
             if (!Application.isPlaying)
                 throw new Exception("Can only setup graph in runtime.");
 
-            Debug.Log(name);
-            ProperyChanged = true;
-            Debug.Log("Before property setup");
             sharedContext.runmode = true;
             uniqueContext.runmode = true;
             SetupProperties();
-            Debug.Log("After property setup");
             foreach (Node node in nodes)
             {
                 if (node.graph != this)
                 {
-                    Debug.LogWarning("Graph doesn't match!!!");
+                    throw new Exception("Node dependencies are currupt");
                 }
                 node.UpdateNode();
             }
             ConnectLinks();
             Initialize();
+
+            foreach (Node node in nodes)
+            {
+                node.Initialize();
+            }
+
+            initialized = true;
         }
 
         public Node CreatePropertyNode(int propertyIndex)
         {
-            Debug.Log("Property index: " + propertyIndex);
             PropertyNode node = CreateInstance<PropertyNode>() as PropertyNode;
             node.name = propertyNames[propertyIndex];
             node.guid = GUID.Generate().ToString();
@@ -415,16 +416,16 @@ namespace JStuff.GraphCreator
             AssetDatabase.SaveAssets();
         }
 
-        public Graph Clone()
+        public virtual Graph Clone()
         {
             Graph retval = CreateInstance(this.GetType()) as Graph;
-            retval.InitializeBaseGraph();
+            retval.Setup();
             retval.name = name + "(Clone)";
 
             List<List<int>> connections = GetConnections();
 
             List<Node> newNodes = new List<Node>();
-            for (int i = 1; i < nodes.Count; i++)
+            for (int i = 0; i < nodes.Count; i++)
             {
                 newNodes.Add(nodes[i].Clone());
             }
@@ -433,7 +434,7 @@ namespace JStuff.GraphCreator
 
             retval.ConnectPorts(connections);
 
-            retval.initialized = true;
+            retval.isSetup = true;
             return retval;
         }
 
@@ -455,15 +456,17 @@ namespace JStuff.GraphCreator
             return connections;
         }
 
-        public void CreateNodes(List<Node> oldNodes)
+        public void CreateNodes(List<Node> newNodes)
         {
             portViews.Clear();
             nodes.Clear();
             rootNode = null;
+            isSetup = false;
+            initialized = false;
 
-            for (int i = 0; i < oldNodes.Count; i++)
+            for (int i = 0; i < newNodes.Count; i++)
             {
-                CreateNode(oldNodes[i]);
+                CreateNode(newNodes[i]);
             }
         }
 
@@ -513,7 +516,7 @@ namespace JStuff.GraphCreator
                 newNodes.Add(nodes[i].Clone());
             }
 
-            InitializeBaseGraph();
+            Setup();
 
             CreateNodes(newNodes);
 

@@ -10,7 +10,6 @@ namespace JStuff.Generation.Terrain
     {
         public int size = 65;
         public int depth = 9;
-        public float zoom = 100;
 
         public float h = 0.35f;
         public float d = 0.35f;
@@ -18,6 +17,7 @@ namespace JStuff.Generation.Terrain
         HeightMap currentHeightMap;
 
         InputLink<int> seedInput;
+        InputLink<float> zoom;
         InputLink<Vector2> offset;
         OutputLink<HeightMap> output;
 
@@ -26,16 +26,17 @@ namespace JStuff.Generation.Terrain
         protected override void SetupPorts()
         {
             seedInput = AddInputLink<int>();
+            zoom = AddInputLink<float>();
             offset = AddInputLink<Vector2>("Vector2");
             output = AddOutputLink(GenerateHeightMap, UnityEditor.Experimental.GraphView.Port.Capacity.Multi);
         }
 
         public HeightMap GenerateHeightMap()
         {
-            Vector2 realOffset = offset.Evaluate() / zoom;
+            Vector2 realOffset = offset.Evaluate();
 
             EquilateralTriangle equilateralTriangle = new EquilateralTriangle();
-            currentHeightMap = HeightMapGeneration.GenerateHeightmap(65, d, h, depth, seedInput.Evaluate(), zoom: zoom, offsetX: realOffset.x, offsetZ: realOffset.y, autoCache: true);
+            currentHeightMap = HeightMapGeneration.GenerateHeightmap(size, d, h, depth, seedInput.Evaluate(), zoom: zoom.Evaluate(), offsetX: realOffset.x, offsetZ: realOffset.y, autoCache: true);
             return currentHeightMap;
         }
 
