@@ -5,7 +5,7 @@ using JStuff.GraphCreator;
 
 namespace JStuff.Generation.Terrain
 {
-    public class HeightMapPosition : GenerateHeightMap
+    public class HeightMapPosition : TerrainUtility
     {
         PropertyPort<float> zoom;
         PropertyPort<float> chunkSize;

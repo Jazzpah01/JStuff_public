@@ -461,8 +461,6 @@ namespace JStuff.GraphCreator
             portViews.Clear();
             nodes.Clear();
             rootNode = null;
-            isSetup = false;
-            initialized = false;
 
             for (int i = 0; i < newNodes.Count; i++)
             {
@@ -515,7 +513,7 @@ namespace JStuff.GraphCreator
             {
                 newNodes.Add(nodes[i].Clone());
             }
-
+            isSetup = false;
             Setup();
 
             CreateNodes(newNodes);

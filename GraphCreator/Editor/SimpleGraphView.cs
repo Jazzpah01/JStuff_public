@@ -42,9 +42,9 @@ public class SimpleGraphView : UnityEditor.Experimental.GraphView.GraphView
 
         evt.menu.AppendAction("Reload Graph", delegate { graph.ResetPorts(); PopulateView(graph); OnNodeSelected(FindNodeView(graph.rootNode)); });
 
-        if (selectedNode != null)
+        if (selection != null && selection.Count == 1 && selection[0] is SimpleNodeView)
         {
-            Node node = selectedNode.node;
+            Node node = ((SimpleNodeView)selection[0]).node;
             evt.menu.AppendAction("Dublicate Node", delegate { DublicateNode(node); OnNodeSelected(FindNodeView(node)); });
         }
 
@@ -95,9 +95,6 @@ public class SimpleGraphView : UnityEditor.Experimental.GraphView.GraphView
         graphViewChanged -= OnGraphViewChanged;
         DeleteElements(graphElements);
         graphViewChanged += OnGraphViewChanged;
-
-        OnNodeSelected -= NodeSelected;
-        OnNodeSelected += NodeSelected;
 
         // Create node view
         graph.UpdateNodes();
@@ -203,13 +200,13 @@ public class SimpleGraphView : UnityEditor.Experimental.GraphView.GraphView
         Node node = graph.CreateNode(type);
         if (node == null)
             throw new Exception("Node is null.");
-        if (position != Vector2.zero)
-            node.nodePosition = position;
         CreateNodeView(node, position);
     }
 
     public void CreateNodeView(Node node, Vector2 position = new Vector2())
     {
+        if (position != Vector2.zero)
+            node.nodePosition = position;
         SimpleNodeView nodeView = new SimpleNodeView(node, this);
         nodeView.OnNodeSelected = OnNodeSelected;
         AddElement(nodeView);
