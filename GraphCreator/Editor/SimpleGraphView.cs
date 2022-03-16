@@ -56,28 +56,26 @@ public class SimpleGraphView : UnityEditor.Experimental.GraphView.GraphView
 
     private void AddMenuType(ContextualMenuPopulateEvent evt, Type t)
     {
-        var types = TypeCache.GetTypesDerivedFrom(t);
+        if (t.IsAbstract)
+        {
+            var types = TypeCache.GetTypesDerivedFrom(t);
+            foreach (var type in types)
+            {
+                AddMenuType(evt, type);
+            }
+            return;
+        }
+
+        CreateNodePath attribute =
+            (CreateNodePath)Attribute.GetCustomAttribute(t, typeof(CreateNodePath));
+
+        if (attribute == null)
+            return;
+
         Vector2 localMousePos = evt.localMousePosition;
         Vector2 actualGraphPosition = viewTransform.matrix.inverse.MultiplyPoint(localMousePos);
-        GetNodePath(evt, t, actualGraphPosition);
-    }
 
-    private void GetNodePath(ContextualMenuPopulateEvent evt, Type type, Vector2 pos, string path = "")
-    {
-        if (!type.IsAbstract)
-        {
-            evt.menu.AppendAction($"{path}{type.Name}", (a) => CreateNode(type, pos));
-        } else
-        {
-            var types = TypeCache.GetTypesDerivedFrom(type);
-            foreach (var t in types)
-            {
-                if (t.BaseType == type)
-                {
-                    GetNodePath(evt, t, pos, $"{path}{type.Name}/");
-                }
-            }
-        }
+        evt.menu.AppendAction($"{attribute.path}", (a) => CreateNode(t, actualGraphPosition));
     }
 
     public override List<Port> GetCompatiblePorts(Port startPort, NodeAdapter nodeAdapter)

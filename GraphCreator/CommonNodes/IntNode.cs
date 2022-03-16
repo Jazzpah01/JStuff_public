@@ -4,6 +4,7 @@ using UnityEngine;
 
 namespace JStuff.GraphCreator
 {
+    [CreateNodePath("Common/int")]
     public class IntNode : CommonNode
     {
         public int value;
