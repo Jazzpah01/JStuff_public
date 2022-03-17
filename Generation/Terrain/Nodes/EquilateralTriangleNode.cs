@@ -6,7 +6,8 @@ using JStuff.Generation;
 
 namespace JStuff.Generation.Terrain
 {
-    public class EquilateralTriangleNode : GenerateHeightMap
+    [CreateNodePath("Terrain/HeightMap/Equilateral Triangle")]
+    public class EquilateralTriangleNode : TerrainNode
     {
         public int size = 65;
         public int depth = 9;

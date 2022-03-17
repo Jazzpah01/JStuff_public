@@ -4,6 +4,7 @@ using UnityEngine;
 
 namespace JStuff.GraphCreator
 {
+    [CreateNodePath("Math/Single/Multiply")]
     public class MultiplyNode : SingleMath
     {
         InputLink<float> v1;

@@ -9,6 +9,7 @@ using JStuff.Collections;
 
 namespace JStuff.GraphCreator
 {
+    [CreateNodePath("Common/Property Node")]
     public class PropertyNode : CommonNode
     {
         public string propertyName = "";

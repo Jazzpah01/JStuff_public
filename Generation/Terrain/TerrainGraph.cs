@@ -166,8 +166,7 @@ namespace JStuff.Generation.Terrain
                 List<Type> types = new List<Type>();
                 types.Add(typeof(CommonNode));
                 types.Add(typeof(MathNode));
-                types.Add(typeof(Generation));
-                types.Add(typeof(TerrainUtility));
+                types.Add(typeof(TerrainNode));
                 return types;
             }
         }

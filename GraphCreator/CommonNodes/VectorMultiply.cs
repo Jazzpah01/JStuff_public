@@ -6,6 +6,7 @@ using UnityEngine;
 
 namespace JStuff.GraphCreator
 {
+    [CreateNodePath("Math/Vector/Multiply")]
     public class VectorMultiply : VectorMath
     {
         InputLink<Vector2> vector;

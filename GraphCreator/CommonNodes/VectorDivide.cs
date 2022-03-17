@@ -5,6 +5,7 @@ using UnityEngine;
 
 namespace JStuff.GraphCreator
 {
+    [CreateNodePath("Math/Vector/Divide")]
     public class VectorDivide : VectorMath
     {
         InputLink<Vector2> vector;

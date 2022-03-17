@@ -6,7 +6,8 @@ using UnityEngine;
 
 namespace JStuff.Generation.Terrain
 {
-    public class ChunkSeed : TerrainUtility
+    [CreateNodePath("Terrain/Utility/Chunk seed")]
+    public class ChunkSeed : TerrainNode
     {
         InputLink<int> seedInput;
         OutputLink<int> output;

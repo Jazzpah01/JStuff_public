@@ -7,7 +7,8 @@ using JStuff.Random;
 
 namespace JStuff.Generation.Terrain
 {
-    public class RandomTerrainObjects : GenerateTerrainObjects
+    [CreateNodePath("Terrain/Terrain Objects/Random")]
+    public class RandomTerrainObjects : TerrainNode
     {
         public List<GameObject> prefabs;
 

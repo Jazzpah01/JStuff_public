@@ -5,6 +5,7 @@ using UnityEngine;
 
 namespace JStuff.GraphCreator
 {
+    [CreateNodePath("Math/Vector/Dot")]
     public class DotNode : VectorMath
     {
         InputLink<Vector2> vector1;

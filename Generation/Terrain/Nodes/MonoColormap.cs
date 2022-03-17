@@ -5,7 +5,8 @@ using UnityEngine;
 
 namespace JStuff.Generation.Terrain
 {
-    public class MonoColormap : GenerateColormap
+    [CreateNodePath("Terrain/Colormap/Mono color")]
+    public class MonoColormap : TerrainNode
     {
         public Color color;
 
