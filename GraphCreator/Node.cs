@@ -306,27 +306,6 @@ namespace JStuff.GraphCreator
             return null;
         }
 
-        protected Link AddPropertyInputLink(string propertyName)
-        {
-            Direction direction = graph.InputPortDirection == Direction.Input ? Direction.Output : Direction.Input;
-            PortView portView;
-
-            switch (currentStrategy)
-            {
-                case InitPortStrategy.StringGeneration:
-                    AddLinkSignature("PropertyInputLink<" + graph.GetPropertyType(propertyName) + ">");
-                    break;
-                case InitPortStrategy.LinkGeneration:
-                    Link link = graph.GetProperty(propertyName);
-                    links.Add(link);
-                    return link;
-                default:
-                    break;
-
-            }
-            return null;
-        }
-
         public void AddLinkSignature(Type type)
         {
             if (currentStrategy != InitPortStrategy.StringGeneration)

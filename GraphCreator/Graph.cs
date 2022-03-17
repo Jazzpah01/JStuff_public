@@ -13,6 +13,7 @@ namespace JStuff.GraphCreator
         public abstract Type RootNodeType { get; }
         [SerializeReference] public List<Node> nodes = new List<Node>();
         [SerializeReference] public List<PortView> portViews = new List<PortView>();
+        [System.NonSerialized] public List<Link> links = new List<Link>();
 
         public abstract List<Type> NodeTypes { get; }
 
@@ -20,12 +21,6 @@ namespace JStuff.GraphCreator
         public virtual Orientation Orientation => Orientation.Horizontal;
 
 
-        public List<PortView> propertyPortViews = new List<PortView>();
-        public List<Link> propertyPorts = new List<Link>();
-        public List<object> oldpropertyValues = new List<object>();
-        public List<string> propertyNames = new List<string>();
-        public List<string> propertyTypeNames = new List<string>();
-        private Dictionary<string, int> propertyIndexMap = new Dictionary<string, int>();
 
         [NonSerialized] public bool ProperyChanged = true;
         public int numberOfProperties;
@@ -137,21 +132,6 @@ namespace JStuff.GraphCreator
 
         }
 
-
-
-        public object GetProperty(int index)
-        {
-            return oldpropertyValues[index];
-        }
-
-        public Link GetPropertyPort(int index)
-        {
-            Debug.Log(propertyPorts);
-            Debug.Log(propertyPorts.Count);
-
-            return propertyPorts[index];
-        }
-
         public void CleanupPortViews()
         {
             foreach (PortView view in portViews.ToArray())
@@ -261,7 +241,10 @@ namespace JStuff.GraphCreator
                 }
                 node.UpdateNode();
             }
-            ConnectLinks();
+
+            List<List<int>> connections = GetConnections();
+
+            ConnectLinks(connections);
             Initialize();
 
             foreach (Node node in nodes)
@@ -272,28 +255,7 @@ namespace JStuff.GraphCreator
             initialized = true;
         }
 
-        public Node CreatePropertyNode(int propertyIndex)
-        {
-            PropertyNode node = CreateInstance<PropertyNode>() as PropertyNode;
-            node.name = propertyNames[propertyIndex];
-            node.guid = GUID.Generate().ToString();
-            node.graph = this;
-            //node.InitPropertyPortView(propertyIndex);
-            nodes.Add(node);
-            node.Valid = true;
-
-            foreach (PortView portView in node.portViews)
-            {
-                portViews.Add(portView);
-                EditorUtility.SetDirty(portView);
-                AssetDatabase.AddObjectToAsset(portView, this);
-            }
-
-            AssetDatabase.AddObjectToAsset(node, this);
-            AssetDatabase.SaveAssets();
-
-            return node;
-        }
+        
 
         public Node CreateNode(Type type)
         {
@@ -492,15 +454,26 @@ namespace JStuff.GraphCreator
             }
         }
 
-        public void ConnectLinks()
+        public void ConnectLinks(List<List<int>> connections)
         {
-            foreach (Node node in nodes)
+            int graphIndex = 0;
+            for (int i = 0; i < nodes.Count; i++)
             {
-                node.SetupLinks();
+                nodes[i].SetupLinks();
+                for (int j = 0; j < nodes[i].links.Count; j++)
+                {
+                    Link link = nodes[i].links[j];
+                    link.graphIndex = graphIndex;
+                    links.Add(link);
+                    graphIndex++;
+                }
             }
-            foreach (Node node in nodes)
+            for (int i = 0; i < connections.Count; i++)
             {
-                node.ConnectLinks();
+                foreach (int connection in connections[i])
+                {
+                    ((ILinkable)links[i]).LinkPort(links[connection]);
+                }
             }
         }
 

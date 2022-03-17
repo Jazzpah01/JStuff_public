@@ -67,5 +67,16 @@ namespace JStuff.Random
             float retval = (Mathf.PI + Mathf.Abs(a)) * (Mathf.PI + Mathf.Abs(b));
             return retval.FractionalDigits();
         }
+
+        public static (float,float) GetNormalSeeds(int seed)
+        {
+            return (1.0f / seed, 1.0f / seed * 0.05136f);
+        }
+
+        public static (float, float) GetSeedValue(float s0, float s1)
+        {
+            float s2 = Value(s0, s1);
+            return (s2, Value(s0, s2));
+        }
     }
 }

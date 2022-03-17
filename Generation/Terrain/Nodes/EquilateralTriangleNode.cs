@@ -36,7 +36,8 @@ namespace JStuff.Generation.Terrain
             Vector2 realOffset = offset.Evaluate();
 
             EquilateralTriangle equilateralTriangle = new EquilateralTriangle();
-            currentHeightMap = HeightMapGeneration.GenerateHeightmap(size, d, h, depth, seedInput.Evaluate(), zoom: zoom.Evaluate(), offsetX: realOffset.x, offsetZ: realOffset.y, autoCache: true);
+            currentHeightMap = equilateralTriangle.GetHeightMap(size, depth, h, d, 
+                seedInput.Evaluate(), offsetX: realOffset.x, offsetZ: realOffset.y, zoom: zoom.Evaluate());
             return currentHeightMap;
         }
 

@@ -62,16 +62,7 @@ namespace JStuff.Generation
                     cacheAtDepth = -1;
             }
 
-            float s;
-
-            if (seed < 0)
-            {
-                s = UnityEngine.Random.value;
-            }
-            else
-            {
-                s = 1 / (float)seed;
-            }
+            float s = 1 / (float)seed;
 
             EquilateralTriangle generator = new EquilateralTriangle(cacheAtDepth);
 
@@ -91,22 +82,6 @@ namespace JStuff.Generation
             offsetX = offsetX;
             offsetZ = offsetZ;
 
-            if (skips > 1)
-            {
-                if (old != null)
-                    return old.Simplified(skips);
-                size = (old.Width - 1) / skips + 1;
-            }
-            else if (skips < -1)
-            {
-                skips *= -1;
-                size = (old.Width - 1) * skips + 1;
-            }
-            else if (old != null)
-            {
-                return old * 1;
-            }
-
             float[,] m = new float[size, size];
 
             for (int i = 0; i < size; i++)
@@ -124,7 +99,7 @@ namespace JStuff.Generation
                     }
                     else
                     {
-                        m[i, j] = generator.HeightAtPoint(p, a, b, c, depth, heightFunction, cacheAtDepth);
+                        //m[i, j] = generator.HeightAtPoint(p, a, b, c, depth, heightFunction, cacheAtDepth);
 
                         if (nonLinearScaling)
                         {

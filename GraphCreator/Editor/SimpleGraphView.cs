@@ -186,15 +186,6 @@ public class SimpleGraphView : UnityEditor.Experimental.GraphView.GraphView
         return graphViewChange;
     }
 
-    protected void CreatePropertyNode(int index)
-    {
-        Debug.Log("Property index: " + index);
-        Node node = graph.CreatePropertyNode(index);
-        if (node == null)
-            throw new Exception("Node is null.");
-        CreateNodeView(node);
-    }
-
     public void CreateNode(Type type, Vector2 position = new Vector2())
     {
         Node node = graph.CreateNode(type);
