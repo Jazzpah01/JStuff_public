@@ -8,7 +8,8 @@ using JStuff.Collections;
 
 namespace JStuff.Generation.Terrain
 {
-    public class SlopeColormap : GenerateColormap
+    [CreateNodePath("Terrain/Colormap/Slope color")]
+    public class SlopeColormap : TerrainNode
     {
         public CustomGradient flatGradient;
         public CustomGradient slopeGradient;

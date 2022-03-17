@@ -445,33 +445,16 @@ namespace JStuff.Generation
         public float GetContinousHeight(float x, float y)
         {
             if (x > Width - 1 || x < 0 || y > Width - 1 || y < 0)
-                throw new System.Exception("x and y must be between 0 and 1 (inclusive). x: " + x + ". y: " + y + ".");
+                throw new System.Exception("x and y must be between 0 and Length-1 (inclusive). x: " + x + ". y: " + y + ".");
 
-            int rx = Mathf.FloorToInt(x * Width);
-            int ry = Mathf.FloorToInt(y * Width);
+            int rx = Mathf.FloorToInt(x);
+            int ry = Mathf.FloorToInt(y);
 
-            float retval = map[rx,ry];
-            int n = 1;
+            float h0 = Mathf.Lerp(map[rx,ry], map[rx, ry+1], y.FractionalDigits());
+            float h1 = Mathf.Lerp(map[rx+1, ry], map[rx+1, ry + 1], y.FractionalDigits());
 
-            if (rx.InRange(0, Width - 2))
-            {
-                retval += map[rx + 1, ry];
-                n++;
-            }
-            if (ry.InRange(0, Width - 2))
-            {
-                retval += map[rx, ry + 1];
-                n++;
-            }
-            if (rx.InRange(0, Width - 2) && ry.InRange(0, Width - 2))
-            {
+            return Mathf.Lerp(h0, h1, x.FractionalDigits());
 
-                retval += map[rx + 1, ry];
-                retval += map[rx, ry + 1];
-                n += 2;
-            }
-
-            return retval / n;
         }
 
         public float GetSlope(int x, int y)

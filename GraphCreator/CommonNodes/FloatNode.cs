@@ -4,6 +4,7 @@ using UnityEngine;
 
 namespace JStuff.GraphCreator
 {
+    [CreateNodePath("Common/Value/float")]
     public class FloatNode : CommonNode
     {
         public float value;

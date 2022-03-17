@@ -5,6 +5,7 @@ using UnityEngine;
 
 namespace JStuff.GraphCreator
 {
+    [CreateNodePath("Common/Value/Vector")]
     public class VectorNode : CommonNode
     {
         public Vector2 value;
