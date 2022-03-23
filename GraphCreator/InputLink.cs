@@ -9,6 +9,7 @@ namespace JStuff.GraphCreator
     [Serializable]
     public class InputLink<T> : Link, ILinkable
     {
+        public bool optional = false;
         public IOutputLink<T> linkedPort;
         public IOutputLink<T> LinkedPort => linkedPort;
         Type type;

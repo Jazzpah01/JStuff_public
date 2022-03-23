@@ -60,7 +60,7 @@ public class Context : ScriptableObject
             if (typeof(T).FullName != propertyTypes[propertyNames.IndexOf(propertyName)])
                 throw new System.Exception($"Type of property doesn't match: {typeof(T).FullName}");
 
-            PropertyPort<T> nodePort = new PropertyPort<T>();
+            PropertyLink<T> nodePort = new PropertyLink<T>();
             nodePort.Init(null, 0, graph.Orientation, direction, Port.Capacity.Multi);
             nodePort.cachedValue = value;
             indexer.Add(propertyName, nodePort);

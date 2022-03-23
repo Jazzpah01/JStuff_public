@@ -27,6 +27,8 @@ namespace JStuff.GraphCreator
 
         public Type PortType => Type.GetType(portType);
 
+        public string PortTypeName => portType;
+
         public bool Valid { get => isValid; set => isValid = value; }
 
         public void Init(Node node, Orientation orientation, Direction direction, Port.Capacity capacity, string portTypeName, int index, string portName = "default")

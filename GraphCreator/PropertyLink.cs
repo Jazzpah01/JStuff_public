@@ -6,7 +6,7 @@ using UnityEngine;
 
 namespace JStuff.GraphCreator
 {
-    public class PropertyPort<T> : Link, IOutputLink<T>
+    public class PropertyLink<T> : Link, IOutputLink<T>
     {
         public Graph graph;
         public Func<object> function;

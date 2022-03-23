@@ -17,12 +17,12 @@ namespace JStuff.Generation.Terrain
         public float zoom = 50;
         public float scale = 1;
 
-        PropertyPort<Vector2> chunkPositionProperty;
-        PropertyPort<Vector2> centerPositionProperty;
-        PropertyPort<float> chunkSizeProperty;
-        PropertyPort<int> seedProperty;
-        PropertyPort<float> scaleProperty;
-        PropertyPort<float> zoomProperty;
+        PropertyLink<Vector2> chunkPositionProperty;
+        PropertyLink<Vector2> centerPositionProperty;
+        PropertyLink<float> chunkSizeProperty;
+        PropertyLink<int> seedProperty;
+        PropertyLink<float> scaleProperty;
+        PropertyLink<float> zoomProperty;
 
         public float Zoom
         {

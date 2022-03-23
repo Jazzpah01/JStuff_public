@@ -12,7 +12,7 @@ namespace JStuff.Generation.Terrain
         InputLink<int> seedInput;
         OutputLink<int> output;
 
-        PropertyPort<Vector2> chunkPosition;
+        InputLink<Vector2> chunkPosition;
 
         public override bool CacheOutput => true;
 
@@ -21,7 +21,7 @@ namespace JStuff.Generation.Terrain
             seedInput = AddInputLink<int>();
             output = AddOutputLink(Evaluate);
 
-            chunkPosition = AddPropertyLink("chunkPosition", false) as PropertyPort<Vector2>;
+            chunkPosition = AddPropertyInputLink<Vector2>("chunkPosition");
         }
 
         public int Evaluate()

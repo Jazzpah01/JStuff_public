@@ -13,6 +13,8 @@ namespace JStuff.Generation.Terrain
         public Material material;
         public Block[] blocks;
 
+        public Transform cameraTransform;
+
         Queue<Vector3> newPositions;
 
         Vector3 centerChunk;
@@ -31,12 +33,32 @@ namespace JStuff.Generation.Terrain
 
         private void Start()
         {
+            transform.position = new Vector3(cameraTransform.position.x, 0, cameraTransform.position.z);
+
             chunkSize = graph.chunkSize;
             scale = graph.scale;
             seed = graph.seed;
             zoom = graph.zoom;
 
             Populate();
+        }
+
+        private void Update()
+        {
+            if ((new Vector3(cameraTransform.position.x, 0, cameraTransform.position.z) - transform.position).magnitude > chunkSize / 2f)
+            {
+                transform.position = new Vector3(cameraTransform.position.x, 0, cameraTransform.position.z);
+            }
+
+            //if ((centerChunk + new Vector3(chunkSize/2, 0, chunkSize / 2) - transform.position).magnitude > chunkSize)
+            Vector3 newCenterChunk = transform.position - new Vector3(transform.position.x % chunkSize, 0, transform.position.z % chunkSize);
+
+            if (centerChunk != newCenterChunk)
+            {
+                DynamicUpdate(newCenterChunk, centerChunk);
+                centerChunk = newCenterChunk;
+            }
+
         }
 
         public void Populate()
@@ -97,19 +119,6 @@ namespace JStuff.Generation.Terrain
         public void UpdateBlock(Block b, Vector3 newCenterChunk, Vector3 newpos)
         {
             b.UpdateBlock(newCenterChunk, newpos);
-        }
-
-        private void Update()
-        {
-            //if ((centerChunk + new Vector3(chunkSize/2, 0, chunkSize / 2) - transform.position).magnitude > chunkSize)
-            Vector3 newCenterChunk = transform.position - new Vector3(transform.position.x % chunkSize, 0, transform.position.z % chunkSize);
-
-            if (centerChunk != newCenterChunk)
-            {
-                DynamicUpdate(newCenterChunk, centerChunk);
-                centerChunk = newCenterChunk;
-            }
-
         }
 
         private void DynamicUpdate(Vector3 newCenterChunk, Vector3 oldCenterChunk)

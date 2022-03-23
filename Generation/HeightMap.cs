@@ -445,16 +445,72 @@ namespace JStuff.Generation
         public float GetContinousHeight(float x, float y)
         {
             if (x > Width - 1 || x < 0 || y > Width - 1 || y < 0)
-                throw new System.Exception("x and y must be between 0 and Length-1 (inclusive). x: " + x + ". y: " + y + ".");
+                throw new System.Exception("x and y must be between 0 and Length-1 (inclusive). x: " + x + ". y: " + y + ". Length: " + Width);
 
             int rx = Mathf.FloorToInt(x);
             int ry = Mathf.FloorToInt(y);
+
+            if (rx == x && ry == y)
+            {
+                return map[rx, ry];
+            } else if (rx == x)
+            {
+                return Mathf.Lerp(map[rx, ry], map[rx, ry+1], y.FractionalDigits());
+            } else if (ry == y)
+            {
+                return Mathf.Lerp(map[rx, ry], map[rx + 1, ry], x.FractionalDigits());
+            }
 
             float h0 = Mathf.Lerp(map[rx,ry], map[rx, ry+1], y.FractionalDigits());
             float h1 = Mathf.Lerp(map[rx+1, ry], map[rx+1, ry + 1], y.FractionalDigits());
 
             return Mathf.Lerp(h0, h1, x.FractionalDigits());
 
+        }
+
+        public float GetSlope(float x, float y)
+        {
+            if ((float)((int)y) != y && (float)((int)x) != x)
+            {
+                return GetSlope((int)x, (int)y);
+            }
+
+            float min = 2;
+            float max = -2;
+
+            if (map[(int)x, (int)y] > max)
+                max = map[Mathf.RoundToInt(x), Mathf.RoundToInt(y)];
+
+            if (map[(int)x, (int)y] < min)
+                min = map[Mathf.RoundToInt(x), Mathf.RoundToInt(y)];
+
+            if ((float)((int)x) != x)
+            {
+                if (map[(int)x + 1, (int)y] > max)
+                    max = map[Mathf.RoundToInt(x), Mathf.RoundToInt(y)];
+                if (map[(int)x + 1, (int)y] < min)
+                    min = map[Mathf.RoundToInt(x), Mathf.RoundToInt(y)];
+            }
+
+            if ((float)((int)y) != y)
+            {
+                if (map[(int)x, (int)y + 1] > max)
+                    max = map[Mathf.RoundToInt(x), Mathf.RoundToInt(y)];
+
+                if (map[(int)x, (int)y + 1] < min)
+                    min = map[Mathf.RoundToInt(x), Mathf.RoundToInt(y)];
+            }
+
+            if ((float)((int)y) != y && (float)((int)x) != x)
+            {
+                if (map[(int)x + 1, (int)y + 1] > max)
+                    max = map[Mathf.RoundToInt(x), Mathf.RoundToInt(y)];
+
+                if (map[(int)x + 1, (int)y + 1] < min)
+                    min = map[Mathf.RoundToInt(x), Mathf.RoundToInt(y)];
+            }
+
+            return max - min;
         }
 
         public float GetSlope(int x, int y)

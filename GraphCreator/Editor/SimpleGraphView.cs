@@ -111,6 +111,7 @@ public class SimpleGraphView : UnityEditor.Experimental.GraphView.GraphView
         FindNodeView(graph.rootNode).capabilities &= ~Capabilities.Deletable;
 
         // Create edges
+        bool error = false;
         foreach (Node node in graph.nodes)
         {
             foreach (PortView port in node.portViews)
@@ -122,6 +123,12 @@ public class SimpleGraphView : UnityEditor.Experimental.GraphView.GraphView
 
                 foreach (PortView view in port.linked)
                 {
+                    //if (view == null || port.PortType == null && (port.PortTypeName != null || port.PortTypeName != ""))
+                    //{
+                    //    port.UnLinkAll();
+                    //    break;
+                    //}
+
                     Node outputnode = view.node;
 
                     Edge edge = FindNodeView(inputnode).GetPort(port).ConnectTo(FindNodeView(outputnode).GetPort(view));

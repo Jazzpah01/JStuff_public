@@ -22,7 +22,7 @@ namespace JStuff.GraphCreator
 
         public Vector2 Evaluate()
         {
-            return vector.Evaluate() / devisor.Evaluate();
+            return vector.Evaluate() * devisor.Evaluate();
         }
     }
 }

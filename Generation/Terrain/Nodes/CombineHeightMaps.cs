@@ -17,6 +17,8 @@ namespace JStuff.Generation.Terrain
         InputLink<HeightMap> heightMap2Input;
         OutputLink<HeightMap> output;
 
+        public override bool CacheOutput => true;
+
         protected override void SetupPorts()
         {
             heightMap1Input = AddInputLink<HeightMap>();
@@ -35,9 +37,9 @@ namespace JStuff.Generation.Terrain
             {
                 float[,] retval = new float[outer.Length, outer.Length];
 
-                for (int i = 0; i < outer.Length; i++)
+                for (int j = 0; j < outer.Length; j++)
                 {
-                    for (int j = 0; j < outer.Length; j++)
+                    for (int i = 0; i < outer.Length; i++)
                     {
                         retval[i, j] = outer[i, j] * outerScale + inner[i, j] * innerScale;
                     }
@@ -57,12 +59,14 @@ namespace JStuff.Generation.Terrain
 
                 float[,] retval = new float[outer.Length, outer.Length];
 
-                for (int i = 0; i < outer.Length; i++)
+                for (int j = 0; j < outer.Length; j++)
                 {
-                    for (int j = 0; j < outer.Length; j++)
+                    for (int i = 0; i < outer.Length; i++)
                     {
-                        retval[i, j] = outer[i, j] * outerScale + 
-                            inner.GetContinousHeight(i / outer.Length * inner.Length, j / outer.Length * inner.Length) * innerScale;
+                        retval[i, j] = outer[i, j] * outerScale +
+                            inner.GetContinousHeight((float)i / (outer.Length-1) * (inner.Length-1), (float)j / (outer.Length-1) * (inner.Length-1)) * innerScale;
+                        //retval[i, j] = inner[i, j] * innerScale +
+                        //    inner.GetContinousHeight(i / inner.Length * outer.Length, j / inner.Length * outer.Length) * innerScale;
                     }
                 }
                 return new HeightMap(retval);

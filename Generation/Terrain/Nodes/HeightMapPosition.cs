@@ -8,16 +8,16 @@ namespace JStuff.Generation.Terrain
     [CreateNodePath("Terrain/Utility/HeightMap Position")]
     public class HeightMapPosition : TerrainNode
     {
-        PropertyPort<float> zoom;
-        PropertyPort<float> chunkSize;
-        PropertyPort<Vector2> chunkPosition;
+        InputLink<float> zoom;
+        InputLink<float> chunkSize;
+        InputLink<Vector2> chunkPosition;
         OutputLink<Vector2> output;
 
         protected override void SetupPorts()
         {
-            zoom = AddPropertyLink("zoom", false)                     as PropertyPort<float>;
-            chunkSize = AddPropertyLink("chunkSize", false)           as PropertyPort<float>;
-            chunkPosition = AddPropertyLink("chunkPosition", false)   as PropertyPort<Vector2>;
+            zoom = AddPropertyInputLink<float>("zoom");
+            chunkSize = AddPropertyInputLink<float>("chunkSize");
+            chunkPosition = AddPropertyInputLink<Vector2>("chunkPosition");
             output = AddOutputLink<Vector2>(Evaluate, portName: "Vector2");
         }
 

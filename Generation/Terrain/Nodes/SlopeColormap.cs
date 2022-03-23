@@ -20,6 +20,8 @@ namespace JStuff.Generation.Terrain
         InputLink<float> maxHeightInput;
         OutputLink<Color[]> colormapOutput;
 
+        public override bool CacheOutput => true;
+
         protected override void SetupPorts()
         {
             inputMeshData = AddInputLink<MeshData>();

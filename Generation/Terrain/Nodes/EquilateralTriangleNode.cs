@@ -15,11 +15,13 @@ namespace JStuff.Generation.Terrain
         public float h = 0.35f;
         public float d = 0.35f;
 
-        HeightMap currentHeightMap;
-
         InputLink<int> seedInput;
-        InputLink<float> zoom;
+        InputLink<float> zoomInput;
         InputLink<Vector2> offset;
+
+        InputLink<Vector2> positionInput;
+        InputLink<float> chunkSizeInput;
+
         OutputLink<HeightMap> output;
 
         public override bool CacheOutput => true;
@@ -27,18 +29,31 @@ namespace JStuff.Generation.Terrain
         protected override void SetupPorts()
         {
             seedInput = AddInputLink<int>();
-            zoom = AddInputLink<float>();
-            offset = AddInputLink<Vector2>("Vector2");
-            output = AddOutputLink(GenerateHeightMap, UnityEditor.Experimental.GraphView.Port.Capacity.Multi);
+            zoomInput = AddInputLink<float>();
+            offset = AddInputLink<Vector2>("Vector2 (Optional)");//, inputPortSettings: InputPortSettings.Optional);//, inputPortSettings: InputPortSettings.Optional);
+            output = AddOutputLink(GenerateHeightMap);
+
+            positionInput = AddPropertyInputLink<Vector2>("chunkPosition");
+            chunkSizeInput = AddPropertyInputLink<float>("chunkSize");
         }
 
         public HeightMap GenerateHeightMap()
         {
-            Vector2 realOffset = offset.Evaluate();
+            Vector2 realOffset = Vector2.zero;//offset.Evaluate();
+            if (offset.LinkedPort != null)
+            {
+                realOffset += offset.Evaluate();
+            }
+
+            float chunkSize = chunkSizeInput.Evaluate();
+            float zoom = zoomInput.Evaluate();
+            Vector2 position = positionInput.Evaluate() / zoom / chunkSize;
+
+            Debug.Log(chunkSizeInput.LinkedPort);
 
             EquilateralTriangle equilateralTriangle = new EquilateralTriangle();
-            currentHeightMap = equilateralTriangle.GetHeightMap(size, depth, h, d, 
-                seedInput.Evaluate(), offsetX: realOffset.x, offsetZ: realOffset.y, zoom: zoom.Evaluate());
+            HeightMap currentHeightMap = equilateralTriangle.GetHeightMap(size, depth, h, d, 
+                seedInput.Evaluate(), offsetX: realOffset.x + position.x, offsetZ: realOffset.y + position.y, zoom: zoom);
             return currentHeightMap;
         }
 
@@ -47,7 +62,7 @@ namespace JStuff.Generation.Terrain
             EquilateralTriangleNode retval = base.Clone() as EquilateralTriangleNode;
             retval.size = size;
             retval.depth = depth;
-            retval.zoom = zoom;
+            retval.zoomInput = zoomInput;
             retval.h = h;
             retval.d = d;
             return retval;

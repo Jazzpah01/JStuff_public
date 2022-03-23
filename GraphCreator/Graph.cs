@@ -28,6 +28,8 @@ namespace JStuff.GraphCreator
         public bool isSetup = false;
         public bool initialized = false;
 
+        public bool valid = false;
+
         public List<string> propertyValues = new List<string>();
         private PropertySetup propertySetup = PropertySetup.Editor;
         private enum PropertySetup
@@ -134,6 +136,7 @@ namespace JStuff.GraphCreator
 
         public void CleanupPortViews()
         {
+
             foreach (PortView view in portViews.ToArray())
             {
                 if (view == null)
@@ -153,6 +156,7 @@ namespace JStuff.GraphCreator
                 }
             }
 
+
             for (int i = 0; i < portViews.Count; i++)
             {
                 if (!portViews[i].Valid)
@@ -163,11 +167,55 @@ namespace JStuff.GraphCreator
                     i--;
                 }
             }
+
+            //List<(Type, Vector2)> nodesToRecreate = new List<(Type, Vector2)>();
+
+            for (int i = 0; i < nodes.Count; i++)
+            {
+                if (!nodes[i].Valid)
+                {
+                    Node invalidNode = nodes[i];
+                    
+                    while(nodes[i].portViews != null && nodes[i].portViews.Count > 0)
+                    {
+                        PortView view = nodes[i].portViews[0];
+                        nodes[i].portViews.Remove(view);
+                        if (portViews.Contains(view))
+                        {
+                            portViews.Remove(view);
+                        }
+                        if (!Application.isPlaying)
+                            AssetDatabase.RemoveObjectFromAsset(view);
+                    }
+
+                    nodes.Remove(invalidNode);
+                    nodes.Add(invalidNode);
+                    invalidNode.isSetup = false;
+                    invalidNode.UpdateNode();
+
+                    i--;
+
+                    //nodesToRecreate.Add((invalidNode.GetType(), invalidNode.nodePosition));
+                    //nodes.Remove(invalidNode);
+                    //if (!Application.isPlaying)
+                    //    AssetDatabase.RemoveObjectFromAsset(portViews[i]);
+
+                }
+            }
+
+            //for (int i = 0; i < nodesToRecreate.Count; i++)
+            //{
+            //    Node newNode = CreateNode(nodesToRecreate[i].Item1);
+            //    newNode.nodePosition = nodesToRecreate[i].Item2;
+            //}
+
             if (!Application.isPlaying)
+            {
                 AssetDatabase.SaveAssets();
+            }
         }
 
-        protected PropertyPort<T> AddProperty<T>(T value, string name, PropertyContext context)
+        protected PropertyLink<T> AddProperty<T>(T value, string name, PropertyContext context)
         {
             if ((uniqueContext.Contains(name) || sharedContext.Contains(name)) && !Application.isPlaying)
                 throw new Exception("Property of the specified name already exists: " + name);
@@ -178,14 +226,14 @@ namespace JStuff.GraphCreator
                     uniqueContext.AddPropertyLink(value, name);
                     if (uniqueContext.runmode)
                     {
-                        return (PropertyPort<T>)uniqueContext.GetPropertyLink(name);
+                        return (PropertyLink<T>)uniqueContext.GetPropertyLink(name);
                     }
                     break;
                 case PropertyContext.Shared:
                     sharedContext.AddPropertyLink(value, name);
                     if (sharedContext.runmode)
                     {
-                        return (PropertyPort<T>)sharedContext.GetPropertyLink(name);
+                        return (PropertyLink<T>)sharedContext.GetPropertyLink(name);
                     }
                     break;
             }
@@ -334,19 +382,14 @@ namespace JStuff.GraphCreator
             {
                 if (node.SignatureChanged)
                 {
-                    node.UpdateNode();
-                    foreach (PortView view in node.portViews)
-                    {
-                        portViews.Add(view);
-                    }
+                    node.Valid = false;
                 }
             }
-            if (!Application.isPlaying)
+            UpdateGraph();
+            CleanupPortViews(); if (!Application.isPlaying)
             {
                 AssetDatabase.SaveAssets();
             }
-            UpdateGraph();
-            CleanupPortViews();
         }
 
         public void DeleteNode(Node node)
@@ -444,6 +487,12 @@ namespace JStuff.GraphCreator
 
         public void ConnectPorts(List<List<int>> connections)
         {
+            if (connections.Count > portViews.Count)
+            {
+                valid = false;
+                return;
+            }
+
             for (int i = 0; i < connections.Count; i++)
             {
                 portViews[i].UnLinkAll();
@@ -462,6 +511,9 @@ namespace JStuff.GraphCreator
                 nodes[i].SetupLinks();
                 for (int j = 0; j < nodes[i].links.Count; j++)
                 {
+                    if (nodes[i].links[j].Direction == Direction.None)
+                        continue;
+
                     Link link = nodes[i].links[j];
                     link.graphIndex = graphIndex;
                     links.Add(link);

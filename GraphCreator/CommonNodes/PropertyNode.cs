@@ -49,24 +49,29 @@ namespace JStuff.GraphCreator
 
         protected override void SetupPorts()
         {
-            output = AddPropertyLink(propertyName);
+            output = AddPropertyOutputLink(propertyName);
         }
 
         private void ValueChanged(string value)
         {
+            Valid = false;
+            portViews[0].Valid = false;
             propertyName = value;
             graph.UpdateNodes();
         }
 
         protected override void SetupNode()
         {
-            if (graph.uniqueContext.Length > 0)
+            if (propertyName == "")
             {
-                propertyName = graph.uniqueContext.propertyNames[0];
-            }
-            else if (graph.sharedContext.Length > 0)
-            {
-                propertyName = graph.sharedContext.propertyNames[0];
+                if (graph.uniqueContext.Length > 0)
+                {
+                    propertyName = graph.uniqueContext.propertyNames[0];
+                }
+                else if (graph.sharedContext.Length > 0)
+                {
+                    propertyName = graph.sharedContext.propertyNames[0];
+                }
             }
         }
 
@@ -75,7 +80,6 @@ namespace JStuff.GraphCreator
             PropertyNode retval = base.Clone() as PropertyNode;
             retval.propertyName = propertyName;
             retval.typeName = typeName;
-            retval.isSetup = true;
             return retval;
         }
     }

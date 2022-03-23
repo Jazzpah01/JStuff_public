@@ -18,6 +18,9 @@ namespace JStuff.GraphCreator
 
         public bool ReEvaluate()
         {
+            if (linkedPort == null && optional)
+                return false;
+
             T val = base.Evaluate();
             if (EqualityComparer<T>.Default.Equals(cachedValue, val))
             {

@@ -38,7 +38,49 @@ namespace JStuff.Generation
 
             return new MeshData(vertices, uv, triangles);
         }
+
+        public static MeshData GenerateLODMesh(MeshData meshData, int LOD)
+        {
+            int inputWidth = meshData.Width();
+
+            if (((inputWidth - 1) / LOD - (int)(inputWidth - 1) / LOD) != 0)
+                throw new System.Exception("Error: LOD doesn't fit.");
+
+            int newWidth = (inputWidth - 1) / LOD + 1;
+
+            Vector3[] vertices = new Vector3[inputWidth * inputWidth];
+            Vector2[] uv = new Vector2[vertices.Length];
+            int[] triangles = new int[(inputWidth - 1) * (inputWidth - 1) * 6];
+
+            int i = 0;
+
+            for (int x = 0; x < newWidth; x++)
+            {
+                for (int z = 0; z < newWidth; z++)
+                {
+                    vertices[x + z * newWidth] = meshData.vertices[(x * LOD) + (z * LOD) * inputWidth];
+                    uv[x + z * newWidth] = new Vector2((float)x / newWidth, (float)z / newWidth);
+
+                    if (x != newWidth - 1 && z != newWidth - 1)
+                    {
+                        triangles[i] = x + newWidth * z;
+                        triangles[i + 1] = x + newWidth * (z + 1);
+                        triangles[i + 2] = x + 1 + newWidth * (z + 1);
+
+                        triangles[i + 3] = x + newWidth * z;
+                        triangles[i + 4] = x + 1 + newWidth * (z + 1);
+                        triangles[i + 5] = x + 1 + newWidth * z;
+
+                        i += 6;
+                    }
+                }
+            }
+
+            return new MeshData(vertices, uv, triangles);
+        }
     }
+
+    
 
     public class MeshData
     {
@@ -51,5 +93,10 @@ namespace JStuff.Generation
         public Vector3[] vertices;
         public Vector2[] uv;
         public int[] triangles;
+
+        public int Width()
+        {
+            return (int)Mathf.Sqrt(vertices.Length);
+        }
     }
 }

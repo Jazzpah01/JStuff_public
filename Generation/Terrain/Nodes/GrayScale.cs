@@ -16,8 +16,8 @@ namespace JStuff.Generation.Terrain
         protected override void SetupPorts()
         {
             inputMeshData = AddInputLink<MeshData>();
-            colormapOutput = AddOutputLink(Evaluate);
             maxHeightInput = AddInputLink<float>();
+            colormapOutput = AddOutputLink<Color[]>(Evaluate, portName: "Colormap");
         }
 
         private Color[] Evaluate()

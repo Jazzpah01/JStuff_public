@@ -53,6 +53,15 @@ public class GraphCreatorEditor : EditorWindow
         OnSelectionChange();
     }
 
+    void OnGraphInvalid()
+    {
+        Graph g = Selection.activeObject as Graph;
+        if (g != null)
+        {
+            graphView.PopulateView(g);
+        }
+    }
+
     private void OnSelectionChange()
     {
         Graph g = Selection.activeObject as Graph;

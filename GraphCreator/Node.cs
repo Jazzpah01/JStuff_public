@@ -15,6 +15,7 @@ namespace JStuff.GraphCreator
 
         [HideInInspector] public Vector2 nodePosition;
         [HideInInspector] public List<Link> links = new List<Link>();
+        [HideInInspector] public List<Link> cacheLinks = new List<Link>();
         [HideInInspector] [SerializeReference] public List<PortView> portViews = new List<PortView>();
         [HideInInspector] public string guid;
         [HideInInspector] public Graph graph;
@@ -49,6 +50,13 @@ namespace JStuff.GraphCreator
         public Action OnNodeChange;
 
         private bool valid = false;
+
+        [Flags]
+        public enum InputPortSettings
+        {
+            None = 0,
+            Optional = 0b1
+        }
 
         [Flags]
         public enum PortSetup
@@ -105,7 +113,11 @@ namespace JStuff.GraphCreator
             {
                 portSignature = "";
                 SetupNode();
+                SetupPorts_Editor(InitPortStrategy.StringGeneration);
+                SetupPorts_Editor(InitPortStrategy.PortViewGeneration);
                 isSetup = true;
+                valid = true;
+                return;
             }
 
             //// Application.isPlaying, then do that
@@ -132,8 +144,10 @@ namespace JStuff.GraphCreator
                     view.Valid = false;
                 }
 
+                valid = false;
+
                 portViews = new List<PortView>();
-                SetupPorts_Editor(InitPortStrategy.PortViewGeneration);
+                //SetupPorts_Editor(InitPortStrategy.PortViewGeneration);
 
                 if (OnNodeChange != null)
                     OnNodeChange();
@@ -166,7 +180,9 @@ namespace JStuff.GraphCreator
 
         }
 
-        protected InputMultiLink<T> AddInputMultiLink<T>(string portName = "default", PortSetup portSetup = PortSetup.Editor | PortSetup.Signature | PortSetup.Runtime)
+        protected InputMultiLink<T> AddInputMultiLink<T>(string portName = "default", 
+            PortSetup portSetup = PortSetup.Editor | PortSetup.Signature | PortSetup.Runtime,
+            InputPortSettings inputPortSettings = InputPortSettings.None)
         {
             Port.Capacity capacity = Port.Capacity.Multi;
             PortView portView;
@@ -196,7 +212,9 @@ namespace JStuff.GraphCreator
             return null;
         }
 
-        protected InputLink<T> AddInputLink<T>(string portName = "default", PortSetup portSetup = PortSetup.Editor | PortSetup.Signature | PortSetup.Runtime)
+        protected InputLink<T> AddInputLink<T>(string portName = "default", 
+            PortSetup portSetup = PortSetup.Editor | PortSetup.Signature | PortSetup.Runtime,
+            InputPortSettings inputPortSettings = InputPortSettings.None)
         {
             Port.Capacity capacity = Port.Capacity.Single;
             PortView portView;
@@ -223,11 +241,14 @@ namespace JStuff.GraphCreator
                     if (CacheOutput)
                     {
                         link = new InputLinkCached<T>();
+                        cacheLinks.Add(link);
                     }
                     else
                     {
                         link = new InputLink<T>();
                     }
+                    if ((inputPortSettings | InputPortSettings.Optional) != 0)
+                        link.optional = true;
                     AddLink<T>(link, capacity, graph.InputPortDirection);
                     return link;
             }
@@ -263,6 +284,7 @@ namespace JStuff.GraphCreator
                     if (CacheOutput)
                     {
                         link = new OutputLinkCached<T>();
+                        cacheLinks.Add(link);
                     } else
                     {
                         link = new OutputLink<T>();
@@ -275,7 +297,7 @@ namespace JStuff.GraphCreator
             return null;
         }
 
-        protected Link AddPropertyLink(string propertyName, bool asOutput = true)
+        protected Link AddPropertyOutputLink(string propertyName)
         {
             Direction direction = graph.InputPortDirection == Direction.Input ? Direction.Output : Direction.Input;
             PortView portView;
@@ -283,21 +305,50 @@ namespace JStuff.GraphCreator
             switch (currentStrategy)
             {
                 case InitPortStrategy.StringGeneration:
-                    AddLinkSignature("PropertyLink<" + graph.GetPropertyType(propertyName) + ">");
+                    AddLinkSignature("PropertyOutputLink<" + propertyName + ":" + graph.GetPropertyType(propertyName) + ">");
                     break;
                 case InitPortStrategy.PortViewGeneration:
-                    if (asOutput)
-                    {
-                        portView = CreateInstance<PortView>();
-                        AddPortView(portView, graph.GetPropertyType(propertyName), Port.Capacity.Multi, direction, propertyName);
-                    }
+                    portView = CreateInstance<PortView>();
+                    AddPortView(portView, graph.GetPropertyType(propertyName), Port.Capacity.Multi, direction, propertyName);
                     break;
                 case InitPortStrategy.LinkGeneration:
                     Link link = graph.GetProperty(propertyName);
-                    if (asOutput)
+                    links.Add(link);
+                    return link;
+                default:
+                    break;
+
+            }
+            return null;
+        }
+
+        protected InputLink<T> AddPropertyInputLink<T>(string propertyName)
+        {
+            PortView portView;
+
+            switch (currentStrategy)
+            {
+                case InitPortStrategy.StringGeneration:
+                    AddLinkSignature("PropertyInputLink<" + propertyName + ":" + graph.GetPropertyType(propertyName) + ">");
+                    break;
+                case InitPortStrategy.PortViewGeneration:
+
+                    break;
+                case InitPortStrategy.LinkGeneration:
+                    Link propertyLink = graph.GetProperty(propertyName);
+                    InputLink<T> link = null;
+                    if (CacheOutput)
                     {
-                        links.Add(link);
+                        link = new InputLinkCached<T>();
+                        cacheLinks.Add(link);
                     }
+                    else
+                    {
+                        link = new InputLink<T>();
+                    }
+                    link.Init(this, links.Count, graph.Orientation, Direction.None, Port.Capacity.Single);
+                    link.Valid = true;
+                    link.LinkPort(propertyLink);
                     return link;
                 default:
                     break;
@@ -322,11 +373,11 @@ namespace JStuff.GraphCreator
             portSignature += name;
         }
 
-        private void AddLink<T>(Link nodePort, Port.Capacity capacity, Direction direction)
+        private void AddLink<T>(Link link, Port.Capacity capacity, Direction direction)
         {
-            nodePort.Init(this, links.Count, graph.Orientation, direction, capacity);
-            links.Add(nodePort);
-            nodePort.Valid = true;
+            link.Init(this, links.Count, graph.Orientation, direction, capacity);
+            links.Add(link);
+            link.Valid = true;
         }
 
         private void AddPortView(PortView portView, string type, Port.Capacity capacity, Direction direction, string portName)
@@ -368,7 +419,7 @@ namespace JStuff.GraphCreator
         public bool ReEvaluate()
         {
             bool retval = false;
-            foreach (Link l in links)
+            foreach (Link l in cacheLinks)
             {
                 ICachedLink cl = l as ICachedLink;
                 if (cl != null)

@@ -8,19 +8,27 @@ namespace JStuff.Generation.Terrain
 {
     public class Block : MonoBehaviour, IConsumer
     {
+        bool inJob = false;
+
         WorldTerrain terrain;
 
         TerrainGraph graph;
         MeshFilter meshFilter;
+        MeshFilter colliderMeshFilter;
+        MeshCollider meshCollider;
         Material material;
 
         BlockData currentData;
 
+        GameObject colliderObject;
+
         public Vector3 targetPosition;
+        public Vector3 oldTargetPosition;
 
         public bool waitingJobResult = false;
 
-        public List<GameObject> terrainObjects = new List<GameObject>();
+        public List<GameObject> terrainGameObjects = new List<GameObject>();
+        List<TerrainObject> terrainObjects;
 
         private void Start()
         {
@@ -32,6 +40,14 @@ namespace JStuff.Generation.Terrain
             meshFilter = gameObject.AddComponent<MeshFilter>();
             gameObject.AddComponent<MeshRenderer>().material = material;
             this.material = material;
+
+
+            colliderObject = new GameObject("Collider");
+            colliderObject.transform.parent = this.transform;
+            colliderObject.transform.localPosition = Vector3.zero;
+            meshCollider = colliderObject.AddComponent<MeshCollider>();
+            colliderObject.SetActive(false);
+
 
             this.graph = graph;
             graph.InitializeGraph();
@@ -48,7 +64,6 @@ namespace JStuff.Generation.Terrain
         {
             currentData = (BlockData)data;
             ApplyData();
-            SetPosition(targetPosition);
             waitingJobResult = false;
         }
 
@@ -59,6 +74,11 @@ namespace JStuff.Generation.Terrain
 
         public void UpdateBlock(Vector3 centerPosition, Vector3 newPosition)
         {
+            if (waitingJobResult)
+            {
+                return;
+            }
+
             graph.CenterPosition = new Vector2(centerPosition.x, centerPosition.z);
             graph.ChunkPosition = new Vector2(newPosition.x, newPosition.z);
             targetPosition = newPosition;
@@ -77,31 +97,85 @@ namespace JStuff.Generation.Terrain
 
         public void ApplyData()
         {
-            Mesh mesh = new Mesh();
-            mesh.vertices = currentData.meshRendererData.vertices;
-            mesh.uv = currentData.meshRendererData.uv;
-            mesh.triangles = currentData.meshRendererData.triangles;
-            mesh.colors = currentData.colormap;
-            mesh.RecalculateNormals();
+            StartCoroutine(ApplyDataCoroutine());
+        }
 
-            meshFilter.sharedMesh = mesh;
-
+        IEnumerator ApplyDataCoroutine()
+        {
+            // Remove terrain objects
             if (currentData.terrainObjects != null)
             {
-                foreach (GameObject go in terrainObjects)
+                if (targetPosition != oldTargetPosition)
                 {
-                    Destroy(go);
-                }
-                terrainObjects.Clear();
-
-                foreach (TerrainObject obj in currentData.terrainObjects)
-                {
-                    GameObject nobj = Instantiate(obj.prefab);
-                    nobj.transform.position = obj.position + targetPosition;
-                    nobj.transform.rotation = obj.rotation;
-                    terrainObjects.Add(nobj);
+                    foreach (GameObject go in terrainGameObjects)
+                    {
+                        Destroy(go);
+                        yield return null;
+                    }
+                    terrainGameObjects.Clear();
                 }
             }
+            yield return null;
+
+            // Mesh renderer
+            if (targetPosition != oldTargetPosition)
+            {
+                Mesh mesh = new Mesh();
+                mesh.vertices = currentData.meshRendererData.vertices;
+                mesh.uv = currentData.meshRendererData.uv;
+                mesh.triangles = currentData.meshRendererData.triangles;
+                mesh.colors = currentData.colormap;
+                mesh.RecalculateNormals();
+
+                meshFilter.sharedMesh = mesh;
+
+                SetPosition(targetPosition);
+            }
+
+            yield return null;
+
+            // Mesh collider
+            if (targetPosition != oldTargetPosition)
+            {
+                if (currentData.meshColliderData != null)
+                {
+                    colliderObject.SetActive(true);
+
+                    Mesh colliderMesh = new Mesh();
+                    colliderMesh.vertices = currentData.meshColliderData.vertices;
+                    colliderMesh.uv = currentData.meshColliderData.uv;
+                    colliderMesh.triangles = currentData.meshColliderData.triangles;
+
+                    meshCollider.sharedMesh = colliderMesh;
+                }
+                else
+                {
+                    colliderObject.SetActive(false);
+                }
+            }
+
+            yield return null;
+
+            // Spawn terrain objects
+            if (currentData.terrainObjects != null)
+            {
+                if (targetPosition != oldTargetPosition)
+                {
+                    foreach (TerrainObject obj in currentData.terrainObjects)
+                    {
+                        GameObject nobj = Instantiate(obj.prefab, transform);
+                        nobj.transform.position = obj.position + targetPosition;
+                        nobj.transform.rotation = obj.rotation;
+                        terrainGameObjects.Add(nobj);
+                    }
+
+                    terrainObjects = currentData.terrainObjects;
+
+                    yield return null;
+                }
+            }
+
+            oldTargetPosition = targetPosition;
         }
 
         public void SetPosition(Vector3 position)

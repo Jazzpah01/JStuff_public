@@ -7,6 +7,7 @@ namespace JStuff.GraphCreator
 {
     public enum Direction
     {
+        None,
         Input,
         Output
     }
