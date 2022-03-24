@@ -100,18 +100,10 @@ public class SimpleNodeView : gvNode, INodeView
 
     private void OnNodeChange()
     {
-        Debug.Log("OnNodeChange");
         foreach (Port p in ports)
         {
             p.DisconnectAll();
         }
-        //foreach (PortView item in node.portViews)
-        //{
-        //    item.Valid = false;
-
-        //}
-        //node.OnNodeChange -= OnNodeChange;
-        //graphView.graph.UpdateNodes();
         graphView.PopulateView(graphView.graph);
     }
 

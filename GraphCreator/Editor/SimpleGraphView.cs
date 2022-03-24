@@ -123,12 +123,6 @@ public class SimpleGraphView : UnityEditor.Experimental.GraphView.GraphView
 
                 foreach (PortView view in port.linked)
                 {
-                    //if (view == null || port.PortType == null && (port.PortTypeName != null || port.PortTypeName != ""))
-                    //{
-                    //    port.UnLinkAll();
-                    //    break;
-                    //}
-
                     Node outputnode = view.node;
 
                     Edge edge = FindNodeView(inputnode).GetPort(port).ConnectTo(FindNodeView(outputnode).GetPort(view));

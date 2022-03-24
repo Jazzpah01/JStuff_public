@@ -54,9 +54,9 @@ namespace JStuff.GraphCreator
 
         private void ValueChanged(string value)
         {
-            Valid = false;
             propertyName = value;
             graph.UpdateNodes();
+            base.OnNodeChange();
         }
 
         protected override void SetupNode()

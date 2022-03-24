@@ -13,7 +13,7 @@ namespace JStuff.Generation.Terrain
     {
         public CustomGradient flatGradient;
         public CustomGradient slopeGradient;
-        public InterpolationCurve interpolateFunction;
+        public AnimationCurve interpolateFunction;
         public float maxSlope = 10;
 
         InputLink<MeshData> inputMeshData;
@@ -95,8 +95,7 @@ namespace JStuff.Generation.Terrain
             SlopeColormap retval = base.Clone() as SlopeColormap;
             retval.slopeGradient = slopeGradient.Clone();
             retval.flatGradient = flatGradient.Clone();
-            interpolateFunction.PreEvaluate();
-            retval.interpolateFunction = interpolateFunction;
+            retval.interpolateFunction = new AnimationCurve(interpolateFunction.keys);
             retval.maxSlope = maxSlope;
             return retval;
         }

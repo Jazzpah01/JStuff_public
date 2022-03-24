@@ -201,9 +201,11 @@ namespace JStuff.GraphCreator
                     invalidNode.portViews.Clear();
 
                     nodes.Remove(invalidNode);
-                    nodes.Add(invalidNode);
-                    invalidNode.isSetup = false;
-                    invalidNode.UpdateNode();
+
+                    CreateNode(invalidNode.Clone());
+
+                    if (!Application.isPlaying)
+                        AssetDatabase.RemoveObjectFromAsset(invalidNode);
                     i--;
                 }
             }
@@ -348,6 +350,7 @@ namespace JStuff.GraphCreator
             node.name = node.GetType().Name;
             node.guid = GUID.Generate().ToString();
             node.graph = this;
+            node.isSetup = false;
             node.UpdateNode();
             nodes.Add(node);
             node.Valid = true;
@@ -499,7 +502,14 @@ namespace JStuff.GraphCreator
                 portViews[i].UnLinkAll();
                 foreach (int connection in connections[i])
                 {
-                    portViews[i].ConnectPort(portViews[connection]);
+                    try
+                    {
+                        portViews[i].ConnectPort(portViews[connection]);
+                    } catch (ArgumentException e)
+                    {
+                        portViews[i].UnLinkAll();
+                        Debug.LogError(e);
+                    }
                 }
             }
         }
