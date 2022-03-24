@@ -31,6 +31,8 @@ namespace JStuff.Generation
             get { return map[i, j]; }
         }
 
+        public float[,] Array => map;
+
         public HeightMap(float[,] map, bool forceScale = false, bool checkRange = true)
         {
             this.map = map;
