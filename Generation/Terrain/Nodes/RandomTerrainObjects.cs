@@ -39,7 +39,7 @@ namespace JStuff.Generation.Terrain
         {
             List<TerrainObject> retval = new List<TerrainObject>();
             HeightMap hm = heightmapInput.Evaluate();
-            float s = (hm.Length-1) / (sizeInput.Evaluate()-1);
+            float s = (hm.Length) / (sizeInput.Evaluate());
             float scale = scaleInput.Evaluate();
 
             System.Random rng = new System.Random(seedInput.Evaluate());

@@ -55,7 +55,6 @@ namespace JStuff.GraphCreator
         private void ValueChanged(string value)
         {
             Valid = false;
-            portViews[0].Valid = false;
             propertyName = value;
             graph.UpdateNodes();
         }

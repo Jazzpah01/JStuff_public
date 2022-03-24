@@ -107,12 +107,14 @@ namespace JStuff.Generation.Terrain
             {
                 if (targetPosition != oldTargetPosition)
                 {
-                    foreach (GameObject go in terrainGameObjects)
+                    for (int i = 0; i < terrainGameObjects.Count; i++)
                     {
-                        Destroy(go);
+                        Destroy(terrainGameObjects[i]);
+                        terrainGameObjects.Clear();
+                        i--;
                         yield return null;
                     }
-                    terrainGameObjects.Clear();
+                    
                 }
             }
             yield return null;

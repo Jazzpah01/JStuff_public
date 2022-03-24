@@ -93,7 +93,22 @@ namespace JStuff.GraphCreator
         protected virtual void SetupNode() { }
         public List<Link> Ports => links;
 
-        public bool Valid { get => valid; set => valid = value; }
+        public bool Valid
+        {
+            get => valid;
+            set
+            {
+                valid = value;
+
+                if (!value)
+                {
+                    foreach (PortView view in portViews)
+                    {
+                        view.Valid = false;
+                    }
+                }
+            }
+        }
 
         [SerializeField] private string portSignature = "";
 
@@ -119,13 +134,6 @@ namespace JStuff.GraphCreator
                 valid = true;
                 return;
             }
-
-            //// Application.isPlaying, then do that
-            //if (Application.isPlaying)
-            //{
-            //    SetupPorts_Editor(InitPortStrategy.PortGeneration);
-            //    return;
-            //}
 
             // Check for change in port signature
             string oldPortSignature = portSignature;
@@ -180,7 +188,7 @@ namespace JStuff.GraphCreator
 
         }
 
-        protected InputMultiLink<T> AddInputMultiLink<T>(string portName = "default", 
+        protected InputMultiLink<T> AddInputMultiLink<T>(string portName = "default",
             PortSetup portSetup = PortSetup.Editor | PortSetup.Signature | PortSetup.Runtime,
             InputPortSettings inputPortSettings = InputPortSettings.None)
         {
@@ -212,7 +220,7 @@ namespace JStuff.GraphCreator
             return null;
         }
 
-        protected InputLink<T> AddInputLink<T>(string portName = "default", 
+        protected InputLink<T> AddInputLink<T>(string portName = "default",
             PortSetup portSetup = PortSetup.Editor | PortSetup.Signature | PortSetup.Runtime,
             InputPortSettings inputPortSettings = InputPortSettings.None)
         {
@@ -285,7 +293,8 @@ namespace JStuff.GraphCreator
                     {
                         link = new OutputLinkCached<T>();
                         cacheLinks.Add(link);
-                    } else
+                    }
+                    else
                     {
                         link = new OutputLink<T>();
                     }

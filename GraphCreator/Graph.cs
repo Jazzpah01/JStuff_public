@@ -134,28 +134,52 @@ namespace JStuff.GraphCreator
 
         }
 
+        public void CleanParentlessPortView()
+        {
+            HashSet<PortView> parentfulViews = new HashSet<PortView>();
+
+            foreach (Node node in nodes)
+            {
+                foreach (PortView view in node.portViews)
+                {
+                    parentfulViews.Add(view);
+                }
+            }
+
+            foreach (PortView view in portViews.ToArray())
+            {
+                if (!parentfulViews.Contains(view))
+                {
+                    // Illigal view to delete
+                    if (!Application.isPlaying)
+                        AssetDatabase.RemoveObjectFromAsset(view);
+                    portViews.Remove(view);
+                }
+            }
+        }
+
         public void CleanupPortViews()
         {
-
             foreach (PortView view in portViews.ToArray())
             {
                 if (view == null)
                 {
+                    portViews.Remove(view);
                     continue;
                 }
                 foreach (PortView linked in view.linked.ToArray())
                 {
                     if (linked == null)
                     {
+                        view.UnLinkAll();
                         continue;
                     }
-                    if (!linked.Valid)
+                    if (!linked.Valid || !view.Valid)
                     {
                         view.UnLink(linked);
                     }
                 }
             }
-
 
             for (int i = 0; i < portViews.Count; i++)
             {
@@ -168,46 +192,21 @@ namespace JStuff.GraphCreator
                 }
             }
 
-            //List<(Type, Vector2)> nodesToRecreate = new List<(Type, Vector2)>();
-
             for (int i = 0; i < nodes.Count; i++)
             {
                 if (!nodes[i].Valid)
                 {
                     Node invalidNode = nodes[i];
-                    
-                    while(nodes[i].portViews != null && nodes[i].portViews.Count > 0)
-                    {
-                        PortView view = nodes[i].portViews[0];
-                        nodes[i].portViews.Remove(view);
-                        if (portViews.Contains(view))
-                        {
-                            portViews.Remove(view);
-                        }
-                        if (!Application.isPlaying)
-                            AssetDatabase.RemoveObjectFromAsset(view);
-                    }
+
+                    invalidNode.portViews.Clear();
 
                     nodes.Remove(invalidNode);
                     nodes.Add(invalidNode);
                     invalidNode.isSetup = false;
                     invalidNode.UpdateNode();
-
                     i--;
-
-                    //nodesToRecreate.Add((invalidNode.GetType(), invalidNode.nodePosition));
-                    //nodes.Remove(invalidNode);
-                    //if (!Application.isPlaying)
-                    //    AssetDatabase.RemoveObjectFromAsset(portViews[i]);
-
                 }
             }
-
-            //for (int i = 0; i < nodesToRecreate.Count; i++)
-            //{
-            //    Node newNode = CreateNode(nodesToRecreate[i].Item1);
-            //    newNode.nodePosition = nodesToRecreate[i].Item2;
-            //}
 
             if (!Application.isPlaying)
             {
@@ -386,7 +385,9 @@ namespace JStuff.GraphCreator
                 }
             }
             UpdateGraph();
-            CleanupPortViews(); if (!Application.isPlaying)
+            CleanupPortViews();
+            CleanParentlessPortView();
+            if (!Application.isPlaying)
             {
                 AssetDatabase.SaveAssets();
             }
