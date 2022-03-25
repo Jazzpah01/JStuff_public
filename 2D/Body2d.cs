@@ -441,15 +441,15 @@ namespace JStuff.TwoD.Platformer
                 else
                 {
                     // If walled + (grounded or ceiled)
-                    velocity.x = data.horizontalBounce * -velocity.x;
-                    if (Vector2.Angle(change, Vector2.up) < 5)
-                    {
-                        Grounded = true;
-                    }
-                    else
-                    {
-                        Ceiled = true;
-                    }
+                    //velocity.x = data.horizontalBounce * -velocity.x;
+                    //if (Vector2.Angle(change, Vector2.up) < 5)
+                    //{
+                    //    Grounded = true;
+                    //}
+                    //else
+                    //{
+                    //    Ceiled = true;
+                    //}
                 }
             }
 
