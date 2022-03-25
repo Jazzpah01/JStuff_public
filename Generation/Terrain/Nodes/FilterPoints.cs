@@ -10,7 +10,9 @@ namespace JStuff.Generation.Terrain
     [CreateNodePath("Terrain/Points/Filter")]
     public class FilterPoints : TerrainNode
     {
-        public float maxSlope = 1;
+        public float maxHeight;
+        public float minHeight;
+
         public AnimationCurve curve;
 
         InputLink<int> seedInput;
@@ -51,13 +53,14 @@ namespace JStuff.Generation.Terrain
 
             foreach (Vector2 point in points)
             {
-                float slope = hm.GetSlope(point.x / size, point.y / size);
+                float height = hm.GetContinousHeight(point.x / (float)size, point.y / (float)size);
 
-                if (slope > maxSlope)
+                if (height < minHeight || height > maxHeight)
                     continue;
 
-                float converted = curve.Evaluate((hm.GetContinousHeight(point.x / size, point.y / size) + 1) / 2) * 2 - 1;
-                if (rng.NextDouble() % 1f < converted)
+                float converted = curve.Evaluate(height.Remap(minHeight, maxHeight, 0, 1));
+                float r = (float)rng.NextDouble();
+                if (Mathf.Abs(r) % 1f < converted.Clamp(0,1))
                 {
                     retval.Add(point);
                 }
@@ -72,8 +75,9 @@ namespace JStuff.Generation.Terrain
 
             AnimationCurve curve = new AnimationCurve(this.curve.keys);
 
-            retval.maxSlope = maxSlope;
             retval.curve = curve;
+            retval.maxHeight = maxHeight;
+            retval.minHeight = minHeight;
 
             return retval;
         }

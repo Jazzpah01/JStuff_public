@@ -11,8 +11,8 @@ namespace JStuff.Generation.Terrain
     [CreateNodePath("Terrain/Colormap/Slope color")]
     public class SlopeColormap : TerrainNode
     {
-        public CustomGradient flatGradient;
-        public CustomGradient slopeGradient;
+        public Gradient flatGradient;
+        public Gradient slopeGradient;
         public AnimationCurve interpolateFunction;
         public float maxSlope = 10;
 
@@ -93,8 +93,10 @@ namespace JStuff.Generation.Terrain
         public override Node Clone()
         {
             SlopeColormap retval = base.Clone() as SlopeColormap;
-            retval.slopeGradient = slopeGradient.Clone();
-            retval.flatGradient = flatGradient.Clone();
+            retval.slopeGradient = new Gradient();
+            retval.slopeGradient.SetKeys(slopeGradient.colorKeys, slopeGradient.alphaKeys);
+            retval.flatGradient = new Gradient();
+            retval.flatGradient.SetKeys(flatGradient.colorKeys, flatGradient.alphaKeys);
             retval.interpolateFunction = new AnimationCurve(interpolateFunction.keys);
             retval.maxSlope = maxSlope;
             return retval;
