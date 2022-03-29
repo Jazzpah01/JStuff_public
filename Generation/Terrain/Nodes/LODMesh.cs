@@ -22,7 +22,6 @@ namespace JStuff.Generation.Terrain
 
             output = AddOutputLink<MeshData>(Evaluate);
         }
-
         MeshData Evaluate()
         {
             int LOD = LODInput.Evaluate();

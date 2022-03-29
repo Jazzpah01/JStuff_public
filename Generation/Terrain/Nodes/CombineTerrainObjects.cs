@@ -10,6 +10,15 @@ namespace JStuff.Generation.Terrain
     [CreateNodePath("Terrain/Terrain Objects/Combine")]
     public class CombineTerrainObjects : TerrainNode
     {
+        public enum CombineStrategy
+        {
+            None,
+            Collision
+        }
+
+        public CombineStrategy strategy;
+
+
         InputLink<List<TerrainObject>> input1;
         InputLink<List<TerrainObject>> input2;
 
@@ -32,19 +41,45 @@ namespace JStuff.Generation.Terrain
 
             List<TerrainObject> retval = new List<TerrainObject>(in1);
 
-            foreach (TerrainObject a in in2)
+            if (in2.Count == 0)
+                return in1;
+
+            if (in1.Count == 0)
+                return in2;
+
+            switch (strategy)
             {
-                foreach (TerrainObject b in in1)
-                {
-                    if ((a.position - b.position).sqrMagnitude >= (a.radius + b.radius)*(a.radius + b.radius))
-                    //if ((a.position - b.position).magnitude >= a.radius + b.radius)
+                case CombineStrategy.None:
+                    foreach(TerrainObject obje in in2)
                     {
-                        // No collision!
-                        Debug.Log("No collision!");
-                        retval.Add(a);
+                        retval.Add(obje);
                     }
-                }
+                    return retval;
+                case CombineStrategy.Collision:
+                    foreach (TerrainObject a in in2)
+                    {
+                        foreach (TerrainObject b in in1)
+                        {
+                            if ((a.position - b.position).sqrMagnitude >= (a.radius + b.radius) * (a.radius + b.radius))
+                            {
+                                // No collision!
+                                retval.Add(a);
+                            }
+                        }
+                    }
+                    return retval;
             }
+
+            
+
+            return retval;
+        }
+
+        public override Node Clone()
+        {
+            CombineTerrainObjects retval = base.Clone() as CombineTerrainObjects;
+
+            retval.strategy = strategy;
 
             return retval;
         }

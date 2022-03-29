@@ -13,9 +13,14 @@ namespace JStuff.Generation.Terrain
         public float maxHeight;
         public float minHeight;
 
+        public float factor;
+
+        public float maxSlope;
+
         public AnimationCurve curve;
 
         InputLink<int> seedInput;
+        InputLink<HeightMap> greenmapInput;
         InputLink<HeightMap> heightmapInput;
         InputLink<List<Vector2>> inputPoints;
         InputLink<float> scaleInput;
@@ -31,6 +36,7 @@ namespace JStuff.Generation.Terrain
         {
             seedInput = AddInputLink<int>();
             heightmapInput = AddInputLink<HeightMap>();
+            greenmapInput = AddInputLink<HeightMap>(inputPortSettings: InputPortSettings.Optional);
             inputPoints = AddInputLink<List<Vector2>>();
             scaleInput = AddInputLink<float>();
 
@@ -42,25 +48,69 @@ namespace JStuff.Generation.Terrain
 
         public List<Vector2> Evaluate()
         {
+            if (greenmapInput.linkedPort == null)
+            {
+                return Evaluate_WithoutGreenmap();
+            }
+
             System.Random rng = new System.Random(seedInput.Evaluate());
             float size = sizeInput.Evaluate();
-            float scale = scaleInput.Evaluate();
+            HeightMap gm = greenmapInput.Evaluate();
             HeightMap hm = heightmapInput.Evaluate();
             List<Vector2> points = inputPoints.Evaluate();
-            Vector2 position = positionInput.Evaluate();
+            float scale = scaleInput.Evaluate();
 
             List<Vector2> retval = new List<Vector2>();
 
             foreach (Vector2 point in points)
             {
+                float weight = gm.GetContinousHeight(point.x / (float)size, point.y / (float)size);
                 float height = hm.GetContinousHeight(point.x / (float)size, point.y / (float)size);
 
-                if (height < minHeight || height > maxHeight)
+                float slope = hm.GetSlope(point.x / (float)size, point.y / (float)size) * scale;
+                slope = 0;
+                if (height < minHeight || height > maxHeight || slope > maxSlope)
                     continue;
 
-                float converted = curve.Evaluate(height.Remap(minHeight, maxHeight, 0, 1));
+                weight = weight.Remap(-1, 1, 0, 1);
+                height = height.Remap(minHeight, maxHeight, 0, 1);
+                height = curve.Evaluate(height);
+
                 float r = (float)rng.NextDouble();
-                if (Mathf.Abs(r) % 1f < converted.Clamp(0,1))
+
+                if (Mathf.Abs(r) % 1f < weight * height * factor)
+                {
+                    retval.Add(point);
+                }
+            }
+
+            return retval;
+        }
+
+        public List<Vector2> Evaluate_WithoutGreenmap()
+        {
+            System.Random rng = new System.Random(seedInput.Evaluate());
+            float size = sizeInput.Evaluate();
+            HeightMap hm2 = heightmapInput.Evaluate();
+            List<Vector2> points = inputPoints.Evaluate();
+            float scale = scaleInput.Evaluate();
+
+            List<Vector2> retval = new List<Vector2>();
+
+            foreach (Vector2 point in points)
+            {
+                float height = hm2.GetContinousHeight(point.x / (float)size, point.y / (float)size);
+
+                float slope = hm2.GetSlope(point.x / (float)size, point.y / (float)size) * scale;
+                if (height < minHeight || height > maxHeight || slope > maxSlope)
+                    continue;
+
+                height = height.Remap(minHeight, maxHeight, 0, 1);
+                height = curve.Evaluate(height);
+
+                float r = (float)rng.NextDouble();
+
+                if (Mathf.Abs(r) % 1f < height * factor)
                 {
                     retval.Add(point);
                 }
@@ -78,6 +128,8 @@ namespace JStuff.Generation.Terrain
             retval.curve = curve;
             retval.maxHeight = maxHeight;
             retval.minHeight = minHeight;
+            retval.factor = factor;
+            retval.maxHeight = maxHeight;
 
             return retval;
         }

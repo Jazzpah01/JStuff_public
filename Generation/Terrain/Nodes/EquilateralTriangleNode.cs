@@ -24,7 +24,7 @@ namespace JStuff.Generation.Terrain
 
         OutputLink<HeightMap> output;
 
-        public override bool CacheOutput => true;
+        //public override bool CacheOutput => true;
 
         protected override void SetupPorts()
         {
@@ -37,6 +37,7 @@ namespace JStuff.Generation.Terrain
             chunkSizeInput = AddPropertyInputLink<float>("chunkSize");
         }
 
+        static int cnt;
         public HeightMap GenerateHeightMap()
         {
             Vector2 realOffset = Vector2.zero;//offset.Evaluate();
@@ -48,8 +49,6 @@ namespace JStuff.Generation.Terrain
             float chunkSize = chunkSizeInput.Evaluate();
             float zoom = zoomInput.Evaluate();
             Vector2 position = positionInput.Evaluate() / zoom / chunkSize;
-
-            Debug.Log(chunkSizeInput.LinkedPort);
 
             EquilateralTriangle equilateralTriangle = new EquilateralTriangle();
             HeightMap currentHeightMap = equilateralTriangle.GetHeightMap(size, depth, h, d, 

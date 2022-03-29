@@ -198,8 +198,6 @@ namespace JStuff.GraphCreator
                 {
                     Node invalidNode = nodes[i];
 
-                    invalidNode.portViews.Clear();
-
                     nodes.Remove(invalidNode);
 
                     CreateNode(invalidNode.Clone());
@@ -277,7 +275,7 @@ namespace JStuff.GraphCreator
         public void InitializeGraph()
         {
             if (!Application.isPlaying)
-                throw new Exception("Can only setup graph in runtime.");
+                throw new Exception("Can only initialize graph in runtime.");
 
             sharedContext.runmode = true;
             uniqueContext.runmode = true;
@@ -389,7 +387,7 @@ namespace JStuff.GraphCreator
             }
             UpdateGraph();
             CleanupPortViews();
-            CleanParentlessPortView();
+            CleanParentlessPortView();  
             if (!Application.isPlaying)
             {
                 AssetDatabase.SaveAssets();
@@ -475,6 +473,9 @@ namespace JStuff.GraphCreator
             {
                 CreateNode(newNodes[i]);
             }
+
+            if (!Application.isPlaying)
+                AssetDatabase.SaveAssets();
         }
 
         public void ReCreateNodes(List<Node> oldNodes)
@@ -487,6 +488,9 @@ namespace JStuff.GraphCreator
             {
                 CreateNode(oldNodes[i].Clone());
             }
+
+            if (!Application.isPlaying)
+                AssetDatabase.SaveAssets();
         }
 
         public void ConnectPorts(List<List<int>> connections)
@@ -508,7 +512,7 @@ namespace JStuff.GraphCreator
                     } catch (ArgumentException e)
                     {
                         portViews[i].UnLinkAll();
-                        Debug.LogError(e);
+                        Debug.LogError("Error while connecting ports: " + e);
                     }
                 }
             }
@@ -542,6 +546,7 @@ namespace JStuff.GraphCreator
 
         public void ResetPorts()
         {
+            Debug.Log("resetting ports!");
             List<List<int>> connections = GetConnections();
 
             List<Node> newNodes = new List<Node>();
@@ -550,11 +555,15 @@ namespace JStuff.GraphCreator
                 newNodes.Add(nodes[i].Clone());
             }
             isSetup = false;
+            Clear();
             Setup();
 
             CreateNodes(newNodes);
 
             ConnectPorts(connections);
+
+            if (!Application.isPlaying)
+                AssetDatabase.SaveAssets();
         }
 
         public void Clear()

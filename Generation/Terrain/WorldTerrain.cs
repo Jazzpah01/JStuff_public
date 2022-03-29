@@ -1,6 +1,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using JStuff.Threading;
 
 namespace JStuff.Generation.Terrain
 {
@@ -43,20 +44,29 @@ namespace JStuff.Generation.Terrain
             Populate();
         }
 
+        bool shouldUpdate = false;
+
         private void Update()
         {
-            if ((new Vector3(cameraTransform.position.x, 0, cameraTransform.position.z) - transform.position).magnitude > chunkSize / 2f)
+            if ((new Vector3(cameraTransform.position.x, 0, cameraTransform.position.z) - transform.position).magnitude > chunkSize / 2f && !shouldUpdate)
             {
                 transform.position = new Vector3(cameraTransform.position.x, 0, cameraTransform.position.z);
+                shouldUpdate = true;
             }
 
             //if ((centerChunk + new Vector3(chunkSize/2, 0, chunkSize / 2) - transform.position).magnitude > chunkSize)
             Vector3 newCenterChunk = transform.position - new Vector3(transform.position.x % chunkSize, 0, transform.position.z % chunkSize);
 
-            if (centerChunk != newCenterChunk)
+            if (shouldUpdate)
             {
+                if (JobManagerComponent.instance.manager.Pending != 0)
+                {
+                    JobManagerComponent.instance.manager.FinishJobs();
+                }
+
                 DynamicUpdate(newCenterChunk, centerChunk);
                 centerChunk = newCenterChunk;
+                shouldUpdate = false;
             }
 
         }

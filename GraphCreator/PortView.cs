@@ -23,7 +23,8 @@ namespace JStuff.GraphCreator
 
         public List<PortView> linked = new List<PortView>();
 
-        [SerializeField] private bool isValid = false;
+        //[SerializeField] private
+        public bool isValid = false;
 
         public Type PortType => Type.GetType(portType);
 

@@ -18,6 +18,7 @@ namespace JStuff.Generation.Terrain
         MeshCollider meshCollider;
         Material material;
 
+        BlockData oldData;
         BlockData currentData;
 
         GameObject colliderObject;
@@ -76,7 +77,7 @@ namespace JStuff.Generation.Terrain
         {
             if (waitingJobResult)
             {
-                return;
+                JobManagerComponent.instance.manager.FinishJobs();
             }
 
             graph.CenterPosition = new Vector2(centerPosition.x, centerPosition.z);
@@ -103,19 +104,15 @@ namespace JStuff.Generation.Terrain
         IEnumerator ApplyDataCoroutine()
         {
             // Remove terrain objects
-            if (currentData.terrainObjects != null)
+            if (terrainObjects != null && currentData.terrainObjects != terrainObjects)
             {
-                if (targetPosition != oldTargetPosition)
+                for (int i = 0; i < terrainGameObjects.Count; i++)
                 {
-                    for (int i = 0; i < terrainGameObjects.Count; i++)
-                    {
-                        Destroy(terrainGameObjects[i]);
-                        terrainGameObjects.Clear();
-                        i--;
-                        yield return null;
-                    }
-                    
+                    Destroy(terrainGameObjects[i]);
+                    i--;
+                    yield return null;
                 }
+                terrainGameObjects.Clear();
             }
             yield return null;
 
@@ -137,7 +134,7 @@ namespace JStuff.Generation.Terrain
             yield return null;
 
             // Mesh collider
-            if (targetPosition != oldTargetPosition)
+            if (oldData == null || currentData.meshColliderData != oldData.meshColliderData)
             {
                 if (currentData.meshColliderData != null)
                 {
@@ -161,7 +158,7 @@ namespace JStuff.Generation.Terrain
             // Spawn terrain objects
             if (currentData.terrainObjects != null)
             {
-                if (targetPosition != oldTargetPosition)
+                if (currentData.terrainObjects != terrainObjects)
                 {
                     foreach (TerrainObject obj in currentData.terrainObjects)
                     {
@@ -178,6 +175,7 @@ namespace JStuff.Generation.Terrain
             }
 
             oldTargetPosition = targetPosition;
+            oldData = currentData;
         }
 
         public void SetPosition(Vector3 position)

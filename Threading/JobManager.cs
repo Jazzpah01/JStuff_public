@@ -313,7 +313,7 @@ namespace JStuff.Threading
             threads = null;
         }
 
-        private void FinishJobs()
+        public void FinishJobs()
         {
             // Main thread sleeps untill all jobs are done.
             pendingEvent.Signal();

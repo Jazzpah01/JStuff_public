@@ -19,6 +19,7 @@ namespace JStuff.GraphCreator
         [HideInInspector] [SerializeReference] public List<PortView> portViews = new List<PortView>();
         [HideInInspector] public string guid;
         [HideInInspector] public Graph graph;
+        public bool valid = false;
 
         public int iteration = 0;
 
@@ -48,8 +49,6 @@ namespace JStuff.GraphCreator
         }
 
         public Action OnNodeChange;
-
-        private bool valid = false;
 
         [Flags]
         public enum InputPortSettings
@@ -146,13 +145,8 @@ namespace JStuff.GraphCreator
             }
             else
             {
-                // New port signature: cleanup old port views
-                foreach (PortView view in portViews)
-                {
-                    view.Valid = false;
-                }
-
-                valid = false;
+                // New signature!
+                Valid = false;
 
                 portViews = new List<PortView>();
                 //SetupPorts_Editor(InitPortStrategy.PortViewGeneration);
@@ -427,6 +421,12 @@ namespace JStuff.GraphCreator
 
         public bool ReEvaluate()
         {
+            if (!CacheOutput)
+            {
+                Debug.Log("wtf");
+                return false;
+            }
+                
             bool retval = false;
             foreach (Link l in cacheLinks)
             {

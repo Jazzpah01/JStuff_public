@@ -462,7 +462,6 @@ namespace JStuff.Generation
             {
                 return Mathf.Lerp(map[rx, ry], map[rx + 1, ry], x.FractionalDigits());
             }
-
             float h0 = Mathf.Lerp(map[rx,ry], map[rx, ry+1], y.FractionalDigits());
             float h1 = Mathf.Lerp(map[rx+1, ry], map[rx+1, ry + 1], y.FractionalDigits());
 
