@@ -23,10 +23,10 @@ namespace JStuff.Generation.Terrain
 
         GameObject parentChunk;
 
-        public float chunkSize;
-        public float scale;
-        public int seed;
-        public float zoom;
+        private float chunkSize;
+        private float scale;
+        private int seed;
+        private float zoom;
 
         public bool enableThreading = false;
 
