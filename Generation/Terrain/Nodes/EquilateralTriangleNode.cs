@@ -10,10 +10,10 @@ namespace JStuff.Generation.Terrain
     public class EquilateralTriangleNode : TerrainNode
     {
         public int size = 65;
-        public int depth = 9;
+        public int depth = 1;
 
-        public float h = 0.35f;
-        public float d = 0.35f;
+        public float h = 0.1f;
+        public float d = 0.55f;
 
         InputLink<int> seedInput;
         InputLink<float> zoomInput;
@@ -24,13 +24,13 @@ namespace JStuff.Generation.Terrain
 
         OutputLink<HeightMap> output;
 
-        //public override bool CacheOutput => true;
+        public override bool CacheOutput => true;
 
         protected override void SetupPorts()
         {
             seedInput = AddInputLink<int>();
             zoomInput = AddInputLink<float>();
-            offset = AddInputLink<Vector2>("Vector2 (Optional)");//, inputPortSettings: InputPortSettings.Optional);//, inputPortSettings: InputPortSettings.Optional);
+            offset = AddInputLink<Vector2>("Vector2 (Optional)");
             output = AddOutputLink(GenerateHeightMap);
 
             positionInput = AddPropertyInputLink<Vector2>("chunkPosition");

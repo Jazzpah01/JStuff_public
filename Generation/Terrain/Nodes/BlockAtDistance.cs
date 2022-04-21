@@ -45,7 +45,7 @@ namespace JStuff.Generation.Terrain
 
             int dist = Mathf.RoundToInt(j / size);
 
-            if (dist >= coordDistance)
+            if (dist > coordDistance)
             {
                 return new List<TerrainObject>();
             } else

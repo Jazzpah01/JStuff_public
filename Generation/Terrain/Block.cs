@@ -104,13 +104,15 @@ namespace JStuff.Generation.Terrain
         IEnumerator ApplyDataCoroutine()
         {
             // Remove terrain objects
-            if (terrainObjects != null && currentData.terrainObjects != terrainObjects)
+            if (terrainObjects != null && currentData.terrainObjects.Count != terrainObjects.Count)
             {
-                for (int i = 0; i < terrainGameObjects.Count; i++)
+                int size = terrainGameObjects.Count;
+                int j = (currentData.terrainObjects.Count > 0) ? currentData.terrainObjects.Count : 0;
+                for (int i = j; i < terrainGameObjects.Count; i++)
                 {
-                    Destroy(terrainGameObjects[i]);
+                    TerrainPool.DestroyTerrainObject(terrainGameObjects[i]);
+                    terrainGameObjects.RemoveAt(i);
                     i--;
-                    yield return null;
                 }
                 terrainGameObjects.Clear();
             }
@@ -158,21 +160,22 @@ namespace JStuff.Generation.Terrain
             // Spawn terrain objects
             if (currentData.terrainObjects != null)
             {
-                if (currentData.terrainObjects != terrainObjects)
+                if (terrainObjects == null)
+                    terrainObjects = new List<TerrainObject>();
+
+                if (currentData.terrainObjects.Count > terrainObjects.Count)
                 {
-                    foreach (TerrainObject obj in currentData.terrainObjects)
+                    int j = (currentData.terrainObjects.Count > 0) ? terrainObjects.Count : 0;
+                    for (int i = j; i < currentData.terrainObjects.Count; i++)
                     {
-                        GameObject nobj = Instantiate(obj.prefab, transform);
-                        nobj.transform.position = obj.position + targetPosition;
-                        nobj.transform.rotation = obj.rotation;
-                        terrainGameObjects.Add(nobj);
+                        terrainGameObjects.Add(TerrainPool.CreateTerrainObject(currentData.terrainObjects[i], this));
                     }
 
                     terrainObjects = currentData.terrainObjects;
-
-                    yield return null;
                 }
             }
+
+            yield return null;
 
             oldTargetPosition = targetPosition;
             oldData = currentData;
