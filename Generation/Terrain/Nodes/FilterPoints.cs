@@ -36,7 +36,7 @@ namespace JStuff.Generation.Terrain
         {
             seedInput = AddInputLink<int>();
             heightmapInput = AddInputLink<HeightMap>();
-            greenmapInput = AddInputLink<HeightMap>(inputPortSettings: InputPortSettings.Optional);
+            greenmapInput = AddInputLink<HeightMap>(portName: "HeightMap (optional)", inputPortSettings: InputPortSettings.Optional);
             inputPoints = AddInputLink<List<Vector2>>();
             scaleInput = AddInputLink<float>();
 
@@ -48,14 +48,9 @@ namespace JStuff.Generation.Terrain
 
         public List<Vector2> Evaluate()
         {
-            if (greenmapInput.linkedPort == null)
-            {
-                return Evaluate_WithoutGreenmap();
-            }
-
             System.Random rng = new System.Random(seedInput.Evaluate());
             float size = sizeInput.Evaluate();
-            HeightMap gm = greenmapInput.Evaluate();
+            HeightMap gm = (greenmapInput == null) ? new HeightMap(2, 1f) : greenmapInput.Evaluate();
             HeightMap hm = heightmapInput.Evaluate();
             List<Vector2> points = inputPoints.Evaluate();
             float scale = scaleInput.Evaluate();
@@ -64,53 +59,20 @@ namespace JStuff.Generation.Terrain
 
             foreach (Vector2 point in points)
             {
-                float weight = gm.GetContinousHeight(point.x / (float)size, point.y / (float)size);
-                float height = hm.GetContinousHeight(point.x / (float)size, point.y / (float)size);
+                float weight = gm.GetContinousHeight(point.x / (float)size * (gm.Width - 1), point.y / (float)size * (gm.Width - 1));
+                float height = hm.GetContinousHeight(point.x / (float)size * (hm.Width - 1), point.y / (float)size * (hm.Width - 1));
 
-                float slope = hm.GetSlope(point.x / (float)size, point.y / (float)size) * scale;
-                slope = 0;
-                if (height < minHeight || height > maxHeight || slope > maxSlope)
+                float slope = hm.GetSlope((int)(point.x / (float)size * (hm.Width - 1)), (int)(point.y / (float)size * (hm.Width - 1)));
+                if (height * scale < minHeight || height * scale > maxHeight || slope * scale > maxSlope)
                     continue;
 
                 weight = weight.Remap(-1, 1, 0, 1);
-                height = height.Remap(minHeight, maxHeight, 0, 1);
+                height = height.Remap(minHeight / scale, maxHeight / scale, 0, 1);
                 height = curve.Evaluate(height);
 
                 float r = (float)rng.NextDouble();
 
                 if (Mathf.Abs(r) % 1f < weight * height * factor)
-                {
-                    retval.Add(point);
-                }
-            }
-
-            return retval;
-        }
-
-        public List<Vector2> Evaluate_WithoutGreenmap()
-        {
-            System.Random rng = new System.Random(seedInput.Evaluate());
-            float size = sizeInput.Evaluate();
-            HeightMap hm2 = heightmapInput.Evaluate();
-            List<Vector2> points = inputPoints.Evaluate();
-            float scale = scaleInput.Evaluate();
-
-            List<Vector2> retval = new List<Vector2>();
-
-            foreach (Vector2 point in points)
-            {
-                float height = hm2.GetContinousHeight(point.x / (float)size, point.y / (float)size);
-
-                float slope = hm2.GetSlope(point.x / (float)size, point.y / (float)size) * scale;
-                if (height < minHeight || height > maxHeight || slope > maxSlope)
-                    continue;
-
-                height = height.Remap(minHeight, maxHeight, 0, 1);
-                height = curve.Evaluate(height);
-
-                float r = (float)rng.NextDouble();
-
-                if (Mathf.Abs(r) % 1f < height * factor)
                 {
                     retval.Add(point);
                 }
@@ -128,6 +90,7 @@ namespace JStuff.Generation.Terrain
             retval.curve = curve;
             retval.maxHeight = maxHeight;
             retval.minHeight = minHeight;
+            retval.maxSlope = maxSlope;
             retval.factor = factor;
             retval.maxHeight = maxHeight;
 

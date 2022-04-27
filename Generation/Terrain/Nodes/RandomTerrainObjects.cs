@@ -10,7 +10,6 @@ namespace JStuff.Generation.Terrain
     [CreateNodePath("Terrain/Terrain Objects/Random")]
     public class RandomTerrainObjects : TerrainNode
     {
-        public float maxSlope = 1;
         public List<TerrainObjectType> types;
 
         InputLink<int> seedInput;
@@ -43,15 +42,10 @@ namespace JStuff.Generation.Terrain
             float s = (hm.Length) / (sizeInput.Evaluate());
             float scale = scaleInput.Evaluate();
 
-
-
             System.Random rng = new System.Random(seedInput.Evaluate());
 
             foreach (Vector2 v in pointsInput.Evaluate())
             {
-                if (hm.GetSlope((int)v.x * s, (int)v.y * s) > maxSlope)
-                    continue;
-
                 int index = rng.Next(0, types.Count);
                 retval.Add(new TerrainObject(types[index].prefab, new Vector3(v.x, hm[(int)(v.x * s), (int)(v.y * s)] * scale, v.y), types[index].objectRadius));
             }
@@ -73,7 +67,6 @@ namespace JStuff.Generation.Terrain
             }
 
             retval.types = nprefabs;
-            retval.maxSlope = maxSlope;
             return retval;
         }
     }

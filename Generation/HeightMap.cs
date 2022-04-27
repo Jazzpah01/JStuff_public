@@ -56,6 +56,18 @@ namespace JStuff.Generation
             }
         }
 
+        public HeightMap(int size, float elevation)
+        {
+            this.map = new float[size, size];
+            for (int y = 0; y < size; y++)
+            {
+                for (int x = 0; x < size; x++)
+                {
+                    this.map[x, y] = elevation;
+                }
+            }
+        }
+
         public HeightMap FilteredHeightMap(Func<float, float> func)
         {
             float[,] retval = new float[this.Width, this.Length];
@@ -376,9 +388,9 @@ namespace JStuff.Generation
         {
             float[,] retval = new float[Width, Width];
 
-            for (int i = 0; i < Width; i++)
+            for (int j = 0; j < Width; j++)
             {
-                for (int j = 0; j < Width; j++)
+                for (int i = 0; i < Width; i++)
                 {
                     retval[i, j] = map[i, j];
                 }
@@ -480,10 +492,10 @@ namespace JStuff.Generation
             float max = -2;
 
             if (map[(int)x, (int)y] > max)
-                max = map[Mathf.RoundToInt(x), Mathf.RoundToInt(y)];
+                max = map[Mathf.FloorToInt(x), Mathf.FloorToInt(y)];
 
             if (map[(int)x, (int)y] < min)
-                min = map[Mathf.RoundToInt(x), Mathf.RoundToInt(y)];
+                min = map[Mathf.FloorToInt(x), Mathf.FloorToInt(y)];
 
             if ((float)((int)x) != x)
             {
