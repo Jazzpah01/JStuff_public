@@ -1,7 +1,6 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
-using UnityEditor.Experimental.GraphView;
 using UnityEngine;
 
 namespace JStuff.GraphCreator
@@ -17,11 +16,11 @@ namespace JStuff.GraphCreator
 
         ILink ILinkable.LinkedPort => linkedPort;
 
-        public override void Init(Node node, int index, Orientation rotientation, Direction direction, Port.Capacity capacity)
+        public override void Init(Node node, int index, Link.Orientation rotientation, Link.Direction direction, Link.Capacity capacity)
         {
-            orientation = orientation;
-            this.direction = Direction.Input;
-            this.capacity = capacity;
+            this._orientation = orientation;
+            this._direction = Direction.Input;
+            this._capacity = capacity;
             type = typeof(T);
             this.node = node;
             this.nodeIndex = index;

@@ -1,7 +1,7 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
-using UnityEditor.Experimental.GraphView;
+//using UnityEditor.Experimental.GraphView;
 using UnityEngine;
 
 namespace JStuff.GraphCreator
@@ -33,11 +33,11 @@ namespace JStuff.GraphCreator
             return cachedValue;
         }
 
-        public override void Init(Node node, int index, Orientation rotientation, Direction direction, Port.Capacity capacity)
+        public override void Init(Node node, int index, Orientation rotientation, Direction direction, Capacity capacity)
         {
-            orientation = rotientation;
-            this.direction = Direction.Output;
-            this.capacity = capacity;
+            this._orientation = rotientation;
+            this._direction = Direction.Output;
+            this._capacity = capacity;
             type = typeof(T);
             this.node = node;
             this.nodeIndex = index;

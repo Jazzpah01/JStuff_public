@@ -6,8 +6,8 @@ using JStuff.Generation;
 
 namespace JStuff.Generation.Terrain
 {
-    [CreateNodePath("Terrain/HeightMap/New/Equilateral Triangle")]
-    public class EquilateralTriangleNode : TerrainNode
+    [CreateNodePath("Terrain/HeightMap/New/Right Triangle")]
+    public class RightTriangleNode : TerrainNode
     {
         public int size = 65;
         public int depth = 1;
@@ -50,15 +50,14 @@ namespace JStuff.Generation.Terrain
             float zoom = zoomInput.Evaluate();
             Vector2 position = positionInput.Evaluate() / zoom / chunkSize;
 
-            EquilateralTriangle equilateralTriangle = new EquilateralTriangle();
-            HeightMap currentHeightMap = equilateralTriangle.GetHeightMap(size, depth, h, d, 
-                seedInput.Evaluate(), offsetX: realOffset.x + position.x, offsetZ: realOffset.y + position.y, zoom: zoom);
+            RightTriangle rightTriangle = new RightTriangle(size, h, d, zoom, realOffset + position);
+            HeightMap currentHeightMap = rightTriangle.GetHeightMap(depth);
             return currentHeightMap;
         }
 
         public override Node Clone()
         {
-            EquilateralTriangleNode retval = base.Clone() as EquilateralTriangleNode;
+            RightTriangleNode retval = base.Clone() as RightTriangleNode;
             retval.size = size;
             retval.depth = depth;
             retval.zoomInput = zoomInput;

@@ -9,7 +9,7 @@ using gvNode = UnityEditor.Experimental.GraphView.Node;
 using gvDirection = UnityEditor.Experimental.GraphView.Direction;
 using JStuff.GraphCreator;
 using Node = JStuff.GraphCreator.Node;
-using Direction = JStuff.GraphCreator.Direction;
+using JStuff.GraphCreator.Editor;
 
 [Serializable]
 public class SimpleNodeView : gvNode, INodeView
@@ -47,12 +47,12 @@ public class SimpleNodeView : gvNode, INodeView
 
         foreach (PortView port in node.portViews)
         {
-            Port p = InstantiatePort(port.orientation, port.direction.Get(), port.capacity, port.PortType);
+            Port p = InstantiatePort(port.orientation.Get(), port.direction.Get(), port.capacity.Get(), port.PortType);
             p.portName = port.portName;
             ports.Add(p);
             portData.Add(p, port);
 
-            if (p.direction.Get() == Direction.Input)
+            if (p.direction.Get() == Link.Direction.Input)
             {
                 inputContainer.Add(p);
             }
@@ -62,7 +62,7 @@ public class SimpleNodeView : gvNode, INodeView
             }
         }
 
-        node.OnGUIStart(this);
+        node.OnGUIStart(/*this*/);
         node.OnNodeChange = null;
         node.OnNodeChange = OnNodeChange;
     }
@@ -85,7 +85,7 @@ public class SimpleNodeView : gvNode, INodeView
         {
             OnNodeSelected.Invoke(this);
         }
-        node.OnGUISelected(this);
+        node.OnGUISelected(/*this*/);
     }
 
     public override void OnUnselected()
@@ -95,7 +95,7 @@ public class SimpleNodeView : gvNode, INodeView
         //{
         //    OnNodeSelected.Invoke(null);
         //}
-        node.OnGUIUnselected(this);
+        node.OnGUIUnselected(/*this*/);
     }
 
     private void OnNodeChange()

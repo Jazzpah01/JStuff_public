@@ -1,8 +1,10 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+#if UNITY_EDITOR
 using UnityEditor;
 using UnityEditor.Experimental.GraphView;
+#endif
 using UnityEngine;
 
 namespace JStuff.GraphCreator
@@ -11,9 +13,9 @@ namespace JStuff.GraphCreator
     public class PortView : ScriptableObject, IInvalid
     {
         public Node node;
-        public Orientation orientation;
-        public Direction direction;
-        public Port.Capacity capacity;
+        public Link.Orientation orientation;
+        public Link.Direction direction;
+        public Link.Capacity capacity;
         [SerializeField] private string portType;
         public int index;
         public int graphIndex;
@@ -32,7 +34,7 @@ namespace JStuff.GraphCreator
 
         public bool Valid { get => isValid; set => isValid = value; }
 
-        public void Init(Node node, Orientation orientation, Direction direction, Port.Capacity capacity, string portTypeName, int index, string portName = "default")
+        public void Init(Node node, Link.Orientation orientation, Link.Direction direction, Link.Capacity capacity, string portTypeName, int index, string portName = "default")
         {
             name = $"{direction} Port: {portTypeName}";
             this.node = node;
@@ -41,7 +43,7 @@ namespace JStuff.GraphCreator
             this.capacity = capacity;
             portType = portTypeName;
             this.index = index;
-            isInput = direction == Direction.Input;
+            isInput = direction == Link.Direction.Input;
             if (portName == "default")
             {
                 Type t = Type.GetType(portType);
@@ -51,8 +53,10 @@ namespace JStuff.GraphCreator
             {
                 this.portName = portName;
             }
-                
+
+#if UNITY_EDITOR
             AssetDatabase.SaveAssets();
+#endif
         }
 
         public void ConnectPort(PortView view)
@@ -61,23 +65,29 @@ namespace JStuff.GraphCreator
                 throw new Exception("Cannot connect to an input PortView.");
             if (!isInput)
                 throw new Exception("Cannot connect from an output PortView.");
-            if (capacity == Port.Capacity.Single && linked.Count > 0)
+            if (capacity == Link.Capacity.Single && linked.Count > 0)
                 throw new Exception("Cannot connect multiple to a single capacity input PortView.");
 
             linked.Add(view);
+#if UNITY_EDITOR
             AssetDatabase.SaveAssets();
+#endif
         }
 
         public void UnLink(PortView view)
         {
             linked.Remove(view);
+#if UNITY_EDITOR
             AssetDatabase.SaveAssets();
+#endif
         }
 
         public void UnLinkAll()
         {
             linked = new List<PortView>();
+#if UNITY_EDITOR
             AssetDatabase.SaveAssets();
+#endif
         }
 
         public bool LinkedWith(PortView view)

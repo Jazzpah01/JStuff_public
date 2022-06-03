@@ -1,8 +1,10 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+#if UNITY_EDITOR
 using UnityEditor;
 using UnityEditor.Experimental.GraphView;
+#endif
 using UnityEngine;
 using UnityEngine.UIElements;
 
@@ -31,22 +33,22 @@ namespace JStuff.GraphCreator
 
         public virtual string path => this.GetType().Name;
 
-        // Can use node.outputContainer/inputContainer for ports
-        // Can use node.titleContainer for node
-        public virtual void OnGUIStart(INodeView nodeView)
+#if UNITY_EDITOR
+        public virtual void OnGUIStart(/*INodeView nodeView*/)
         {
 
         }
 
-        public virtual void OnGUISelected(INodeView nodeView)
+        public virtual void OnGUISelected(/*INodeView nodeView*/)
         {
 
         }
 
-        public virtual void OnGUIUnselected(INodeView nodeView)
+        public virtual void OnGUIUnselected(/*INodeView nodeView*/)
         {
 
         }
+#endif
 
         public Action OnNodeChange;
 
@@ -186,7 +188,7 @@ namespace JStuff.GraphCreator
             PortSetup portSetup = PortSetup.Editor | PortSetup.Signature | PortSetup.Runtime,
             InputPortSettings inputPortSettings = InputPortSettings.None)
         {
-            Port.Capacity capacity = Port.Capacity.Multi;
+            Link.Capacity capacity = Link.Capacity.Multi;
             PortView portView;
             switch (currentStrategy)
             {
@@ -218,7 +220,7 @@ namespace JStuff.GraphCreator
             PortSetup portSetup = PortSetup.Editor | PortSetup.Signature | PortSetup.Runtime,
             InputPortSettings inputPortSettings = InputPortSettings.None)
         {
-            Port.Capacity capacity = Port.Capacity.Single;
+            Link.Capacity capacity = Link.Capacity.Single;
             PortView portView;
             switch (currentStrategy)
             {
@@ -257,10 +259,10 @@ namespace JStuff.GraphCreator
             return null;
         }
 
-        protected OutputLink<T> AddOutputLink<T>(OutputFunction<T> function, Port.Capacity capacity = Port.Capacity.Multi, string portName = "default",
+        protected OutputLink<T> AddOutputLink<T>(OutputFunction<T> function, Link.Capacity capacity = Link.Capacity.Multi, string portName = "default",
             PortSetup portSetup = PortSetup.Editor | PortSetup.Signature | PortSetup.Runtime)
         {
-            Direction direction = graph.InputPortDirection == Direction.Input ? Direction.Output : Direction.Input;
+            Link.Direction direction = (graph.InputPortDirection == Link.Direction.Input) ? Link.Direction.Output : Link.Direction.Input;
             PortView portView;
 
             switch (currentStrategy)
@@ -302,7 +304,7 @@ namespace JStuff.GraphCreator
 
         protected Link AddPropertyOutputLink(string propertyName)
         {
-            Direction direction = graph.InputPortDirection == Direction.Input ? Direction.Output : Direction.Input;
+            Link.Direction direction = (graph.InputPortDirection == Link.Direction.Input) ? Link.Direction.Output : Link.Direction.Input;
             PortView portView;
 
             switch (currentStrategy)
@@ -312,7 +314,7 @@ namespace JStuff.GraphCreator
                     break;
                 case InitPortStrategy.PortViewGeneration:
                     portView = CreateInstance<PortView>();
-                    AddPortView(portView, graph.GetPropertyType(propertyName), Port.Capacity.Multi, direction, propertyName);
+                    AddPortView(portView, graph.GetPropertyType(propertyName), Link.Capacity.Multi, direction, propertyName);
                     break;
                 case InitPortStrategy.LinkGeneration:
                     Link link = graph.GetProperty(propertyName);
@@ -349,7 +351,7 @@ namespace JStuff.GraphCreator
                     {
                         link = new InputLink<T>();
                     }
-                    link.Init(this, links.Count, graph.Orientation, Direction.None, Port.Capacity.Single);
+                    link.Init(this, links.Count, graph.Orientation, Link.Direction.None, Link.Capacity.Single);
                     link.Valid = true;
                     link.LinkPort(propertyLink);
                     return link;
@@ -376,27 +378,31 @@ namespace JStuff.GraphCreator
             portSignature += name;
         }
 
-        private void AddLink<T>(Link link, Port.Capacity capacity, Direction direction)
+        private void AddLink<T>(Link link, Link.Capacity capacity, Link.Direction direction)
         {
             link.Init(this, links.Count, graph.Orientation, direction, capacity);
             links.Add(link);
             link.Valid = true;
         }
 
-        private void AddPortView(PortView portView, string type, Port.Capacity capacity, Direction direction, string portName)
+        private void AddPortView(PortView portView, string type, Link.Capacity capacity, Link.Direction direction, string portName)
         {
             portView.Init(this, graph.Orientation, direction, capacity, type, portViews.Count, portName);
             portView.Valid = true;
+#if UNITY_EDITOR
             if (!Application.isPlaying)
             {
                 EditorUtility.SetDirty(portView);
                 AssetDatabase.AddObjectToAsset(portView, graph);
             }
+#endif
             portViews.Add(portView);
+#if UNITY_EDITOR
             if (!Application.isPlaying)
             {
                 AssetDatabase.SaveAssets();
             }
+#endif
         }
 
         public void ConnectLinks()

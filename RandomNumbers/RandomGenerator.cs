@@ -52,7 +52,7 @@ namespace JStuff.Random
         /// <returns>A random value from -1 to 1.</returns>
         public static float Value(float a, float b)
         {
-            float retval = (Mathf.PI + a) * (Mathf.PI + b);
+            float retval = (3.14159265359f + a) * (3.14159265359f + b);
             return retval.FractionalDigits() * 2 - 1;
         }
 
@@ -64,7 +64,7 @@ namespace JStuff.Random
         /// <returns></returns>
         public static float NormalValue(float a, float b)
         {
-            float retval = (Mathf.PI + Mathf.Abs(a)) * (Mathf.PI + Mathf.Abs(b));
+            float retval = (3.14159265359f + Mathf.Abs(a)) * (3.14159265359f + Mathf.Abs(b));
             return retval.FractionalDigits();
         }
 

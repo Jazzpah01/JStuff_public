@@ -16,7 +16,7 @@ namespace JStuff.Generation.Terrain
 
         InputLink<float> sizeInput;
 
-        OutputLink<List<Vector2>> terrainObjectsOutput;
+        OutputLink<List<Vector2>> points;
 
         public override bool CacheOutput => true;
 
@@ -24,7 +24,7 @@ namespace JStuff.Generation.Terrain
         {
             seedInput = AddInputLink<int>();
             sizeInput = AddPropertyInputLink<float>("chunkSize");
-            terrainObjectsOutput = AddOutputLink(Evaluate, portName: "List<Vector2>");
+            points = AddOutputLink(Evaluate, portName: "List<Vector2>");
         }
 
         public List<Vector2> Evaluate()

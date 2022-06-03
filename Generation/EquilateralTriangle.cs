@@ -89,7 +89,7 @@ namespace JStuff.Generation
             {
                 foreach(Triangle t in cachedVertices)
                 {
-                    if (PointInTriangle(p, t.a.v, t.b.v, t.c.v))
+                    if (PointInTriangle(p, t.a.xz, t.b.xz, t.c.xz))
                     {
                         usedCaching++;
                         return HeightAtPoint(p, t.a, t.b, t.c, cacheAtDepth, h, d, -1);
@@ -108,42 +108,42 @@ namespace JStuff.Generation
 
             float newheight;
             float r;
-            float distance = (a.v - b.v).magnitude;
+            float distance = (a.xz - b.xz).magnitude;
 
             r = Generator.Value(a.r, b.r);
-            newheight = d * r * (a.v-b.v).magnitude + Mathf.Abs(a.h - b.h) * h * r + (a.h + b.h) / 2;
+            newheight = d * r * (a.xz-b.xz).magnitude + Mathf.Abs(a.h - b.h) * h * r + (a.h + b.h) / 2;
             if (newheight < -1) newheight = -1;
             if (newheight > 1) newheight = 1;
-            Vertex ab = new Vertex((a.v + b.v) / 2, newheight, r);
+            Vertex ab = new Vertex((a.xz + b.xz) / 2, newheight, r);
 
             r = Generator.Value(a.r, c.r);
-            newheight = d * r * (a.v - c.v).magnitude + Mathf.Abs(a.h - c.h) * h * r + (a.h + c.h) / 2;
+            newheight = d * r * (a.xz - c.xz).magnitude + Mathf.Abs(a.h - c.h) * h * r + (a.h + c.h) / 2;
             if (newheight < -1) newheight = -1;
             if (newheight > 1) newheight = 1;
-            Vertex ac = new Vertex((a.v + c.v) / 2, newheight, r);
+            Vertex ac = new Vertex((a.xz + c.xz) / 2, newheight, r);
 
             r = Generator.Value(b.r, c.r);
-            newheight = d * r * (b.v - c.v).magnitude + Mathf.Abs(b.h - c.h) * h * r + (b.h + c.h) / 2;
+            newheight = d * r * (b.xz - c.xz).magnitude + Mathf.Abs(b.h - c.h) * h * r + (b.h + c.h) / 2;
             if (newheight < -1) newheight = -1;
             if (newheight > 1) newheight = 1;
-            Vertex bc = new Vertex((b.v + c.v) / 2, newheight, r);
+            Vertex bc = new Vertex((b.xz + c.xz) / 2, newheight, r);
 
-            if (PointInTriangle(p, a.v, ab.v, ac.v))
+            if (PointInTriangle(p, a.xz, ab.xz, ac.xz))
             {
                 return HeightAtPoint(p, a, ab, ac, depth - 1, h, d, cacheAtDepth);
             }
 
-            if (PointInTriangle(p, b.v, ab.v, bc.v))
+            if (PointInTriangle(p, b.xz, ab.xz, bc.xz))
             {
                 return HeightAtPoint(p, ab, b, bc, depth - 1, h, d, cacheAtDepth);
             }
 
-            if (PointInTriangle(p, ac.v, c.v, bc.v))
+            if (PointInTriangle(p, ac.xz, c.xz, bc.xz))
             {
                 return HeightAtPoint(p, ac, bc, c, depth - 1, h, d, cacheAtDepth);
             }
 
-            if (PointInTriangle(p, ab.v, bc.v, ac.v))
+            if (PointInTriangle(p, ab.xz, bc.xz, ac.xz))
             {
                 return HeightAtPoint(p, ab, bc, ac, depth - 1, h, d, cacheAtDepth);
             }

@@ -31,8 +31,8 @@ public class MultiLine
     public void AddVertex(float x, float z)
     {
         Vertex v = new Vertex();
-        v.v.x = x;
-        v.v.y = z;
+        v.xz.x = x;
+        v.xz.y = z;
 
         (float, float) chunkpos = (x - x % chunkSize, z - z % chunkSize);
 
@@ -56,8 +56,8 @@ public class MultiLine
     public void AddVertex(Vector2 vector)
     {
         Vertex v = new Vertex();
-        v.v.x = vector.x;
-        v.v.y = vector.y;
+        v.xz.x = vector.x;
+        v.xz.y = vector.y;
 
         float x = vector.x;
         float z = vector.y;
@@ -91,11 +91,11 @@ public class MultiLine
             nvertices.Add(vertices[i]);
             for (int j = 0; j < a; j++)
             {
-                Vector2 v = vertices[i].v + (vertices[i + 1].v - vertices[i].v) / a * j;
+                Vector2 v = vertices[i].xz + (vertices[i + 1].xz - vertices[i].xz) / a * j;
 
                 Vertex vertex = new Vertex();
 
-                vertex.v = v;
+                vertex.xz = v;
 
                 nvertices.Add(vertex);
             }
@@ -120,7 +120,7 @@ public class MultiLine
 
         for (int i = 0; i < vertices.Count-1; i++)
         {
-            float d = minimum_distance(vertices[i].v, vertices[i + 1].v, p);
+            float d = minimum_distance(vertices[i].xz, vertices[i + 1].xz, p);
             if (d < retval)
                 retval = d;
         }

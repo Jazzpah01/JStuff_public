@@ -1,9 +1,10 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
-using System;
+#if UNITY_EDITOR
 using UnityEditor;
-using UnityEditor.Experimental.GraphView;
+#endif
+using System;
 
 namespace JStuff.GraphCreator
 {
@@ -17,8 +18,8 @@ namespace JStuff.GraphCreator
 
         public abstract List<Type> NodeTypes { get; }
 
-        public virtual Direction InputPortDirection => Direction.Input;
-        public virtual Orientation Orientation => Orientation.Horizontal;
+        public virtual Link.Direction InputPortDirection => Link.Direction.Input;
+        public virtual Link.Orientation Orientation => Link.Orientation.Horizontal;
 
 
 
@@ -56,29 +57,34 @@ namespace JStuff.GraphCreator
             sharedContext = CreateInstance<Context>();
             sharedContext.name = "SharedContext";
             sharedContext.graph = this;
+#if UNITY_EDITOR
             if (!Application.isPlaying)
             {
                 EditorUtility.SetDirty(sharedContext);
                 AssetDatabase.AddObjectToAsset(sharedContext, this);
             }
+#endif
 
             uniqueContext = CreateInstance<Context>();
             uniqueContext.name = "UniqueContext";
             uniqueContext.graph = this;
+#if UNITY_EDITOR
             if (!Application.isPlaying)
             {
                 EditorUtility.SetDirty(uniqueContext);
                 AssetDatabase.AddObjectToAsset(uniqueContext, this);
             }
+#endif
 
             SetupProperties();
 
             isSetup = true;
-
+#if UNITY_EDITOR
             if (!Application.isPlaying)
             {
                 AssetDatabase.SaveAssets();
             }
+#endif
         }
 
         public void UpdateGraph()
@@ -94,11 +100,13 @@ namespace JStuff.GraphCreator
                     sharedContext = CreateInstance<Context>();
                     sharedContext.name = "SharedContext";
                     sharedContext.graph = this;
+#if UNITY_EDITOR
                     if (!Application.isPlaying)
                     {
                         EditorUtility.SetDirty(sharedContext);
                         AssetDatabase.AddObjectToAsset(sharedContext, this);
                     }
+#endif
                 }
 
                 if (uniqueContext == null)
@@ -106,21 +114,25 @@ namespace JStuff.GraphCreator
                     uniqueContext = CreateInstance<Context>();
                     uniqueContext.name = "UniqueContext";
                     uniqueContext.graph = this;
+#if UNITY_EDITOR
                     if (!Application.isPlaying)
                     {
                         EditorUtility.SetDirty(uniqueContext);
                         AssetDatabase.AddObjectToAsset(uniqueContext, this);
                     }
+#endif
                 }
 
                 sharedContext.Clear();
                 uniqueContext.Clear();
                 SetupProperties();
 
+#if UNITY_EDITOR
                 if (!Application.isPlaying)
                 {
                     AssetDatabase.SaveAssets();
                 }
+#endif
             }
         }
 
@@ -150,9 +162,11 @@ namespace JStuff.GraphCreator
             {
                 if (!parentfulViews.Contains(view))
                 {
+#if UNITY_EDITOR
                     // Illigal view to delete
                     if (!Application.isPlaying)
                         AssetDatabase.RemoveObjectFromAsset(view);
+#endif
                     portViews.Remove(view);
                 }
             }
@@ -185,9 +199,11 @@ namespace JStuff.GraphCreator
             {
                 if (!portViews[i].Valid)
                 {
+#if UNITY_EDITOR
                     if (!Application.isPlaying)
                         AssetDatabase.RemoveObjectFromAsset(portViews[i]);
                     portViews.Remove(portViews[i]);
+#endif
                     i--;
                 }
             }
@@ -201,17 +217,20 @@ namespace JStuff.GraphCreator
                     nodes.Remove(invalidNode);
 
                     CreateNode(invalidNode.Clone());
-
+#if UNITY_EDITOR
                     if (!Application.isPlaying)
                         AssetDatabase.RemoveObjectFromAsset(invalidNode);
+#endif
                     i--;
                 }
             }
 
+#if UNITY_EDITOR
             if (!Application.isPlaying)
             {
                 AssetDatabase.SaveAssets();
             }
+#endif
         }
 
         protected PropertyLink<T> AddProperty<T>(T value, string name, PropertyContext context)
@@ -302,7 +321,7 @@ namespace JStuff.GraphCreator
             initialized = true;
         }
 
-        
+
 
         public Node CreateNode(Type type)
         {
@@ -313,7 +332,9 @@ namespace JStuff.GraphCreator
 
             Node node = CreateInstance(type) as Node;
             node.name = type.Name;
+#if UNITY_EDITOR
             node.guid = GUID.Generate().ToString();
+#endif
             node.graph = this;
             node.UpdateNode();
             nodes.Add(node);
@@ -322,31 +343,35 @@ namespace JStuff.GraphCreator
             if (type == RootNodeType)
             {
                 rootNode = node;
+#if UNITY_EDITOR
                 if (!Application.isPlaying)
                 {
                     EditorUtility.SetDirty(this);
                     AssetDatabase.SaveAssets();
                 }
+#endif
             }
 
             foreach (PortView portView in node.portViews)
             {
                 portViews.Add(portView);
             }
-
+#if UNITY_EDITOR
             if (!Application.isPlaying)
             {
                 AssetDatabase.AddObjectToAsset(node, this);
                 AssetDatabase.SaveAssets();
             }
-
+#endif
             return node;
         }
 
         public Node CreateNode(Node node)
         {
             node.name = node.GetType().Name;
+#if UNITY_EDITOR
             node.guid = GUID.Generate().ToString();
+#endif
             node.graph = this;
             node.isSetup = false;
             node.UpdateNode();
@@ -358,21 +383,23 @@ namespace JStuff.GraphCreator
                 rootNode = node;
                 if (!Application.isPlaying)
                 {
+#if UNITY_EDITOR
                     EditorUtility.SetDirty(this);
                     AssetDatabase.SaveAssets();
+#endif
                 }
             }
             foreach (PortView portView in node.portViews)
             {
                 portViews.Add(portView);
             }
-
+#if UNITY_EDITOR
             if (!Application.isPlaying)
             {
                 AssetDatabase.AddObjectToAsset(node, this);
                 AssetDatabase.SaveAssets();
             }
-
+#endif
             return node;
         }
 
@@ -387,11 +414,13 @@ namespace JStuff.GraphCreator
             }
             UpdateGraph();
             CleanupPortViews();
-            CleanParentlessPortView();  
+            CleanParentlessPortView();
+#if UNITY_EDITOR
             if (!Application.isPlaying)
             {
                 AssetDatabase.SaveAssets();
             }
+#endif
         }
 
         public void DeleteNode(Node node)
@@ -405,22 +434,28 @@ namespace JStuff.GraphCreator
             foreach (PortView portView in node.portViews)
             {
                 portViews.Remove(portView);
-
+#if UNITY_EDITOR
                 AssetDatabase.RemoveObjectFromAsset(portView);
+#endif
             }
-
+#if UNITY_EDITOR
             AssetDatabase.RemoveObjectFromAsset(node);
             AssetDatabase.SaveAssets();
+#endif
         }
 
         public void DetectChange()
         {
+#if UNITY_EDITOR
             AssetDatabase.SaveAssets();
+#endif
         }
 
         public void SaveAsset()
         {
+#if UNITY_EDITOR
             AssetDatabase.SaveAssets();
+#endif
         }
 
         public virtual Graph Clone()
@@ -473,9 +508,10 @@ namespace JStuff.GraphCreator
             {
                 CreateNode(newNodes[i]);
             }
-
+#if UNITY_EDITOR
             if (!Application.isPlaying)
                 AssetDatabase.SaveAssets();
+#endif
         }
 
         public void ReCreateNodes(List<Node> oldNodes)
@@ -488,9 +524,10 @@ namespace JStuff.GraphCreator
             {
                 CreateNode(oldNodes[i].Clone());
             }
-
+#if UNITY_EDITOR
             if (!Application.isPlaying)
                 AssetDatabase.SaveAssets();
+#endif
         }
 
         public void ConnectPorts(List<List<int>> connections)
@@ -509,7 +546,8 @@ namespace JStuff.GraphCreator
                     try
                     {
                         portViews[i].ConnectPort(portViews[connection]);
-                    } catch (ArgumentException e)
+                    }
+                    catch (ArgumentException e)
                     {
                         portViews[i].UnLinkAll();
                         Debug.LogError("Error while connecting ports: " + e);
@@ -526,7 +564,7 @@ namespace JStuff.GraphCreator
                 nodes[i].SetupLinks();
                 for (int j = 0; j < nodes[i].links.Count; j++)
                 {
-                    if (nodes[i].links[j].Direction == Direction.None)
+                    if (nodes[i].links[j].direction == Link.Direction.None)
                         continue;
 
                     Link link = nodes[i].links[j];
@@ -561,9 +599,10 @@ namespace JStuff.GraphCreator
             CreateNodes(newNodes);
 
             ConnectPorts(connections);
-
+#if UNITY_EDITOR
             if (!Application.isPlaying)
                 AssetDatabase.SaveAssets();
+#endif
         }
 
         public void Clear()

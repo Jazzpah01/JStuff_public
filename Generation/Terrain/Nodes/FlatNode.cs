@@ -5,7 +5,7 @@ using JStuff.GraphCreator;
 
 namespace JStuff.Generation.Terrain
 {
-    [CreateNodePath("Terrain/HeightMap/Flat")]
+    [CreateNodePath("Terrain/HeightMap/New/Flat")]
     public class FlatNode : TerrainNode
     {
         public int size = 65;

@@ -25,19 +25,13 @@ namespace JStuff.Generation.Terrain
         protected override void SetupPorts()
         {
             inputMeshData = AddInputLink<MeshData>();
-            maxHeightInput = AddInputLink<float>();
             colormapOutput = AddOutputLink(Evaluate, portName: "Colormap");
         }
 
-        //public override void Initialize()
-        //{
-        //    interpolateFunction.PreEvaluate();
-        //}
-
         private Color[] Evaluate()
         {
-            float maxHeight = maxHeightInput.Evaluate();
             MeshData data = inputMeshData.Evaluate();
+            float maxHeight = data.heightFactor;
 
             int size = (int)Mathf.Sqrt(data.vertices.Length);
             int asize = size - 1;

@@ -1,11 +1,8 @@
 using System.Collections;
 using System.Collections.Generic;
-using UnityEditor.Experimental.GraphView;
 using UnityEngine;
 using System;
 using JStuff.GraphCreator;
-using gvDirection = UnityEditor.Experimental.GraphView.Direction;
-using Direction = JStuff.GraphCreator.Direction;
 
 public class Context : ScriptableObject
 {
@@ -46,14 +43,12 @@ public class Context : ScriptableObject
 
     public void AddPropertyLink<T>(T value, string propertyName)
     {
-        Direction direction = (graph.InputPortDirection == Direction.Input) ? Direction.Output : Direction.Input;
+        Link.Direction direction = (graph.InputPortDirection == Link.Direction.Input) ? Link.Direction.Output : Link.Direction.Input;
         string propertyNameType = $"[{typeof(T).Name}] {propertyName}";
         if (runmode)
         {
             if (!propertyNames.Contains(propertyName))
             {
-                Debug.Log(propertyNames.Count);
-                Debug.Log(propertyNames[0]);
                 throw new System.Exception($"Property name doesn't exist: {propertyName}");
             }
 
@@ -61,7 +56,7 @@ public class Context : ScriptableObject
                 throw new System.Exception($"Type of property doesn't match: {typeof(T).FullName}");
 
             PropertyLink<T> nodePort = new PropertyLink<T>();
-            nodePort.Init(null, 0, graph.Orientation, direction, Port.Capacity.Multi);
+            nodePort.Init(null, 0, graph.Orientation, direction, Link.Capacity.Multi);
             nodePort.cachedValue = value;
             indexer.Add(propertyName, nodePort);
         } else

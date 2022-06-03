@@ -4,7 +4,7 @@ using UnityEngine;
 
 namespace JStuff.Threading
 {
-    [CreateAssetMenu(menuName = "Assets/JStuff/JobManagerData")]
+    [CreateAssetMenu(menuName = "JStuff/JobManagerData")]
     public class JobManagerData : ScriptableObject
     {
         [Min(1)] [SerializeField] public int maxJobs = 1000;

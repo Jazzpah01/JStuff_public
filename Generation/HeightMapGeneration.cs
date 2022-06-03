@@ -17,7 +17,7 @@ namespace JStuff.Generation
             bool nonLinearScaling = false,
             bool autoCache = false)
         {
-            Func<Vertex, Vertex, float, float> func = (Vertex a, Vertex b, float r) => (a.h + b.h) / 2 + r * ((a.v - b.v).magnitude * dist + Mathf.Abs(a.h - b.h) * heightDiff);
+            Func<Vertex, Vertex, float, float> func = (Vertex a, Vertex b, float r) => (a.h + b.h) / 2 + r * ((a.xz - b.xz).magnitude * dist + Mathf.Abs(a.h - b.h) * heightDiff);
 
             return GenerateHeightmap(func, size, depth, seed, ah, bh, ch, offsetX, offsetZ, zoom, cacheAtDepth, null, 0, nonLinearScaling, autoCache);
         }

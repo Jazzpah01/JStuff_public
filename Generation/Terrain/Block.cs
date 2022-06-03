@@ -8,6 +8,9 @@ namespace JStuff.Generation.Terrain
 {
     public class Block : MonoBehaviour, IConsumer
     {
+        [Header("Debug")]
+        public bool initialized = false;
+
         bool inJob = false;
 
         WorldTerrain terrain;
@@ -54,6 +57,10 @@ namespace JStuff.Generation.Terrain
             graph.InitializeGraph();
 
             terrain = worldTerrain;
+
+            initialized = true;
+
+            oldTargetPosition = new Vector3(0, 0, float.MinValue);
         }
 
         public object Job(object graph)
@@ -127,6 +134,7 @@ namespace JStuff.Generation.Terrain
                 mesh.triangles = currentData.meshRendererData.triangles;
                 mesh.colors = currentData.colormap;
                 mesh.RecalculateNormals();
+                mesh.RecalculateTangents();
 
                 meshFilter.sharedMesh = mesh;
 

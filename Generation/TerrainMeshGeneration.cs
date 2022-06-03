@@ -36,7 +36,7 @@ namespace JStuff.Generation
                 }
             }
 
-            return new MeshData(vertices, uv, triangles);
+            return new MeshData(vertices, uv, triangles, multiplier, map.Length, map.Width);
         }
 
         public static MeshData GenerateLODMesh(MeshData meshData, int LOD)
@@ -76,7 +76,7 @@ namespace JStuff.Generation
                 }
             }
 
-            return new MeshData(vertices, uv, triangles);
+            return new MeshData(vertices, uv, triangles, meshData.heightFactor, newWidth, newWidth);
         }
     }
 
@@ -84,19 +84,60 @@ namespace JStuff.Generation
 
     public class MeshData
     {
-        public MeshData(Vector3[] vertices, Vector2[] uv, int[] triangles)
+        public MeshData(Vector3[] vertices, Vector2[] uv, int[] triangles, float heightFactor, int sizeX, int sizeZ)
         {
             this.vertices = vertices;
             this.uv = uv;
             this.triangles = triangles;
+            this.heightFactor = heightFactor;
+            this.sizeX = sizeX;
+            this.sizeZ = sizeZ;
         }
         public Vector3[] vertices;
         public Vector2[] uv;
         public int[] triangles;
+        public float heightFactor;
+        public int sizeX;
+        public int sizeZ;
 
         public int Width()
         {
             return (int)Mathf.Sqrt(vertices.Length);
+        }
+
+        public MeshData Clone()
+        {
+            Vector3[] vertices = new Vector3[this.vertices.Length];
+            Vector2[] uv = new Vector2[this.uv.Length];
+            int[] triangles = new int[this.triangles.Length];
+
+            int size = Mathf.RoundToInt(Mathf.Sqrt((float)this.vertices.Length));
+
+            int i = 0;
+
+            for (int z = 0; z < size; z++)
+            {
+                for (int x = 0; x < size; x++)
+                {
+                    vertices[x + z * size] = this.vertices[x + z * size];
+                    uv[x + z * size] = this.uv[x + z * size];
+
+                    if (x != size - 1 && z != size - 1)
+                    {
+                        triangles[i] = this.triangles[i];
+                        triangles[i + 1] = this.triangles[i + 1];
+                        triangles[i + 2] = this.triangles[i + 2];
+
+                        triangles[i + 3] = this.triangles[i + 3];
+                        triangles[i + 4] = this.triangles[i + 4];
+                        triangles[i + 5] = this.triangles[i + 5];
+
+                        i += 6;
+                    }
+                }
+            }
+
+            return new MeshData(vertices, uv, triangles, this.heightFactor, this.sizeX, this.sizeZ);
         }
     }
 }

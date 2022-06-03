@@ -6,19 +6,25 @@ namespace JStuff.Generation
 {
     public struct Vertex : IEquatable<Vertex>
     {
-        public Vertex(Vector2 v, float h, float r)
+        public Vertex(Vector2 xz, float h, float r)
         {
-            this.v = v;
+            this.xz = xz;
             this.h = h;
             this.r = r;
         }
-        public Vector2 v;
+        public Vertex(float x, float z, float h, float r)
+        {
+            this.xz = new Vector2(x, z);
+            this.h = h;
+            this.r = r;
+        }
+        public Vector2 xz;
         public float h;
         public float r;
 
         public bool Equals(Vertex other)
         {
-            if (v != other.v)
+            if (xz != other.xz)
                 return false;
             if (r != other.r)
                 return false;
@@ -51,6 +57,20 @@ namespace JStuff.Generation
         public Vertex b;
         public Vertex c;
 
+        public bool PointInTriangle(Vector2 s)
+        {
+            float as_x = s.x - a.xz.x;
+            float as_y = s.y - a.xz.y;
+
+            bool s_ab = (b.xz.x - a.xz.x) * as_y - (b.xz.y - a.xz.y) * as_x > 0;
+
+            if ((c.xz.x - a.xz.x) * as_y - (c.xz.y - a.xz.y) * as_x > 0 == s_ab) return false;
+
+            if ((c.xz.x - b.xz.x) * (s.y - b.xz.y) - (c.xz.y - b.xz.y) * (s.x - b.xz.x) > 0 != s_ab) return false;
+
+            return true;
+        }
+
         public bool Equals(Triangle other)
         {
             if (!a.Equals(other.a))
@@ -65,6 +85,26 @@ namespace JStuff.Generation
         public override int GetHashCode()
         {
             return Mathf.FloorToInt((a.h + b.h + c.h) * 10000);
+        }
+    }
+
+    public static class Mathg
+    {
+        /// <summary>
+        /// https://stackoverflow.com/questions/2049582/how-to-determine-if-a-point-is-in-a-2d-triangle
+        /// </summary>
+        public static bool PointInTriangle(Vector2 s, Vector2 a, Vector2 b, Vector2 c)
+        {
+            float as_x = s.x - a.x;
+            float as_y = s.y - a.y;
+
+            bool s_ab = (b.x - a.x) * as_y - (b.y - a.y) * as_x > 0;
+
+            if ((c.x - a.x) * as_y - (c.y - a.y) * as_x > 0 == s_ab) return false;
+
+            if ((c.x - b.x) * (s.y - b.y) - (c.y - b.y) * (s.x - b.x) > 0 != s_ab) return false;
+
+            return true;
         }
     }
 }

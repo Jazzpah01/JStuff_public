@@ -23,6 +23,8 @@ namespace JStuff.Generation.Terrain
 
         GameObject parentChunk;
 
+        public bool raymarchingTerrain = false;
+
         private float chunkSize;
         private float scale;
         private int seed;
@@ -34,12 +36,20 @@ namespace JStuff.Generation.Terrain
 
         private void Start()
         {
+            
+
             transform.position = new Vector3(cameraTransform.position.x, 0, cameraTransform.position.z);
 
             chunkSize = graph.chunkSize;
             scale = graph.scale;
             seed = graph.seed;
             zoom = graph.zoom;
+
+            if (raymarchingTerrain)
+            {
+                material.SetFloat("Scale", scale);
+                material.SetFloat("Stretch", chunkSize * zoom);
+            }
 
             Populate();
         }

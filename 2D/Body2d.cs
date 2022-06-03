@@ -24,9 +24,12 @@ namespace JStuff.TwoD.Platformer
         public float initialGravityAcceleration;
 
         private Vector2 velocity;
+        private Vector2 oldVelocity;
 
         [System.NonSerialized]public bool grounded;
         private bool ceiled;
+        private bool leftWalled;
+        private bool rightWalled;
 
         private float horizontalInput;
         private float verticalInput;
@@ -293,6 +296,20 @@ namespace JStuff.TwoD.Platformer
 
         void FixedUpdate()
         {
+            UpdateVelocity();
+
+            oldVelocity = velocity;
+
+            if (boxCollider == null)
+                return;
+
+            UpdateCollision();
+
+            Cleanup();
+        }
+
+        void UpdateVelocity()
+        {
             // Jump
             if (((Grounded && data.gravityAcceleration < 0) || activeJackalFrames > 0) &&
                 jumpInputBuffer > 0)
@@ -306,20 +323,8 @@ namespace JStuff.TwoD.Platformer
                 jumpInputBuffer = 0;
                 Grounded = false;
             }
-            else if (((Ceiled && data.gravityAcceleration > 0) || activeJackalFrames > 0) &&
-                jumpInputBuffer > 0)
-            {
-                velocity.y = 0;
-                AddVelocity("jump", -1 * new Vector2(0, Mathf.Sqrt(2 * Mathf.Abs(JumpHeight) * jumpFactor * Mathf.Abs(GravetyAcceleration))));
-                descending = true;
-                ascending = false;
-                fall = false;
-                activeJackalFrames = 0;
-                jumpInputBuffer = 0;
-                Ceiled = false;
-            }
 
-            if (fallInputBuffer > 0 && ((ascending && data.gravityAcceleration < 0) || (descending && data.gravityAcceleration > 0)))
+            if (fallInputBuffer > 0 && ascending)
             {
                 fall = true;
                 fallInputBuffer = 0;
@@ -355,7 +360,7 @@ namespace JStuff.TwoD.Platformer
                         !(data.speed * horizontalInput < velocity.x && horizontalInput > 0) &&
                         !(data.speed * horizontalInput > velocity.x && horizontalInput < 0)) // BUG: should be able to airaccelerate
             {
-                if ((Grounded && data.gravityAcceleration < 0) || (Ceiled && data.gravityAcceleration > 0))
+                if (Grounded && data.gravityAcceleration < 0)
                 {
                     if (data.walkAcceleration != 0)
                         velocity.x = Mathf.MoveTowards(velocity.x, data.speed * horizontalInput, data.walkAcceleration * Time.fixedDeltaTime);
@@ -368,7 +373,7 @@ namespace JStuff.TwoD.Platformer
             }
             else // BUG
             {
-                if ((Grounded && data.gravityAcceleration < 0) || (Ceiled && data.gravityAcceleration > 0))
+                if (Grounded && data.gravityAcceleration < 0)
                 {
                     if (data.groundDeceleration != 0)
                         velocity.x = Mathf.MoveTowards(velocity.x, 0, data.groundDeceleration * Time.fixedDeltaTime);
@@ -382,16 +387,18 @@ namespace JStuff.TwoD.Platformer
 
             // Materialize velocity
             transform.Translate(velocity * Time.fixedDeltaTime);
+        }
 
-            if (boxCollider == null)
-                return;
-
+        void UpdateCollision()
+        {
             // Detect collision
             Vector3 boxOffset = new Vector2(boxCollider.offset.x, boxCollider.offset.y);
             Collider2D[] hits = ColliderController.OverlapBoxAllWithFlags(boxCollider.transform.position, boxCollider.size, _colliderFlags);
             Collider2D[] hitsPlatform = ColliderController.OverlapBoxAllWithFlags(boxCollider.transform.position, boxCollider.size, _platformFlags);
             grounded = false;
             ceiled = false;
+            leftWalled = false;
+            rightWalled = false;
 
             Vector3 posBeforeCollision = boxCollider.transform.position;
             bool walled = false;
@@ -416,41 +423,26 @@ namespace JStuff.TwoD.Platformer
             if (hits != null && hits.Length != 0 && change != Vector3.zero)
             {
                 // Is grounded
-                if (Vector2.Angle(change, Vector2.up) == 0 && velocity.y < 0)
+                if (Vector2.Dot(change, Vector2.up) > 0)
                 {
                     if (!oldGrounded && data.landingSound != "")
                         AudioPlay.PlaySound(data.landingSound, 1);
                     // If grounded
-                    Grounded = true;
+                    grounded = true;
                 }
-                else if (Vector2.Angle(change, Vector2.down) == 0 && velocity.y > 0)
+                else if (Vector2.Dot(change, Vector2.down) > 0)
                 {
                     // If ceiled
-                    Ceiled = true;
+                    ceiled = true;
                 }
-                else if (Vector2.Angle(change, Vector2.left) == 0 && velocity.x > 0)
-                {
-                    // If walled
-                    velocity.x = data.horizontalBounce * -velocity.x;
-                }
-                else if (Vector2.Angle(change, Vector2.right) == 0 && velocity.x < 0)
-                {
-                    // If walled
-                    velocity.x = data.horizontalBounce * -velocity.x;
-                }
-                else
-                {
-                    // If walled + (grounded or ceiled)
-                    //velocity.x = data.horizontalBounce * -velocity.x;
-                    //if (Vector2.Angle(change, Vector2.up) < 5)
-                    //{
-                    //    Grounded = true;
-                    //}
-                    //else
-                    //{
-                    //    Ceiled = true;
-                    //}
-                }
+
+                //if (Vector2.Dot(change, Vector2.up) > 0 && velocity.y < 0)
+                //{
+                //    if (!oldGrounded && data.landingSound != "")
+                //        AudioPlay.PlaySound(data.landingSound, 1);
+                //    // If grounded
+                //    Grounded = true;
+                //}
             }
 
             ascending = false;
@@ -496,8 +488,6 @@ namespace JStuff.TwoD.Platformer
 
             oldPosition = boxCollider.transform.position;
             oldGrounded = grounded;
-
-            Cleanup();
         }
 
         void Cleanup()

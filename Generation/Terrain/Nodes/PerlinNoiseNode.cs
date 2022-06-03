@@ -5,7 +5,7 @@ using UnityEngine;
 
 namespace JStuff.Generation.Terrain
 {
-    [CreateNodePath("Terrain/HeightMap/Perlin Noise")]
+    [CreateNodePath("Terrain/HeightMap/New/Perlin Noise")]
     public class PerlinNoiseNode : TerrainNode
     {
         public int size = 128;

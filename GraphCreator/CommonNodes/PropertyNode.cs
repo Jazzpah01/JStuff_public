@@ -1,8 +1,6 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
-using UnityEditor.Experimental.GraphView;
-using UnityEditor;
 using System;
 using UnityEngine.UIElements;
 using JStuff.Collections;
@@ -25,7 +23,8 @@ namespace JStuff.GraphCreator
 
         public DropDownList list;
 
-        public override void OnGUIStart(INodeView nodeView)
+#if UNITY_EDITOR
+        public override void OnGUIStart(/*INodeView nodeView*/)
         {
             list.OnValueChanged = null;
             OnNodeChange = null;
@@ -41,6 +40,7 @@ namespace JStuff.GraphCreator
             list.value = propertyName;
             list.OnValueChanged = ValueChanged;
         }
+#endif
 
         public void InitPropertyPortView()
         {
