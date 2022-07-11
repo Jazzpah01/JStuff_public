@@ -2,6 +2,7 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using JStuff.Random;
+using JStuff.Utilities;
 
 namespace JStuff.Generation
 {

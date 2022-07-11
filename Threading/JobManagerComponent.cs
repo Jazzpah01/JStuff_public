@@ -33,6 +33,11 @@ namespace JStuff.Threading
             }
         }
 
+        private void OnDestroy()
+        {
+            manager.Remove();
+        }
+
         private void OnApplicationQuit()
         {
             manager.Remove();

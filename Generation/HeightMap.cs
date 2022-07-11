@@ -4,6 +4,7 @@ using UnityEngine;
 using System;
 using JStuff.AI.Pathfinding;
 using JStuff.Random;
+using JStuff.Utilities;
 
 namespace JStuff.Generation
 {

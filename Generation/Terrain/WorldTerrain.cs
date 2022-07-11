@@ -52,6 +52,7 @@ namespace JStuff.Generation.Terrain
             }
 
             Populate();
+            JobManagerComponent.instance.manager.FinishJobs();
         }
 
         bool shouldUpdate = false;

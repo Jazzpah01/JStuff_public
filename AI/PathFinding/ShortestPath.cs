@@ -13,87 +13,8 @@ namespace JStuff.AI.Pathfinding
 
         public delegate float Heuristic(int v, int u);
 
-        /// <summary>
-        /// 
-        /// </summary>
-        /// <param name="G">Graph.</param>
-        /// <param name="s">Starting vertex.</param>
-        /// <param name="t">Endind vertex/goal.</param>
-        /// <returns>Returns array of shortest path from s to t INVERTED (t, ... , s).</returns>
-        //public static Node[] AStar(Graph G, Node s, Node t)
-        //{
-        //    // Distance dist(v) to u is g(s->v) + h(v->t)
-        //    // where g is the current shortest distance and h is a heuristic function mapping
-        //    // an approximate distance between some vertex u and t. s is the starting vertex, 
-        //    // u is some vertex, t is the goal vertex.
-        //
-        //    Dictionary<Node, float> dist = new Dictionary<Node, float>();
-        //    Dictionary<Node, float> rdist = new Dictionary<Node, float>();
-        //    Dictionary<Node, Node> prev = new Dictionary<Node, Node>();
-        //
-        //    foreach (Node v in G.GetVertices())
-        //    {
-        //        dist.Add(v, float.PositiveInfinity);
-        //    }
-        //
-        //    List<Node> S = new List<Node>();
-        //
-        //    S.Add(s);
-        //    rdist[s] = ManhattenDistance(s, t, 1);
-        //    dist[s] = 0;
-        //
-        //    int control = 1000;
-        //    while (S.Count > 0 && control > 0)
-        //    {
-        //        control--;
-        //        if (control < 1)
-        //            throw new System.Exception("Infinite loop. :(");
-        //
-        //        (List<Node> nS, Node v) = ExtractMinimum(S, rdist);
-        //        S = nS;
-        //
-        //        if (v.Equals(t))
-        //            break;
-        //
-        //        foreach (Node u in G.GetNeighbors(v))
-        //        {
-        //            if ((!prev.ContainsKey(u) && !u.Equals(s)) ||
-        //                (S.Contains(u) && dist[v] + G.GetWeight(v, u) < dist[u]))
-        //            {
-        //                if (!S.Contains(u))
-        //                    S.Add(u);
-        //                dist[u] = dist[v] + G.GetWeight(v, u);
-        //                rdist[u] = dist[u] + ManhattenDistance(u, t, 1);
-        //                prev[u] = v;
-        //            }
-        //        }
-        //    }
-        //
-        //
-        //    if (prev.ContainsKey(t))
-        //    {
-        //        List<Node> route = new List<Node>();
-        //        Node p = t;
-        //        control = 1000;
-        //        while (prev.ContainsKey(p))
-        //        {
-        //            route.Add(p);
-        //            p = prev[p];
-        //            control--;
-        //            if (control < 1)
-        //                throw new System.Exception("Infinite loop. :(");
-        //        }
-        //        route.Add(s);
-        //        return route.ToArray();
-        //    }
-        //    else
-        //    {
-        //        return null;
-        //    }
-        //}
 
-
-        public static N[] AStar<N>(IGraph<N> G, int s, int t, Heuristic heuristic, bool invertedRoute = false, HashSet<int> excludedVertices = null)
+        public static N[] AStar<N>(IGraph<N> G, int s, int t, Heuristic heuristic, bool invertedRoute = false)
         {
             // Distance f(v) to u is g(v) + h(v). g is shortest path s->v, h is heuristic for v->t.
             // where g is the current shortest distance and h is a heuristic function mapping
@@ -102,15 +23,13 @@ namespace JStuff.AI.Pathfinding
 
             // Sanitize input
             if (s == t)
-            {
-                throw new System.Exception("Can't find path between two identical vertices.");
-            }
+                return null;
 
             if (!G.Contains(s))
-                throw new System.Exception("Can't find path when initial vertex s is not contained in the graph. Index of s is: " + s);
+                return null;
 
-            if (!G.Contains(s))
-                throw new System.Exception("Can't find path when destination vertex t is not contained in the graph. Index of t is: " + t);
+            if (!G.Contains(t))
+                return null;
 
             // Begin algorithm
             float[] g = new float[G.Size]; // Current shortest distance to node
