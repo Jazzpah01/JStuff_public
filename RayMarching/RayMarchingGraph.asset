@@ -1,0 +1,1232 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &-8991701644321283710
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: a78264e1917015d44984179acca97c87, type: 3}
+  m_Name: Uniform2DPoints
+  m_EditorClassIdentifier: 
+  isSetup: 1
+  nodePosition: {x: -739.3334, y: 383.9025}
+  portViews:
+  - {fileID: -4324181978740018714}
+  - {fileID: 2680517429387989438}
+  guid: bf3e329bca9171b45840d5114ab776a6
+  graph: {fileID: 11400000}
+  valid: 1
+  iteration: 0
+  linkDescription: 
+  portSignature: JStuff.GraphCreator.InputLink`1[[System.Int32, mscorlib, Version=4.0.0.0,
+    Culture=neutral, PublicKeyToken=b77a5c561934e089]]PropertyInputLink<chunkSize:System.Single>JStuff.GraphCreator.OutputLink`1[[System.Collections.Generic.List`1[[UnityEngine.Vector2,
+    UnityEngine.CoreModule, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null]],
+    mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089]]
+  pointDistance: 30
+--- !u!114 &-8605305487878030357
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 541c922fe33130b4582f9269205071a7, type: 3}
+  m_Name: 'Input Port: System.Int32'
+  m_EditorClassIdentifier: 
+  node: {fileID: -1120022627258467373}
+  orientation: 0
+  direction: 1
+  capacity: 0
+  portType: System.Int32
+  index: 0
+  graphIndex: 25
+  UIIndex: 0
+  portName: Int32
+  isInput: 1
+  linked:
+  - {fileID: -158509377025943958}
+  isValid: 1
+--- !u!114 &-8272775476802764844
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: d6d22f94ec673d74aa0c0fc8be7c0bed, type: 3}
+  m_Name: PropertyNode
+  m_EditorClassIdentifier: 
+  isSetup: 1
+  nodePosition: {x: -1039.6667, y: 256.66666}
+  portViews:
+  - {fileID: -6870420590938540680}
+  guid: 3a2f18c4a623e2744a2b3224037f0fd5
+  graph: {fileID: 11400000}
+  valid: 1
+  iteration: 0
+  linkDescription: 
+  portSignature: PropertyOutputLink<seed:System.Int32>
+  propertyName: seed
+  index: -1
+  typeName: 
+  list:
+    values:
+    - chunkPosition
+    - centerPosition
+    - chunkSize
+    - seed
+    - offset
+    - scale
+    - zoom
+    _value: seed
+    _index: 3
+--- !u!114 &-8233830865610500077
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: d6d22f94ec673d74aa0c0fc8be7c0bed, type: 3}
+  m_Name: PropertyNode
+  m_EditorClassIdentifier: 
+  isSetup: 1
+  nodePosition: {x: -1053.114, y: -0.000008229807}
+  portViews:
+  - {fileID: 1508853986856157036}
+  guid: 13ceed1482e25904b9752f4c2d23d9e7
+  graph: {fileID: 11400000}
+  valid: 1
+  iteration: 0
+  linkDescription: 
+  portSignature: PropertyOutputLink<seed:System.Int32>
+  propertyName: seed
+  index: -1
+  typeName: 
+  list:
+    values:
+    - chunkPosition
+    - centerPosition
+    - chunkSize
+    - seed
+    - offset
+    - scale
+    - zoom
+    _value: seed
+    _index: 3
+--- !u!114 &-7445381846359013579
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 541c922fe33130b4582f9269205071a7, type: 3}
+  m_Name: 'Output Port: System.Single'
+  m_EditorClassIdentifier: 
+  node: {fileID: 6652137347203776888}
+  orientation: 0
+  direction: 2
+  capacity: 1
+  portType: System.Single
+  index: 0
+  graphIndex: 9
+  UIIndex: 0
+  portName: zoom
+  isInput: 0
+  linked: []
+  isValid: 1
+--- !u!114 &-6870420590938540680
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 541c922fe33130b4582f9269205071a7, type: 3}
+  m_Name: 'Output Port: System.Int32'
+  m_EditorClassIdentifier: 
+  node: {fileID: -8272775476802764844}
+  orientation: 0
+  direction: 2
+  capacity: 1
+  portType: System.Int32
+  index: 0
+  graphIndex: 24
+  UIIndex: 0
+  portName: seed
+  isInput: 0
+  linked: []
+  isValid: 1
+--- !u!114 &-6726221935753479934
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: efa7c5e0fe08fa2488968aa442cf9231, type: 3}
+  m_Name: RightTriangleNode
+  m_EditorClassIdentifier: 
+  isSetup: 1
+  nodePosition: {x: -879.114, y: -0.000008229807}
+  portViews:
+  - {fileID: 7742126685799141017}
+  - {fileID: 534223917109592531}
+  - {fileID: 6216793467055220482}
+  - {fileID: 8858465653765492011}
+  guid: 563844eb7bc2a2a49afdb4fd89ba9bde
+  graph: {fileID: 11400000}
+  valid: 1
+  iteration: 0
+  linkDescription: 
+  portSignature: JStuff.GraphCreator.InputLink`1[[System.Int32, mscorlib, Version=4.0.0.0,
+    Culture=neutral, PublicKeyToken=b77a5c561934e089]]JStuff.GraphCreator.InputLink`1[[System.Single,
+    mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089]]JStuff.GraphCreator.InputLink`1[[UnityEngine.Vector2,
+    UnityEngine.CoreModule, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null]]JStuff.GraphCreator.OutputLink`1[[JStuff.Generation.HeightMap,
+    Assembly-CSharp, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null]]PropertyInputLink<chunkPosition:UnityEngine.Vector2>PropertyInputLink<chunkSize:System.Single>
+  size: 17
+  depth: 15
+  h: 0.2
+  d: 0.95
+--- !u!114 &-6619669998927019352
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 541c922fe33130b4582f9269205071a7, type: 3}
+  m_Name: 'Input Port: System.Collections.Generic.List`1[[JStuff.Generation.Terrain.TerrainObject,
+    Assembly-CSharp, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null]]'
+  m_EditorClassIdentifier: 
+  node: {fileID: 4236533049215016521}
+  orientation: 0
+  direction: 1
+  capacity: 0
+  portType: System.Collections.Generic.List`1[[JStuff.Generation.Terrain.TerrainObject,
+    Assembly-CSharp, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null]]
+  index: 3
+  graphIndex: 3
+  UIIndex: 0
+  portName: TerrainObjects
+  isInput: 1
+  linked:
+  - {fileID: -629955506564601304}
+  isValid: 1
+--- !u!114 &-6207732546874626702
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 541c922fe33130b4582f9269205071a7, type: 3}
+  m_Name: 'Input Port: System.Int32'
+  m_EditorClassIdentifier: 
+  node: {fileID: 233645059927861536}
+  orientation: 0
+  direction: 1
+  capacity: 0
+  portType: System.Int32
+  index: 0
+  graphIndex: 22
+  UIIndex: 0
+  portName: Int32
+  isInput: 1
+  linked:
+  - {fileID: -6870420590938540680}
+  isValid: 1
+--- !u!114 &-5697900542096897610
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 541c922fe33130b4582f9269205071a7, type: 3}
+  m_Name: 'Output Port: System.Single'
+  m_EditorClassIdentifier: 
+  node: {fileID: 6711151995899048055}
+  orientation: 0
+  direction: 2
+  capacity: 1
+  portType: System.Single
+  index: 0
+  graphIndex: 13
+  UIIndex: 0
+  portName: scale
+  isInput: 0
+  linked: []
+  isValid: 1
+--- !u!114 &-5626553202396997379
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 541c922fe33130b4582f9269205071a7, type: 3}
+  m_Name: 'Input Port: System.Single'
+  m_EditorClassIdentifier: 
+  node: {fileID: -1284651410009757596}
+  orientation: 0
+  direction: 1
+  capacity: 0
+  portType: System.Single
+  index: 1
+  graphIndex: 17
+  UIIndex: 0
+  portName: Single
+  isInput: 1
+  linked:
+  - {fileID: 3436650953373366604}
+  isValid: 1
+--- !u!114 &-5572011156899746573
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 541c922fe33130b4582f9269205071a7, type: 3}
+  m_Name: 'Output Port: UnityEngine.Color[]'
+  m_EditorClassIdentifier: 
+  node: {fileID: -1880607083788360626}
+  orientation: 0
+  direction: 2
+  capacity: 1
+  portType: UnityEngine.Color[]
+  index: 1
+  graphIndex: 15
+  UIIndex: 0
+  portName: Colormap
+  isInput: 0
+  linked: []
+  isValid: 1
+--- !u!114 &-4324181978740018714
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 541c922fe33130b4582f9269205071a7, type: 3}
+  m_Name: 'Input Port: System.Int32'
+  m_EditorClassIdentifier: 
+  node: {fileID: -8991701644321283710}
+  orientation: 0
+  direction: 1
+  capacity: 0
+  portType: System.Int32
+  index: 0
+  graphIndex: 20
+  UIIndex: 0
+  portName: Int32
+  isInput: 1
+  linked:
+  - {fileID: -158509377025943958}
+  isValid: 1
+--- !u!114 &-4196075194547084326
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 53d24893682919d4faa495ae8404b84c, type: 3}
+  m_Name: StandardMesh
+  m_EditorClassIdentifier: 
+  isSetup: 1
+  nodePosition: {x: -510.03748, y: -0.0000021457672}
+  portViews:
+  - {fileID: -1535775493474521009}
+  - {fileID: -2116994538183977927}
+  - {fileID: 2808472237588057851}
+  guid: 13703152ffbb2cd4d9b283e02de99edf
+  graph: {fileID: 11400000}
+  valid: 1
+  iteration: 0
+  linkDescription: 
+  portSignature: JStuff.GraphCreator.InputLink`1[[JStuff.Generation.HeightMap, Assembly-CSharp,
+    Version=0.0.0.0, Culture=neutral, PublicKeyToken=null]]JStuff.GraphCreator.InputLink`1[[System.Single,
+    mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089]]PropertyInputLink<chunkSize:System.Single>JStuff.GraphCreator.OutputLink`1[[JStuff.Generation.MeshData,
+    Assembly-CSharp, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null]]
+--- !u!114 &-3839341546446159413
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 541c922fe33130b4582f9269205071a7, type: 3}
+  m_Name: 'Input Port: JStuff.Generation.MeshData'
+  m_EditorClassIdentifier: 
+  node: {fileID: -1284651410009757596}
+  orientation: 0
+  direction: 1
+  capacity: 0
+  portType: JStuff.Generation.MeshData
+  index: 0
+  graphIndex: 16
+  UIIndex: 0
+  portName: MeshData
+  isInput: 1
+  linked:
+  - {fileID: 2808472237588057851}
+  isValid: 1
+--- !u!114 &-3489692887187757715
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 541c922fe33130b4582f9269205071a7, type: 3}
+  m_Name: 'Input Port: JStuff.Generation.MeshData'
+  m_EditorClassIdentifier: 
+  node: {fileID: 4236533049215016521}
+  orientation: 0
+  direction: 1
+  capacity: 0
+  portType: JStuff.Generation.MeshData
+  index: 0
+  graphIndex: 0
+  UIIndex: 0
+  portName: MeshData
+  isInput: 1
+  linked:
+  - {fileID: 7784847416487736640}
+  isValid: 1
+--- !u!114 &-3022867683917920365
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 321b10b658908b94682e491b050f715e, type: 3}
+  m_Name: SharedContext
+  m_EditorClassIdentifier: 
+  propertyNames: []
+  propertyTypes: []
+  graph: {fileID: 11400000}
+--- !u!114 &-2799987335354928443
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: b2497c08bdd793b48b998764915d2883, type: 3}
+  m_Name: FloatNode
+  m_EditorClassIdentifier: 
+  isSetup: 1
+  nodePosition: {x: -429.33334, y: 102.666664}
+  portViews:
+  - {fileID: 3436650953373366604}
+  guid: 092e4aa574f46b04a84242f34b488dae
+  graph: {fileID: 11400000}
+  valid: 1
+  iteration: 0
+  linkDescription: 
+  portSignature: JStuff.GraphCreator.OutputLink`1[[System.Single, mscorlib, Version=4.0.0.0,
+    Culture=neutral, PublicKeyToken=b77a5c561934e089]]
+  value: 2
+--- !u!114 &-2675797640727934716
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 541c922fe33130b4582f9269205071a7, type: 3}
+  m_Name: 'Input Port: JStuff.Generation.MeshData'
+  m_EditorClassIdentifier: 
+  node: {fileID: -1880607083788360626}
+  orientation: 0
+  direction: 1
+  capacity: 0
+  portType: JStuff.Generation.MeshData
+  index: 0
+  graphIndex: 14
+  UIIndex: 0
+  portName: MeshData
+  isInput: 1
+  linked:
+  - {fileID: 7784847416487736640}
+  isValid: 1
+--- !u!114 &-2116994538183977927
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 541c922fe33130b4582f9269205071a7, type: 3}
+  m_Name: 'Input Port: System.Single'
+  m_EditorClassIdentifier: 
+  node: {fileID: -4196075194547084326}
+  orientation: 0
+  direction: 1
+  capacity: 0
+  portType: System.Single
+  index: 1
+  graphIndex: 11
+  UIIndex: 0
+  portName: Single
+  isInput: 1
+  linked:
+  - {fileID: -5697900542096897610}
+  isValid: 1
+--- !u!114 &-1880607083788360626
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 1b01040322176c045a624632fed05fa9, type: 3}
+  m_Name: GrayScale
+  m_EditorClassIdentifier: 
+  isSetup: 1
+  nodePosition: {x: 54.49968, y: 87.33334}
+  portViews:
+  - {fileID: -2675797640727934716}
+  - {fileID: -5572011156899746573}
+  guid: 5b92b99089f069f4d8ad49108f9a5d6d
+  graph: {fileID: 11400000}
+  valid: 1
+  iteration: 0
+  linkDescription: 
+  portSignature: JStuff.GraphCreator.InputLink`1[[JStuff.Generation.MeshData, Assembly-CSharp,
+    Version=0.0.0.0, Culture=neutral, PublicKeyToken=null]]JStuff.GraphCreator.OutputLink`1[[UnityEngine.Color[],
+    UnityEngine.CoreModule, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null]]
+--- !u!114 &-1535775493474521009
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 541c922fe33130b4582f9269205071a7, type: 3}
+  m_Name: 'Input Port: JStuff.Generation.HeightMap'
+  m_EditorClassIdentifier: 
+  node: {fileID: -4196075194547084326}
+  orientation: 0
+  direction: 1
+  capacity: 0
+  portType: JStuff.Generation.HeightMap
+  index: 0
+  graphIndex: 10
+  UIIndex: 0
+  portName: HeightMap
+  isInput: 1
+  linked:
+  - {fileID: 8858465653765492011}
+  isValid: 1
+--- !u!114 &-1284651410009757596
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: d02c428db41f23a418cbdd1119d7fee3, type: 3}
+  m_Name: OffsetMesh
+  m_EditorClassIdentifier: 
+  isSetup: 1
+  nodePosition: {x: -203.92946, y: 0.0000076293945}
+  portViews:
+  - {fileID: -3839341546446159413}
+  - {fileID: -5626553202396997379}
+  - {fileID: 7784847416487736640}
+  guid: a32f36e9f9ad8ad41a2c009778d225d9
+  graph: {fileID: 11400000}
+  valid: 1
+  iteration: 0
+  linkDescription: 
+  portSignature: JStuff.GraphCreator.InputLink`1[[JStuff.Generation.MeshData, Assembly-CSharp,
+    Version=0.0.0.0, Culture=neutral, PublicKeyToken=null]]JStuff.GraphCreator.InputLink`1[[System.Single,
+    mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089]]JStuff.GraphCreator.OutputLink`1[[JStuff.Generation.MeshData,
+    Assembly-CSharp, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null]]
+--- !u!114 &-1120022627258467373
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: b204dd20fd4c2294e81588f2b1a25bea, type: 3}
+  m_Name: RandomTerrainObjects
+  m_EditorClassIdentifier: 
+  isSetup: 1
+  nodePosition: {x: -510.00006, y: 257.23584}
+  portViews:
+  - {fileID: -8605305487878030357}
+  - {fileID: 8817803582441048414}
+  - {fileID: 4288266444026626733}
+  - {fileID: -629955506564601304}
+  guid: b325428fb330b7540a9e9d2e47629fb6
+  graph: {fileID: 11400000}
+  valid: 1
+  iteration: 0
+  linkDescription: 
+  portSignature: JStuff.GraphCreator.InputLink`1[[System.Int32, mscorlib, Version=4.0.0.0,
+    Culture=neutral, PublicKeyToken=b77a5c561934e089]]JStuff.GraphCreator.InputLink`1[[JStuff.Generation.HeightMap,
+    Assembly-CSharp, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null]]JStuff.GraphCreator.InputLink`1[[System.Collections.Generic.List`1[[UnityEngine.Vector2,
+    UnityEngine.CoreModule, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null]],
+    mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089]]PropertyInputLink<chunkSize:System.Single>PropertyInputLink<scale:System.Single>JStuff.GraphCreator.OutputLink`1[[System.Collections.Generic.List`1[[JStuff.Generation.Terrain.TerrainObject,
+    Assembly-CSharp, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null]], mscorlib,
+    Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089]]
+  types:
+  - prefab: {fileID: 1000010151976528, guid: ca0f87d8635ce0940b7441781fb4354d, type: 3}
+    objectRadius: 1
+  - prefab: {fileID: 1000013451787930, guid: 06b059ea2b033674198473f8573ffd67, type: 3}
+    objectRadius: 1
+--- !u!114 &-629955506564601304
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 541c922fe33130b4582f9269205071a7, type: 3}
+  m_Name: 'Output Port: System.Collections.Generic.List`1[[JStuff.Generation.Terrain.TerrainObject,
+    Assembly-CSharp, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null]]'
+  m_EditorClassIdentifier: 
+  node: {fileID: -1120022627258467373}
+  orientation: 0
+  direction: 2
+  capacity: 1
+  portType: System.Collections.Generic.List`1[[JStuff.Generation.Terrain.TerrainObject,
+    Assembly-CSharp, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null]]
+  index: 3
+  graphIndex: 28
+  UIIndex: 0
+  portName: TerrainObjects
+  isInput: 0
+  linked: []
+  isValid: 1
+--- !u!114 &-158509377025943958
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 541c922fe33130b4582f9269205071a7, type: 3}
+  m_Name: 'Output Port: System.Int32'
+  m_EditorClassIdentifier: 
+  node: {fileID: 233645059927861536}
+  orientation: 0
+  direction: 2
+  capacity: 1
+  portType: System.Int32
+  index: 1
+  graphIndex: 23
+  UIIndex: 0
+  portName: Int32
+  isInput: 0
+  linked: []
+  isValid: 1
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: c0b06d6a473a72c4aa04591f0252f62f, type: 3}
+  m_Name: RayMarchingGraph
+  m_EditorClassIdentifier: 
+  rootNode: {fileID: 4236533049215016521}
+  nodes:
+  - {fileID: 4236533049215016521}
+  - {fileID: -6726221935753479934}
+  - {fileID: -8233830865610500077}
+  - {fileID: 6652137347203776888}
+  - {fileID: -4196075194547084326}
+  - {fileID: 6711151995899048055}
+  - {fileID: -1880607083788360626}
+  - {fileID: -1284651410009757596}
+  - {fileID: -2799987335354928443}
+  - {fileID: -8991701644321283710}
+  - {fileID: 233645059927861536}
+  - {fileID: -8272775476802764844}
+  - {fileID: -1120022627258467373}
+  portViews:
+  - {fileID: -3489692887187757715}
+  - {fileID: 3367266929966746346}
+  - {fileID: 2803636969617838691}
+  - {fileID: -6619669998927019352}
+  - {fileID: 7742126685799141017}
+  - {fileID: 534223917109592531}
+  - {fileID: 6216793467055220482}
+  - {fileID: 8858465653765492011}
+  - {fileID: 1508853986856157036}
+  - {fileID: -7445381846359013579}
+  - {fileID: -1535775493474521009}
+  - {fileID: -2116994538183977927}
+  - {fileID: 2808472237588057851}
+  - {fileID: -5697900542096897610}
+  - {fileID: -2675797640727934716}
+  - {fileID: -5572011156899746573}
+  - {fileID: -3839341546446159413}
+  - {fileID: -5626553202396997379}
+  - {fileID: 7784847416487736640}
+  - {fileID: 3436650953373366604}
+  - {fileID: -4324181978740018714}
+  - {fileID: 2680517429387989438}
+  - {fileID: -6207732546874626702}
+  - {fileID: -158509377025943958}
+  - {fileID: -6870420590938540680}
+  - {fileID: -8605305487878030357}
+  - {fileID: 8817803582441048414}
+  - {fileID: 4288266444026626733}
+  - {fileID: -629955506564601304}
+  numberOfProperties: 0
+  isSetup: 1
+  initialized: 0
+  valid: 0
+  propertyValues: []
+  uniqueContext: {fileID: 89234174353268271}
+  sharedContext: {fileID: -3022867683917920365}
+  chunkSize: 100
+  seed: 42
+  zoom: 10
+  scale: 100
+--- !u!114 &89234174353268271
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 321b10b658908b94682e491b050f715e, type: 3}
+  m_Name: UniqueContext
+  m_EditorClassIdentifier: 
+  propertyNames:
+  - chunkPosition
+  - centerPosition
+  - chunkSize
+  - seed
+  - offset
+  - scale
+  - zoom
+  propertyTypes:
+  - UnityEngine.Vector2
+  - UnityEngine.Vector2
+  - System.Single
+  - System.Int32
+  - UnityEngine.Vector2
+  - System.Single
+  - System.Single
+  graph: {fileID: 11400000}
+--- !u!114 &233645059927861536
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 02f635924593304469cb80768fedbcae, type: 3}
+  m_Name: ChunkSeed
+  m_EditorClassIdentifier: 
+  isSetup: 1
+  nodePosition: {x: -897.6667, y: 256.66666}
+  portViews:
+  - {fileID: -6207732546874626702}
+  - {fileID: -158509377025943958}
+  guid: 0aace1ace4acd5e4482ca9d451dbefee
+  graph: {fileID: 11400000}
+  valid: 1
+  iteration: 0
+  linkDescription: 
+  portSignature: JStuff.GraphCreator.InputLink`1[[System.Int32, mscorlib, Version=4.0.0.0,
+    Culture=neutral, PublicKeyToken=b77a5c561934e089]]JStuff.GraphCreator.OutputLink`1[[System.Int32,
+    mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089]]PropertyInputLink<chunkPosition:UnityEngine.Vector2>
+--- !u!114 &534223917109592531
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 541c922fe33130b4582f9269205071a7, type: 3}
+  m_Name: 'Input Port: System.Single'
+  m_EditorClassIdentifier: 
+  node: {fileID: -6726221935753479934}
+  orientation: 0
+  direction: 1
+  capacity: 0
+  portType: System.Single
+  index: 1
+  graphIndex: 5
+  UIIndex: 0
+  portName: Single
+  isInput: 1
+  linked:
+  - {fileID: -7445381846359013579}
+  isValid: 1
+--- !u!114 &1508853986856157036
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 541c922fe33130b4582f9269205071a7, type: 3}
+  m_Name: 'Output Port: System.Int32'
+  m_EditorClassIdentifier: 
+  node: {fileID: -8233830865610500077}
+  orientation: 0
+  direction: 2
+  capacity: 1
+  portType: System.Int32
+  index: 0
+  graphIndex: 8
+  UIIndex: 0
+  portName: seed
+  isInput: 0
+  linked: []
+  isValid: 1
+--- !u!114 &2680517429387989438
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 541c922fe33130b4582f9269205071a7, type: 3}
+  m_Name: 'Output Port: System.Collections.Generic.List`1[[UnityEngine.Vector2, UnityEngine.CoreModule,
+    Version=0.0.0.0, Culture=neutral, PublicKeyToken=null]]'
+  m_EditorClassIdentifier: 
+  node: {fileID: -8991701644321283710}
+  orientation: 0
+  direction: 2
+  capacity: 1
+  portType: System.Collections.Generic.List`1[[UnityEngine.Vector2, UnityEngine.CoreModule,
+    Version=0.0.0.0, Culture=neutral, PublicKeyToken=null]]
+  index: 1
+  graphIndex: 21
+  UIIndex: 0
+  portName: List<Vector2>
+  isInput: 0
+  linked: []
+  isValid: 1
+--- !u!114 &2803636969617838691
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 541c922fe33130b4582f9269205071a7, type: 3}
+  m_Name: 'Input Port: UnityEngine.Color[]'
+  m_EditorClassIdentifier: 
+  node: {fileID: 4236533049215016521}
+  orientation: 0
+  direction: 1
+  capacity: 0
+  portType: UnityEngine.Color[]
+  index: 2
+  graphIndex: 2
+  UIIndex: 0
+  portName: Colormap
+  isInput: 1
+  linked:
+  - {fileID: -5572011156899746573}
+  isValid: 1
+--- !u!114 &2808472237588057851
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 541c922fe33130b4582f9269205071a7, type: 3}
+  m_Name: 'Output Port: JStuff.Generation.MeshData'
+  m_EditorClassIdentifier: 
+  node: {fileID: -4196075194547084326}
+  orientation: 0
+  direction: 2
+  capacity: 1
+  portType: JStuff.Generation.MeshData
+  index: 2
+  graphIndex: 12
+  UIIndex: 0
+  portName: MeshData
+  isInput: 0
+  linked: []
+  isValid: 1
+--- !u!114 &3367266929966746346
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 541c922fe33130b4582f9269205071a7, type: 3}
+  m_Name: 'Input Port: JStuff.Generation.MeshData'
+  m_EditorClassIdentifier: 
+  node: {fileID: 4236533049215016521}
+  orientation: 0
+  direction: 1
+  capacity: 0
+  portType: JStuff.Generation.MeshData
+  index: 1
+  graphIndex: 1
+  UIIndex: 0
+  portName: MeshData
+  isInput: 1
+  linked:
+  - {fileID: 7784847416487736640}
+  isValid: 1
+--- !u!114 &3436650953373366604
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 541c922fe33130b4582f9269205071a7, type: 3}
+  m_Name: 'Output Port: System.Single'
+  m_EditorClassIdentifier: 
+  node: {fileID: -2799987335354928443}
+  orientation: 0
+  direction: 2
+  capacity: 1
+  portType: System.Single
+  index: 0
+  graphIndex: 19
+  UIIndex: 0
+  portName: Single
+  isInput: 0
+  linked: []
+  isValid: 1
+--- !u!114 &4236533049215016521
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: b8982c2a2f4b1a54e82fdbc0698c83de, type: 3}
+  m_Name: TerrainRoot
+  m_EditorClassIdentifier: 
+  isSetup: 1
+  nodePosition: {x: 387.00842, y: -0.0000002358911}
+  portViews:
+  - {fileID: -3489692887187757715}
+  - {fileID: 3367266929966746346}
+  - {fileID: 2803636969617838691}
+  - {fileID: -6619669998927019352}
+  guid: a6fc7731014f6bc4eb857186a0130fa0
+  graph: {fileID: 11400000}
+  valid: 1
+  iteration: 0
+  linkDescription: 
+  portSignature: JStuff.GraphCreator.InputLink`1[[JStuff.Generation.MeshData, Assembly-CSharp,
+    Version=0.0.0.0, Culture=neutral, PublicKeyToken=null]]JStuff.GraphCreator.InputLink`1[[JStuff.Generation.MeshData,
+    Assembly-CSharp, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null]]JStuff.GraphCreator.InputLink`1[[UnityEngine.Color[],
+    UnityEngine.CoreModule, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null]]JStuff.GraphCreator.InputLink`1[[System.Collections.Generic.List`1[[JStuff.Generation.Terrain.TerrainObject,
+    Assembly-CSharp, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null]], mscorlib,
+    Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089]]
+--- !u!114 &4288266444026626733
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 541c922fe33130b4582f9269205071a7, type: 3}
+  m_Name: 'Input Port: System.Collections.Generic.List`1[[UnityEngine.Vector2, UnityEngine.CoreModule,
+    Version=0.0.0.0, Culture=neutral, PublicKeyToken=null]]'
+  m_EditorClassIdentifier: 
+  node: {fileID: -1120022627258467373}
+  orientation: 0
+  direction: 1
+  capacity: 0
+  portType: System.Collections.Generic.List`1[[UnityEngine.Vector2, UnityEngine.CoreModule,
+    Version=0.0.0.0, Culture=neutral, PublicKeyToken=null]]
+  index: 2
+  graphIndex: 27
+  UIIndex: 0
+  portName: List<Vector2>
+  isInput: 1
+  linked:
+  - {fileID: 2680517429387989438}
+  isValid: 1
+--- !u!114 &6216793467055220482
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 541c922fe33130b4582f9269205071a7, type: 3}
+  m_Name: 'Input Port: UnityEngine.Vector2'
+  m_EditorClassIdentifier: 
+  node: {fileID: -6726221935753479934}
+  orientation: 0
+  direction: 1
+  capacity: 0
+  portType: UnityEngine.Vector2
+  index: 2
+  graphIndex: 6
+  UIIndex: 0
+  portName: Vector2 (Optional)
+  isInput: 1
+  linked: []
+  isValid: 1
+--- !u!114 &6652137347203776888
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: d6d22f94ec673d74aa0c0fc8be7c0bed, type: 3}
+  m_Name: PropertyNode
+  m_EditorClassIdentifier: 
+  isSetup: 1
+  nodePosition: {x: -1053.114, y: 78.66667}
+  portViews:
+  - {fileID: -7445381846359013579}
+  guid: b0677f0d70441a744b1eb9a24d408115
+  graph: {fileID: 11400000}
+  valid: 1
+  iteration: 0
+  linkDescription: 
+  portSignature: PropertyOutputLink<zoom:System.Single>
+  propertyName: zoom
+  index: -1
+  typeName: 
+  list:
+    values:
+    - chunkPosition
+    - centerPosition
+    - chunkSize
+    - seed
+    - offset
+    - scale
+    - zoom
+    _value: zoom
+    _index: 6
+--- !u!114 &6711151995899048055
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: d6d22f94ec673d74aa0c0fc8be7c0bed, type: 3}
+  m_Name: PropertyNode
+  m_EditorClassIdentifier: 
+  isSetup: 1
+  nodePosition: {x: -775.9998, y: 126.66666}
+  portViews:
+  - {fileID: -5697900542096897610}
+  guid: c39aa188d345f9c4a8c664ab0008b3d7
+  graph: {fileID: 11400000}
+  valid: 1
+  iteration: 0
+  linkDescription: 
+  portSignature: PropertyOutputLink<scale:System.Single>
+  propertyName: scale
+  index: -1
+  typeName: 
+  list:
+    values:
+    - chunkPosition
+    - centerPosition
+    - chunkSize
+    - seed
+    - offset
+    - scale
+    - zoom
+    _value: scale
+    _index: 5
+--- !u!114 &7742126685799141017
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 541c922fe33130b4582f9269205071a7, type: 3}
+  m_Name: 'Input Port: System.Int32'
+  m_EditorClassIdentifier: 
+  node: {fileID: -6726221935753479934}
+  orientation: 0
+  direction: 1
+  capacity: 0
+  portType: System.Int32
+  index: 0
+  graphIndex: 4
+  UIIndex: 0
+  portName: Int32
+  isInput: 1
+  linked:
+  - {fileID: 1508853986856157036}
+  isValid: 1
+--- !u!114 &7784847416487736640
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 541c922fe33130b4582f9269205071a7, type: 3}
+  m_Name: 'Output Port: JStuff.Generation.MeshData'
+  m_EditorClassIdentifier: 
+  node: {fileID: -1284651410009757596}
+  orientation: 0
+  direction: 2
+  capacity: 1
+  portType: JStuff.Generation.MeshData
+  index: 2
+  graphIndex: 18
+  UIIndex: 0
+  portName: MeshData
+  isInput: 0
+  linked: []
+  isValid: 1
+--- !u!114 &8817803582441048414
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 541c922fe33130b4582f9269205071a7, type: 3}
+  m_Name: 'Input Port: JStuff.Generation.HeightMap'
+  m_EditorClassIdentifier: 
+  node: {fileID: -1120022627258467373}
+  orientation: 0
+  direction: 1
+  capacity: 0
+  portType: JStuff.Generation.HeightMap
+  index: 1
+  graphIndex: 26
+  UIIndex: 0
+  portName: HeightMap
+  isInput: 1
+  linked:
+  - {fileID: 8858465653765492011}
+  isValid: 1
+--- !u!114 &8858465653765492011
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 541c922fe33130b4582f9269205071a7, type: 3}
+  m_Name: 'Output Port: JStuff.Generation.HeightMap'
+  m_EditorClassIdentifier: 
+  node: {fileID: -6726221935753479934}
+  orientation: 0
+  direction: 2
+  capacity: 1
+  portType: JStuff.Generation.HeightMap
+  index: 3
+  graphIndex: 7
+  UIIndex: 0
+  portName: HeightMap
+  isInput: 0
+  linked: []
+  isValid: 1
