@@ -1,5 +1,4 @@
-﻿using JStuff.Random;
-using System;
+﻿using System;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
@@ -67,11 +66,11 @@ namespace JStuff.Generation
             EquilateralTriangle generator = new EquilateralTriangle(cacheAtDepth);
 
             if (ah < -1 || ah > 1)
-                ah = Generator.Value(s, 0.5236f);
+                ah = Noise.Value(s, 0.5236f);
             if (bh < -1 || bh > 1)
-                bh = Generator.Value(ah, -0.3251f);
+                bh = Noise.Value(ah, -0.3251f);
             if (ch < -1 || ch > 1)
-                ch = Generator.Value(ah, bh);
+                ch = Noise.Value(ah, bh);
 
             // Height of TRIANGLE
             float h = Mathf.Sqrt(3) / 2;

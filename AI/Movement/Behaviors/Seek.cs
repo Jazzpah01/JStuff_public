@@ -16,5 +16,10 @@ namespace JStuff.AI.Steering
 
             return new SteeringOutput(acceleration);
         }
+
+        public static Seek Create()
+        {
+            return CreateInstance<Seek>();
+        }
     }
 }

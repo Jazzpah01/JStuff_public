@@ -18,8 +18,21 @@ namespace JStuff.Generation.Terrain
             instance = this;
         }
 
+        private void OnDestroy()
+        {
+            freeObjects = new Dictionary<GameObject, Stack<GameObject>>();
+            usedObjects = new Dictionary<GameObject, GameObject>();
+            instance = this;
+        }
+
         public static void DestroyTerrainObject(GameObject go)
         {
+            if (!Application.isPlaying)
+            {
+                Destroy(go);
+                return;
+            }
+
             GameObject prefab = usedObjects[go];
             usedObjects.Remove(go);
 
@@ -35,35 +48,46 @@ namespace JStuff.Generation.Terrain
 
         public static GameObject CreateTerrainObject(TerrainObject terrainObject, Block block)
         {
+            if (!Application.isPlaying)
+            {
+                GameObject go = Instantiate(terrainObject.prefab);
+                go.tag = "Spawned";
+
+                SetGameObjectValues(terrainObject, go, block);
+                return go;
+            }
+
             if (!freeObjects.ContainsKey(terrainObject.prefab) || freeObjects[terrainObject.prefab].Count <= 0)
             {
                 GameObject go = Instantiate(terrainObject.prefab);
+                go.tag = "Spawned";
 
-                go.transform.position = terrainObject.position + block.transform.position;
-                go.transform.rotation = terrainObject.rotation;
-                //go.transform.localScale = terrainObject.scale;
+                SetGameObjectValues(terrainObject, go, block);
 
                 usedObjects.Add(go, terrainObject.prefab);
-
-                go.transform.parent = block.transform;
 
                 return go;
             } else
             {
                 GameObject go = freeObjects[terrainObject.prefab].Pop();
+                go.tag = "Spawned";
+
+                SetGameObjectValues(terrainObject, go, block);
 
                 go.SetActive(true);
 
-                go.transform.position = terrainObject.position + block.transform.position;
-                go.transform.rotation = terrainObject.rotation;
-                //go.transform.localScale = terrainObject.scale;
-
                 usedObjects.Add(go, terrainObject.prefab);
-
-                go.transform.parent = block.transform;
 
                 return go;
             }
+        }
+
+        private static void SetGameObjectValues(TerrainObject terrainObject, GameObject go, Block block)
+        {
+            go.transform.position = terrainObject.position + block.transform.position;
+            go.transform.rotation = terrainObject.rotation;
+            go.transform.localScale = Vector3.one * terrainObject.scale;
+            go.transform.parent = block.transform;
         }
     }
 }

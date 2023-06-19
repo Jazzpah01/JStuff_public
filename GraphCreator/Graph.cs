@@ -12,11 +12,11 @@ namespace JStuff.GraphCreator
     {
         [SerializeReference] public Node rootNode;
         public abstract Type RootNodeType { get; }
+        public virtual bool Collapsable => false;
         [SerializeReference] public List<Node> nodes = new List<Node>();
-        [SerializeReference] public List<PortView> portViews = new List<PortView>();
         [System.NonSerialized] public List<Link> links = new List<Link>();
 
-        public abstract List<Type> NodeTypes { get; }
+        public abstract Type[] NodeTypes { get; }
 
         public virtual Link.Direction InputPortDirection => Link.Direction.Input;
         public virtual Link.Orientation Orientation => Link.Orientation.Horizontal;
@@ -33,6 +33,41 @@ namespace JStuff.GraphCreator
 
         public List<string> propertyValues = new List<string>();
         private PropertySetup propertySetup = PropertySetup.Editor;
+
+        public List<Port> GetPorts()
+        {
+            List<Port> retval = new List<Port>();
+
+            foreach (Node node in nodes)
+            {
+                if (node == null)
+                    continue;
+
+                foreach (Port port in node.ports)
+                {
+                    retval.Add(port);
+                }
+            }
+
+            return retval;
+        }
+
+        public bool Valid { 
+            get
+            {
+                if (!valid)
+                    return false;
+
+                foreach (Node node in nodes)
+                {
+                    if (node == null || !node.Valid)
+                        return false;
+                }
+
+                return true;
+            } 
+        }
+
         private enum PropertySetup
         {
             Runtime,
@@ -52,88 +87,63 @@ namespace JStuff.GraphCreator
         {
             isSetup = false;
 
-            Clear();
-
-            sharedContext = CreateInstance<Context>();
-            sharedContext.name = "SharedContext";
-            sharedContext.graph = this;
-#if UNITY_EDITOR
-            if (!Application.isPlaying)
+            if (sharedContext == null)
             {
-                EditorUtility.SetDirty(sharedContext);
-                AssetDatabase.AddObjectToAsset(sharedContext, this);
-            }
-#endif
-
-            uniqueContext = CreateInstance<Context>();
-            uniqueContext.name = "UniqueContext";
-            uniqueContext.graph = this;
-#if UNITY_EDITOR
-            if (!Application.isPlaying)
+                sharedContext = CreateInstance<Context>();
+                sharedContext.name = "SharedContext";
+                sharedContext.graph = this;
+            } else
             {
-                EditorUtility.SetDirty(uniqueContext);
-                AssetDatabase.AddObjectToAsset(uniqueContext, this);
+                sharedContext.Clear();
             }
-#endif
+
+            if (uniqueContext == null)
+            {
+                uniqueContext = CreateInstance<Context>();
+                uniqueContext.name = "UniqueContext";
+                uniqueContext.graph = this;
+            } else
+            {
+                uniqueContext.Clear();
+            }
 
             SetupProperties();
 
             isSetup = true;
-#if UNITY_EDITOR
-            if (!Application.isPlaying)
-            {
-                AssetDatabase.SaveAssets();
-            }
-#endif
+            valid = true;
         }
 
         public void UpdateGraph()
         {
-            if (!isSetup)
+            RefreshNodes();
+
+            if (sharedContext == null)
             {
-                Setup();
+                valid = false;
+                //sharedContext = CreateInstance<Context>();
+                //sharedContext.name = "SharedContext";
+                //sharedContext.graph = this;
             }
-            else
+
+            if (uniqueContext == null)
             {
-                if (sharedContext == null)
-                {
-                    sharedContext = CreateInstance<Context>();
-                    sharedContext.name = "SharedContext";
-                    sharedContext.graph = this;
-#if UNITY_EDITOR
-                    if (!Application.isPlaying)
-                    {
-                        EditorUtility.SetDirty(sharedContext);
-                        AssetDatabase.AddObjectToAsset(sharedContext, this);
-                    }
-#endif
-                }
-
-                if (uniqueContext == null)
-                {
-                    uniqueContext = CreateInstance<Context>();
-                    uniqueContext.name = "UniqueContext";
-                    uniqueContext.graph = this;
-#if UNITY_EDITOR
-                    if (!Application.isPlaying)
-                    {
-                        EditorUtility.SetDirty(uniqueContext);
-                        AssetDatabase.AddObjectToAsset(uniqueContext, this);
-                    }
-#endif
-                }
-
-                sharedContext.Clear();
-                uniqueContext.Clear();
-                SetupProperties();
-
-#if UNITY_EDITOR
-                if (!Application.isPlaying)
-                {
-                    AssetDatabase.SaveAssets();
-                }
-#endif
+                valid = false;
+                //uniqueContext = CreateInstance<Context>();
+                //uniqueContext.name = "UniqueContext";
+                //uniqueContext.graph = this;
             }
+
+            foreach (Node node in nodes)
+            {
+                if (!node.Valid)
+                {
+                    node.UpdateNode();
+                }
+            }
+
+            sharedContext.Clear();
+            uniqueContext.Clear();
+            SetupProperties();
         }
 
         protected virtual void Initialize()
@@ -146,111 +156,29 @@ namespace JStuff.GraphCreator
 
         }
 
-        public void CleanParentlessPortView()
+
+        protected PropertyLink<T> AddProperty<T>(T value, string name, PropertyContext context, bool isConstant = false)
         {
-            HashSet<PortView> parentfulViews = new HashSet<PortView>();
-
-            foreach (Node node in nodes)
-            {
-                foreach (PortView view in node.portViews)
-                {
-                    parentfulViews.Add(view);
-                }
-            }
-
-            foreach (PortView view in portViews.ToArray())
-            {
-                if (!parentfulViews.Contains(view))
-                {
-#if UNITY_EDITOR
-                    // Illigal view to delete
-                    if (!Application.isPlaying)
-                        AssetDatabase.RemoveObjectFromAsset(view);
-#endif
-                    portViews.Remove(view);
-                }
-            }
-        }
-
-        public void CleanupPortViews()
-        {
-            foreach (PortView view in portViews.ToArray())
-            {
-                if (view == null)
-                {
-                    portViews.Remove(view);
-                    continue;
-                }
-                foreach (PortView linked in view.linked.ToArray())
-                {
-                    if (linked == null)
-                    {
-                        view.UnLinkAll();
-                        continue;
-                    }
-                    if (!linked.Valid || !view.Valid)
-                    {
-                        view.UnLink(linked);
-                    }
-                }
-            }
-
-            for (int i = 0; i < portViews.Count; i++)
-            {
-                if (!portViews[i].Valid)
-                {
-#if UNITY_EDITOR
-                    if (!Application.isPlaying)
-                        AssetDatabase.RemoveObjectFromAsset(portViews[i]);
-                    portViews.Remove(portViews[i]);
-#endif
-                    i--;
-                }
-            }
-
-            for (int i = 0; i < nodes.Count; i++)
-            {
-                if (!nodes[i].Valid)
-                {
-                    Node invalidNode = nodes[i];
-
-                    nodes.Remove(invalidNode);
-
-                    CreateNode(invalidNode.Clone());
-#if UNITY_EDITOR
-                    if (!Application.isPlaying)
-                        AssetDatabase.RemoveObjectFromAsset(invalidNode);
-#endif
-                    i--;
-                }
-            }
-
-#if UNITY_EDITOR
-            if (!Application.isPlaying)
-            {
-                AssetDatabase.SaveAssets();
-            }
-#endif
-        }
-
-        protected PropertyLink<T> AddProperty<T>(T value, string name, PropertyContext context)
-        {
-            if ((uniqueContext.Contains(name) || sharedContext.Contains(name)) && !Application.isPlaying)
+            if ((uniqueContext.Contains(name) || sharedContext.Contains(name)) && !sharedContext.Runmode)
                 throw new Exception("Property of the specified name already exists: " + name);
 
             switch (context)
             {
                 case PropertyContext.Unique:
-                    uniqueContext.AddPropertyLink(value, name);
-                    if (uniqueContext.runmode)
+                    uniqueContext.AddPropertyLink(value, name, isConstant);
+                    if (uniqueContext.Runmode)
                     {
                         return (PropertyLink<T>)uniqueContext.GetPropertyLink(name);
                     }
                     break;
                 case PropertyContext.Shared:
-                    sharedContext.AddPropertyLink(value, name);
-                    if (sharedContext.runmode)
+                    if (!sharedContext.Runmode)
                     {
+                        sharedContext.AddPropertyLink(value, name, isConstant);
+                    }
+                    else if (sharedContext.Runmode && !sharedContext.Contains(name))
+                    {
+                        sharedContext.AddPropertyLink(value, name, isConstant);
                         return (PropertyLink<T>)sharedContext.GetPropertyLink(name);
                     }
                     break;
@@ -296,21 +224,13 @@ namespace JStuff.GraphCreator
             if (!Application.isPlaying)
                 throw new Exception("Can only initialize graph in runtime.");
 
-            sharedContext.runmode = true;
-            uniqueContext.runmode = true;
+            sharedContext.Runmode = true;
+            uniqueContext.Runmode = true;
             SetupProperties();
-            foreach (Node node in nodes)
-            {
-                if (node.graph != this)
-                {
-                    throw new Exception("Node dependencies are currupt");
-                }
-                node.UpdateNode();
-            }
 
-            List<List<int>> connections = GetConnections();
+            List<List<int>> connections = GetConnections(GetPorts());
 
-            ConnectLinks(connections);
+            CreateAndConnectLinks(connections);
             Initialize();
 
             foreach (Node node in nodes)
@@ -332,9 +252,7 @@ namespace JStuff.GraphCreator
 
             Node node = CreateInstance(type) as Node;
             node.name = type.Name;
-#if UNITY_EDITOR
-            node.guid = GUID.Generate().ToString();
-#endif
+
             node.graph = this;
             node.UpdateNode();
             nodes.Add(node);
@@ -343,84 +261,86 @@ namespace JStuff.GraphCreator
             if (type == RootNodeType)
             {
                 rootNode = node;
-#if UNITY_EDITOR
-                if (!Application.isPlaying)
-                {
-                    EditorUtility.SetDirty(this);
-                    AssetDatabase.SaveAssets();
-                }
-#endif
             }
 
-            foreach (PortView portView in node.portViews)
-            {
-                portViews.Add(portView);
-            }
-#if UNITY_EDITOR
-            if (!Application.isPlaying)
-            {
-                AssetDatabase.AddObjectToAsset(node, this);
-                AssetDatabase.SaveAssets();
-            }
-#endif
             return node;
         }
 
-        public Node CreateNode(Node node)
+        public Node AddNode(Node node)
         {
             node.name = node.GetType().Name;
-#if UNITY_EDITOR
-            node.guid = GUID.Generate().ToString();
-#endif
             node.graph = this;
             node.isSetup = false;
+
             node.UpdateNode();
-            nodes.Add(node);
+
+            if (!nodes.Contains(node))
+                nodes.Add(node);
+
             node.Valid = true;
 
             if (node.GetType() == RootNodeType)
             {
                 rootNode = node;
-                if (!Application.isPlaying)
-                {
-#if UNITY_EDITOR
-                    EditorUtility.SetDirty(this);
-                    AssetDatabase.SaveAssets();
-#endif
-                }
             }
-            foreach (PortView portView in node.portViews)
-            {
-                portViews.Add(portView);
-            }
-#if UNITY_EDITOR
-            if (!Application.isPlaying)
-            {
-                AssetDatabase.AddObjectToAsset(node, this);
-                AssetDatabase.SaveAssets();
-            }
-#endif
+
             return node;
         }
 
-        public void UpdateNodes()
+        public void RefreshNodes()
         {
-            foreach (Node node in nodes)
+            for (int i = 0; i < nodes.Count; i++)
             {
+                Node node = nodes[i];
+
+                if (node == null)
+                {
+                    nodes.RemoveAt(i);
+                    i--;
+                }
+
+#if UNITY_EDITOR
+                if (!AssetDatabase.IsSubAsset(node))
+                {
+                    nodes.RemoveAt(i);
+                    i--;
+                }
+#endif
+
                 if (node.SignatureChanged)
                 {
                     node.Valid = false;
                 }
+
+                if (node.ports == null || node.ports.Count == 0)
+                {
+                    node.Valid = false;
+                    return;
+                }
+
+                foreach (Port port in node.ports)
+                {
+                    Port[] ports = port.GetConnectedPorts();
+
+                    if (ports == null || !port.Valid)
+                    {
+                        port.UnLinkAll();
+                        continue;
+                    }
+
+                    foreach (Port connectedPort in port.GetConnectedPorts())
+                    {
+                        if (!connectedPort.Valid)
+                        {
+                            port.UnLinkAll();
+                        }
+                    }
+                }
             }
-            UpdateGraph();
-            CleanupPortViews();
-            CleanParentlessPortView();
-#if UNITY_EDITOR
-            if (!Application.isPlaying)
+            foreach (Node node in nodes)
             {
-                AssetDatabase.SaveAssets();
+                
             }
-#endif
         }
 
         public void DeleteNode(Node node)
@@ -430,32 +350,6 @@ namespace JStuff.GraphCreator
                 rootNode = null;
             }
             nodes.Remove(node);
-
-            foreach (PortView portView in node.portViews)
-            {
-                portViews.Remove(portView);
-#if UNITY_EDITOR
-                AssetDatabase.RemoveObjectFromAsset(portView);
-#endif
-            }
-#if UNITY_EDITOR
-            AssetDatabase.RemoveObjectFromAsset(node);
-            AssetDatabase.SaveAssets();
-#endif
-        }
-
-        public void DetectChange()
-        {
-#if UNITY_EDITOR
-            AssetDatabase.SaveAssets();
-#endif
-        }
-
-        public void SaveAsset()
-        {
-#if UNITY_EDITOR
-            AssetDatabase.SaveAssets();
-#endif
         }
 
         public virtual Graph Clone()
@@ -464,7 +358,9 @@ namespace JStuff.GraphCreator
             retval.Setup();
             retval.name = name + "(Clone)";
 
-            List<List<int>> connections = GetConnections();
+            List<Port> ports = GetPorts();
+
+            List<List<int>> connections = GetConnections(ports);
 
             List<Node> newNodes = new List<Node>();
             for (int i = 0; i < nodes.Count; i++)
@@ -474,25 +370,28 @@ namespace JStuff.GraphCreator
 
             retval.CreateNodes(newNodes);
 
-            retval.ConnectPorts(connections);
+            retval.ConnectPorts(retval.GetPorts(), connections);
 
             retval.isSetup = true;
             return retval;
         }
 
-        public List<List<int>> GetConnections()
+        public List<List<int>> GetConnections(List<Port> ports)
         {
-            for (int i = 0; i < portViews.Count; i++)
+            for (int i = 0; i < ports.Count; i++)
             {
-                portViews[i].graphIndex = i;
+                ports[i].graphIndex = i;
             }
             List<List<int>> connections = new List<List<int>>();
-            for (int i = 0; i < portViews.Count; i++)
+            int conn = 0;
+            for (int i = 0; i < ports.Count; i++)
             {
                 connections.Add(new List<int>());
-                for (int j = 0; j < portViews[i].linked.Count; j++)
+                Port[] connectedPorts = ports[i].GetConnectedPorts();
+                for (int j = 0; j < connectedPorts.Length; j++)
                 {
-                    connections[i].Add(portViews[i].linked[j].graphIndex);
+                    connections[i].Add(connectedPorts[j].graphIndex);
+                    conn++;
                 }
             }
             return connections;
@@ -500,39 +399,29 @@ namespace JStuff.GraphCreator
 
         public void CreateNodes(List<Node> newNodes)
         {
-            portViews.Clear();
             nodes.Clear();
             rootNode = null;
 
             for (int i = 0; i < newNodes.Count; i++)
             {
-                CreateNode(newNodes[i]);
+                AddNode(newNodes[i]);
             }
-#if UNITY_EDITOR
-            if (!Application.isPlaying)
-                AssetDatabase.SaveAssets();
-#endif
         }
 
         public void ReCreateNodes(List<Node> oldNodes)
         {
-            portViews.Clear();
             nodes.Clear();
             rootNode = null;
 
             for (int i = 0; i < oldNodes.Count; i++)
             {
-                CreateNode(oldNodes[i].Clone());
+                AddNode(oldNodes[i].Clone());
             }
-#if UNITY_EDITOR
-            if (!Application.isPlaying)
-                AssetDatabase.SaveAssets();
-#endif
         }
 
-        public void ConnectPorts(List<List<int>> connections)
+        public void ConnectPorts(List<Port> ports, List<List<int>> connections)
         {
-            if (connections.Count > portViews.Count)
+            if (connections.Count > ports.Count)
             {
                 valid = false;
                 return;
@@ -540,23 +429,23 @@ namespace JStuff.GraphCreator
 
             for (int i = 0; i < connections.Count; i++)
             {
-                portViews[i].UnLinkAll();
+                ports[i].UnLinkAll();
                 foreach (int connection in connections[i])
                 {
                     try
                     {
-                        portViews[i].ConnectPort(portViews[connection]);
+                        ports[i].ConnectPort(ports[connection]);
                     }
                     catch (ArgumentException e)
                     {
-                        portViews[i].UnLinkAll();
+                        ports[i].UnLinkAll();
                         Debug.LogError("Error while connecting ports: " + e);
                     }
                 }
             }
         }
 
-        public void ConnectLinks(List<List<int>> connections)
+        public void CreateAndConnectLinks(List<List<int>> connections)
         {
             int graphIndex = 0;
             for (int i = 0; i < nodes.Count; i++)
@@ -584,8 +473,8 @@ namespace JStuff.GraphCreator
 
         public void ResetPorts()
         {
-            Debug.Log("resetting ports!");
-            List<List<int>> connections = GetConnections();
+            List<Port> ports = GetPorts();
+            List<List<int>> connections = GetConnections(ports);
 
             List<Node> newNodes = new List<Node>();
             for (int i = 0; i < nodes.Count; i++)
@@ -598,11 +487,7 @@ namespace JStuff.GraphCreator
 
             CreateNodes(newNodes);
 
-            ConnectPorts(connections);
-#if UNITY_EDITOR
-            if (!Application.isPlaying)
-                AssetDatabase.SaveAssets();
-#endif
+            ConnectPorts(ports, connections);
         }
 
         public void Clear()
@@ -611,14 +496,6 @@ namespace JStuff.GraphCreator
 
             DestroyImmediate(uniqueContext, true);
             DestroyImmediate(sharedContext, true);
-
-            while (portViews.Count > 0)
-            {
-                PortView p = portViews[0];
-                portViews.RemoveAt(0);
-                DestroyImmediate(p, true);
-            }
-            portViews.Clear();
 
             while (nodes.Count > 0)
             {
@@ -643,13 +520,128 @@ namespace JStuff.GraphCreator
             {
                 retval += $"Node: {nodes[i].name}. GUID: {nodes[i].guid}\r\n";
             }
-            retval += $"PortViews ({portViews.Count}):\r\n";
-            for (int i = 0; i < portViews.Count; i++)
+            List<Port> ports = GetPorts();
+            retval += $"PortViews ({ports.Count}):\r\n";
+            for (int i = 0; i < ports.Count; i++)
             {
-                retval += $"Portview: {portViews[i].name}. GUID of node: {portViews[i].node.guid}\r\n";
+                retval += $"Portview: {ports[i].name}. GUID of node: {ports[i].node.guid}\r\n";
             }
 
             return retval;
+        }
+
+        public Graph GetInitializedGraph()
+        {
+            // Cloning graph
+            Graph retval = Clone();
+
+            // Setup properties
+            //retval.sharedContext = sharedContext;
+            retval.sharedContext.Runmode = true;
+            retval.uniqueContext.Runmode = true;
+            retval.SetupProperties();
+
+            // Get connections from old graph
+            List<List<int>> connections = GetConnections(GetPorts());
+
+            // Connect links
+            retval.CreateAndConnectLinks(connections);
+
+            // User graph initialization
+            retval.Initialize();
+
+            // User node initialization
+            foreach (Node node in retval.nodes)
+            {
+                node.Initialize();
+            }
+
+            if (retval.Collapsable)
+                retval.CollapseGraph();
+
+            retval.initialized = true;
+
+            return retval;
+        }
+
+        public Graph GetChild()
+        {
+            if (!initialized)
+            {
+                throw new Exception("Cannot get child of uninitialized graph!");
+            }
+
+            // Cloning graph
+            Graph retval = Clone();
+
+            // Setup properties
+            retval.sharedContext = sharedContext;
+            retval.sharedContext.Runmode = true;
+            retval.uniqueContext.Runmode = true;
+            retval.SetupProperties();
+
+            // Get connections from old graph
+            List<List<int>> connections = GetConnections(GetPorts());
+
+            // Connect links
+            retval.CreateAndConnectLinks(connections);
+
+            // User graph initialization
+            retval.Initialize();
+
+            // User node initialization
+            foreach (Node node in retval.nodes)
+            {
+                node.Initialize();
+            }
+
+            // User node initialization
+            for (int i = 0; i < retval.nodes.Count; i++)
+            {
+                retval.nodes[i].Initialize();
+
+                for (int j = 0; j < nodes[i].links.Count; j++)
+                {
+                    if (nodes[i].links[j] is ILinkable && nodes[i].links[j].IsConstant() && ((ILinkable)nodes[i].links[j]).LinkedPort != null)
+                    {
+
+
+                        //Debug.Log(nodes[i].links[j].GetType());
+                        //Debug.Log(nodes[i].links[j].node);
+
+                        ILinkable other = (ILinkable)nodes[i].links[j];
+                        ILinkable thisl = (ILinkable)retval.nodes[i].links[j];
+
+                        //Debug.Log(((Link)other.LinkedPort).node);
+                        //Debug.Log(other.LinkedPort.GetType());
+
+                        thisl.LinkPort((Link)other.LinkedPort);
+
+                        //retval.nodes[i].links[j] = nodes[i].links[j];
+                    }
+                }
+            }
+
+            retval.initialized = true;
+
+            return retval;
+        }
+
+        public void CollapseGraph()
+        {
+            foreach (Node node in nodes)
+            {
+                if (!node.IsConstant())
+                {
+                    foreach (Link link in node.links)
+                    {
+                        if (link.IsInput && link.node != null && link.IsConstant())
+                        {
+                            link.Collapse();
+                        }
+                    }
+                }
+            }
         }
     }
 }

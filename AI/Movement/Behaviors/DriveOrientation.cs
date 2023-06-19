@@ -21,15 +21,15 @@ namespace JStuff.AI.Steering
 
             Vector2 targetDirection = target - agent.Position;
 
-            float targetOrientation = targetDirection.normalized.xy().Orientation();
+            float targetOrientation = targetDirection.normalized.xy().GetOrientation();
 
             float t = agent.Velocity.magnitude.Remap(0, agent.MaxSpeed, 0, 1).Clamp(0,1);
 
-            Vector2 targetOrientationVector = targetOrientation.GetOrientationVector(agent.Up);
+            Vector2 targetOrientationVector = targetOrientation.GetDirection(agent.Up);
 
             float deltaOrientation = (targetOrientation - agent.Orientation + 540) % 360 - 180;
 
-            float dot = Mathf.Abs(Vector3.Dot(targetOrientation.GetOrientationVector(agent.Up), agent.Velocity.normalized));
+            float dot = Mathf.Abs(Vector3.Dot(targetOrientation.GetDirection(agent.Up), agent.Velocity.normalized));
 
             float maxRotation = Mathf.Lerp(minSpeedRotationFactor, maxSpeedRotationFactor, t) * agent.MaxRotation;
             Debug.Log(maxRotation);

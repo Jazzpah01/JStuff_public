@@ -1,144 +1,351 @@
 using System.Collections;
 using System.Collections.Generic;
+using System.Diagnostics;
 using UnityEngine;
 using JStuff.Threading;
+using Debug = UnityEngine.Debug;
+using System.Linq;
 
 namespace JStuff.Generation.Terrain
 {
     public class WorldTerrain : MonoBehaviour
     {
-        public TerrainGraph graph;
-        [Min(1)] public int terrainHalfsize;
-        public Vector2 offset;
+        // These are for the Aljeja project only, please remove
+        public static WorldTerrain instance;
+        // These are for the Aljeja project only, please remove
 
+        [Header("Graph Settings")]
+        public TerrainGraph graphData;
         public Material material;
-        public Block[] blocks;
+        public string blockLayer;
+        public bool raymarchingTerrain = false;
+        public bool enableThreading = false;
 
+        [Header("Visual Settings")]
+        public float generateDistance = 100;
+        public float generateDistanceEditor = 1000;
+        [Min(1)] public int terrainHalfsize = 1;
         public Transform cameraTransform;
+
+        [Header("Debug")]
+        public TerrainGraph initializedGraph;
+        public bool debugTime = false;
+        public List<Block> blocks;
+        private List<Block> usedBlocks;
+        private Stack<Block> depricatedBlocks;
+        public GameObject parentBlock;
+        public GameObject savedBlocksParent;
+
+        private Block[] savedBlocks;
 
         Queue<Vector3> newPositions;
 
-        Vector3 centerChunk;
-        public Vector3 updatedPlayerPosition;
+        Vector3 centerBlock;
 
-        GameObject parentChunk;
+        private HashSet<TerrainCoordinate> savedCoordinates;
 
-        public bool raymarchingTerrain = false;
+        private HashSet<Vector3> oldPositions;
 
-        private float chunkSize;
-        private float scale;
-        private int seed;
-        private float zoom;
+        [HideInInspector]public float blockSize;
+        [HideInInspector]public float scale;
+        [HideInInspector]public int seed;
+        [HideInInspector]public float zoom;
 
-        public bool enableThreading = false;
+        bool shouldUpdate = false;
 
-        public List<GameObject> terrainObjectPrefabs;
+        public bool IsUpdating
+        {
+            get
+            {
+                if (blocks == null)
+                    return false;
+                foreach (Block block in blocks)
+                {
+                    if (block.waitingJobResult || block.waitingCoroutine)
+                        return true;
+                }
+                return false;
+            }
+        }
+
+        public void Initialize()
+        {
+            initializedGraph = graphData.GetInitializedGraph() as TerrainGraph;
+
+            blockSize = graphData.chunkSize;
+            scale = graphData.scale;
+            seed = graphData.seed;
+            zoom = graphData.zoom;
+            depricatedBlocks = new Stack<Block>();
+            oldPositions = new HashSet<Vector3>();
+            blocks = new List<Block>();
+            usedBlocks = new List<Block>();
+
+            savedCoordinates = new HashSet<TerrainCoordinate>();
+
+            if (savedBlocksParent == null)
+                savedBlocksParent = new GameObject();
+
+            savedBlocks = savedBlocksParent.GetComponentsInChildren<Block>();
+
+            foreach (Block block in savedBlocks)
+            {
+                savedCoordinates.Add(block.GetCoordinates());
+            }
+        }
+
+        public void SaveBlock(Block block)
+        {
+            if (savedBlocksParent == null)
+            {
+                savedBlocksParent = new GameObject("Saved Blocks Parent");
+            }
+
+            if (savedBlocks == null || savedBlocks.Length == 0)
+            {
+                savedBlocks = savedBlocksParent.GetComponentsInChildren<Block>();
+            }
+
+            bool savedcontains = false;
+            for (int i = 0; i < savedBlocks.Length; i++)
+            {
+                if (savedBlocks[i].name == block.name)
+                {
+                    savedcontains = true;
+                    if (savedBlocks[i] != block)
+                    {
+                        Block tmp = savedBlocks[i];
+                        savedBlocks[i] = block;
+                        DestroyImmediate(tmp.gameObject);
+                    }
+                }
+            }
+
+            block.gameObject.transform.parent = savedBlocksParent.transform;
+        }
+
+        private void Awake()
+        {
+            instance = this;
+        }
 
         private void Start()
         {
-            
+            Cleanup();
+
+            if (cameraTransform == null)
+                cameraTransform = Camera.main.transform;
 
             transform.position = new Vector3(cameraTransform.position.x, 0, cameraTransform.position.z);
 
-            chunkSize = graph.chunkSize;
-            scale = graph.scale;
-            seed = graph.seed;
-            zoom = graph.zoom;
+            Initialize();
+
+            foreach (Block block in savedBlocks)
+            {
+                savedCoordinates.Add(block.GetCoordinates());
+            }
 
             if (raymarchingTerrain)
             {
                 material.SetFloat("Scale", scale);
-                material.SetFloat("Stretch", chunkSize * zoom);
+                material.SetFloat("Stretch", blockSize * zoom);
+            }
+            
+            
+            if (debugTime)
+            {
+                Stopwatch watch = new Stopwatch();
+                watch.Start();
+                Populate(GetCenterChunkPosition());
+                UpdateAll(centerBlock);
+                JobManagerComponent.instance.manager.FinishJobs();
+                watch.Stop();
+                Debug.Log("Populating time: " + watch.Elapsed);
+            } else
+            {
+                Populate(GetCenterChunkPosition());
+                UpdateAll(centerBlock);
+                JobManagerComponent.instance.manager.FinishJobs();
             }
 
-            Populate();
-            JobManagerComponent.instance.manager.FinishJobs();
+            JobManagerComponent.instance.manager.ConsumeAll();
         }
+#if UNITY_EDITOR
+        public void GenerateEditorTerrain(Vector3 position)
+        {
+            Cleanup();
+            Initialize();
 
-        bool shouldUpdate = false;
+            position.y = 0;
+            transform.position = position;
+            
+            Populate(GetCenterChunkPosition());
+
+            EnqueuePositions(GetCenterChunkPosition(), generateDistanceEditor);
+
+            while (newPositions.Count > 0)
+            {
+                Vector3 p = newPositions.Dequeue();
+
+                if (savedCoordinates.Contains(new TerrainCoordinate(blockSize, p)))
+                    continue;
+
+                Block b = NewBlock();
+
+                b.UpdateValues(p, p);
+                b.EditorGenerateRenderMesh();
+            }
+        }
+#endif
+        public void Cleanup()
+        {
+            if (parentBlock != null)
+            {
+                DestroyImmediate(parentBlock);
+                parentBlock = null;
+            }
+
+            if (savedBlocksParent == null)
+            {
+                savedBlocksParent = null;
+            }
+
+            savedBlocks = null;
+            blocks = null;
+        }
 
         private void Update()
         {
-            if ((new Vector3(cameraTransform.position.x, 0, cameraTransform.position.z) - transform.position).magnitude > chunkSize / 2f && !shouldUpdate)
+            if ((new Vector3(cameraTransform.position.x, 0, cameraTransform.position.z) - transform.position).magnitude > blockSize / 2f && !shouldUpdate)
             {
                 transform.position = new Vector3(cameraTransform.position.x, 0, cameraTransform.position.z);
                 shouldUpdate = true;
             }
 
             //if ((centerChunk + new Vector3(chunkSize/2, 0, chunkSize / 2) - transform.position).magnitude > chunkSize)
-            Vector3 newCenterChunk = transform.position - new Vector3(transform.position.x % chunkSize, 0, transform.position.z % chunkSize);
+            Vector3 newCenterChunk = transform.position - new Vector3(transform.position.x % blockSize, 0, transform.position.z % blockSize);
 
             if (shouldUpdate)
             {
+                shouldUpdate = false;
                 if (JobManagerComponent.instance.manager.Pending != 0)
                 {
                     JobManagerComponent.instance.manager.FinishJobs();
                 }
 
-                DynamicUpdate(newCenterChunk, centerChunk);
-                centerChunk = newCenterChunk;
-                shouldUpdate = false;
+                UpdateAll(newCenterChunk);
+                centerBlock = newCenterChunk;
             }
 
         }
 
-        public void Populate()
+        public Block NewBlock()
         {
+            GameObject go = new GameObject("Block" + (blocks.Count));
+            go.layer = LayerMask.NameToLayer(blockLayer);
+            go.transform.parent = parentBlock.transform;
+            go.transform.position = new Vector3(-10000, -1000000, -1000);//centerBlock + new Vector3(i - terrainHalfsize, 0, j - terrainHalfsize) * blockSize;
+                                                                         //go.transform.position = new Vector3(30 * chunkSize, 0, 30 * chunkSize);
+            Block c = go.AddComponent<Block>();
+            c.Initialize(this, (TerrainGraph)initializedGraph.GetChild(), material);
+            blocks.Add(c);
+            return c;
+        }
+
+        public void Populate(Vector3 centerChunkPos)
+        {
+            Cleanup();
+
             int chunkAmount = terrainHalfsize * 2 + 1;
-            blocks = new Block[chunkAmount * chunkAmount];
+            blocks = new List<Block>();
             newPositions = new Queue<Vector3>();
 
-            centerChunk = transform.position - new Vector3(transform.position.x % chunkSize, 0, transform.position.z % chunkSize);
-            updatedPlayerPosition = transform.position;
+            centerBlock = transform.position - new Vector3(transform.position.x % blockSize, 0, transform.position.z % blockSize);
 
-            parentChunk = new GameObject("Chunks");
-
-            for (int i = 0; i < chunkAmount; i++)
-            {
-                for (int j = 0; j < chunkAmount; j++)
-                {
-                    GameObject go = new GameObject("Chunk" + (i + j * chunkAmount));
-                    go.transform.parent = parentChunk.transform;
-                    go.transform.position = centerChunk + new Vector3(i - terrainHalfsize, 0, j - terrainHalfsize) * chunkSize;
-                    //go.transform.position = new Vector3(30 * chunkSize, 0, 30 * chunkSize);
-                    Block c = go.AddComponent<Block>();
-                    c.Initialize(this, (TerrainGraph)graph.Clone(), material);
-                    blocks[i + j * chunkAmount] = c;
-                }
-            }
-
-            UpdateAll(centerChunk);
-            //DynamicUpdate(centerChunk, new Vector3(30 * chunkSize, 0, 30 * chunkSize));
+            parentBlock = new GameObject("Blocks");
         }
 
-        public void UpdateAll(Vector3 newCenterChunk)
+        public void EnqueuePositions(Vector3 newCenterChunk, float generateDistance)
         {
-            //for (int i = 0; i < terrainHalfsize * 2 + 1; i++)
-            //{
-            //    for (int j = 0; j < terrainHalfsize * 2 + 1; j++)
-            //    {
-            //        //newPositions.Enqueue(newCenterChunk + new Vector3(i - Mathf.Sqrt(blocks.Length) / 2, 0, j - Mathf.Sqrt(blocks.Length) / 2) * chunkSize);
-            //        newPositions.Enqueue(newCenterChunk + new Vector3(i - terrainHalfsize, 0, j - terrainHalfsize) * chunkSize);
-            //    }
-            //}
+            // Big optimisation missing
             for (int i = -terrainHalfsize; i < terrainHalfsize + 1; i++)
             {
                 for (int j = -terrainHalfsize; j < terrainHalfsize + 1; j++)
                 {
                     //newPositions.Enqueue(newCenterChunk + new Vector3(i - Mathf.Sqrt(blocks.Length) / 2, 0, j - Mathf.Sqrt(blocks.Length) / 2) * chunkSize);
-                    newPositions.Enqueue(newCenterChunk + new Vector3(i, 0, j) * chunkSize);
+                    Vector3 pos = newCenterChunk + new Vector3(i, 0, j) * blockSize;
+
+                    if (!oldPositions.Contains(pos) && (pos - newCenterChunk).magnitude <= generateDistance)
+                    {
+                        newPositions.Enqueue(pos);
+                    }
                 }
             }
-            foreach (Block c in blocks)
+        }
+
+        public void EnqueueDepricatedBlocks(Vector3 newCenterChunk)
+        {
+            for (int i = 0; i < usedBlocks.Count; i++)
             {
-                UpdateBlock(c, newCenterChunk, newPositions.Dequeue());
+                if (Vector3.Distance(usedBlocks[i].transform.position, newCenterChunk) >= generateDistance)
+                {
+                    oldPositions.Remove(usedBlocks[i].targetPosition);
+                    depricatedBlocks.Push(usedBlocks[i]);
+                    usedBlocks.Remove(usedBlocks[i]);
+                    i--;
+                }
+            }
+        }
+
+        public void UpdateAll(Vector3 newCenterChunk)
+        {
+            EnqueuePositions(newCenterChunk, generateDistance);
+            EnqueueDepricatedBlocks(newCenterChunk);
+
+            HashSet<Block> updated = new HashSet<Block>();
+
+            while(newPositions.Count > 0)
+            {
+                Vector3 p = newPositions.Dequeue();
+
+                Block b = null;
+
+                if (depricatedBlocks.Count > 0)
+                {
+                    b = depricatedBlocks.Pop();
+                } else
+                {
+                    b = NewBlock();
+                }
+
+                usedBlocks.Add(b);
+
+                oldPositions.Add(p);
+
+                UpdateBlock(b, newCenterChunk, p);
+                updated.Add(b);
             }
 
-            centerChunk = newCenterChunk;
+            foreach (Block b in blocks)
+            {
+                if (!updated.Contains(b))
+                    UpdateBlock(b, newCenterChunk, b.targetPosition);
+            }
+
+            centerBlock = newCenterChunk;
         }
 
         public void UpdateBlock(Block b, Vector3 newCenterChunk, Vector3 newpos)
         {
+            if (savedCoordinates.Contains(new TerrainCoordinate(blockSize, newpos)))
+            {
+                b.gameObject.SetActive(false);
+                return;
+            } else
+            {
+                b.gameObject.SetActive(true);
+            }
+
             b.UpdateBlock(newCenterChunk, newpos);
         }
 
@@ -156,13 +363,13 @@ namespace JStuff.Generation.Terrain
             {
                 for (int j = -terrainHalfsize; j < terrainHalfsize + 1; j++)
                 {
-                    Vector3 diffPosition = newCenterChunk + new Vector3(i * chunkSize, 0, j * chunkSize) - oldCenterChunk;
+                    Vector3 diffPosition = newCenterChunk + new Vector3(i * blockSize, 0, j * blockSize) - oldCenterChunk;
 
                     (int x, int y) diffPos = ChunkPosition(diffPosition);
 
                     if (Mathf.Abs(diffPos.x) > terrainHalfsize || Mathf.Abs(diffPos.y) > terrainHalfsize)
                     {
-                        newPositions.Enqueue(newCenterChunk + new Vector3(i * chunkSize, 0, j * chunkSize));
+                        newPositions.Enqueue(newCenterChunk + new Vector3(i * blockSize, 0, j * blockSize));
                     }
                 }
             }
@@ -198,7 +405,7 @@ namespace JStuff.Generation.Terrain
                 for (int i = 0; i < terrainHalfsize; i++)
                 {
                     cnt++;
-                    newPositions.Enqueue(newCenterChunk + new Vector3(terrainHalfsize / 2, 0, i - terrainHalfsize / 2) * chunkSize);
+                    newPositions.Enqueue(newCenterChunk + new Vector3(terrainHalfsize / 2, 0, i - terrainHalfsize / 2) * blockSize);
                 }
             }
             if (oldCenterChunk.x > newCenterChunk.x)
@@ -206,7 +413,7 @@ namespace JStuff.Generation.Terrain
                 for (int i = 0; i < terrainHalfsize; i++)
                 {
                     cnt++;
-                    newPositions.Enqueue(newCenterChunk + new Vector3(-terrainHalfsize / 2, 0, i - terrainHalfsize / 2) * chunkSize);
+                    newPositions.Enqueue(newCenterChunk + new Vector3(-terrainHalfsize / 2, 0, i - terrainHalfsize / 2) * blockSize);
                 }
             }
             if (oldCenterChunk.z < newCenterChunk.z)
@@ -214,7 +421,7 @@ namespace JStuff.Generation.Terrain
                 for (int i = 0; i < terrainHalfsize; i++)
                 {
                     cnt++;
-                    newPositions.Enqueue(newCenterChunk + new Vector3(i - terrainHalfsize / 2, 0, terrainHalfsize / 2) * chunkSize);
+                    newPositions.Enqueue(newCenterChunk + new Vector3(i - terrainHalfsize / 2, 0, terrainHalfsize / 2) * blockSize);
                 }
             }
             if (oldCenterChunk.z > newCenterChunk.z)
@@ -222,7 +429,7 @@ namespace JStuff.Generation.Terrain
                 for (int i = 0; i < terrainHalfsize; i++)
                 {
                     cnt++;
-                    newPositions.Enqueue(newCenterChunk + new Vector3(i - terrainHalfsize / 2, 0, -terrainHalfsize / 2) * chunkSize);
+                    newPositions.Enqueue(newCenterChunk + new Vector3(i - terrainHalfsize / 2, 0, -terrainHalfsize / 2) * blockSize);
                 }
             }
 
@@ -231,9 +438,9 @@ namespace JStuff.Generation.Terrain
                 if (c.waitingJobResult)
                     continue;
 
-                float dist = terrainHalfsize / 2 * chunkSize;
+                float dist = terrainHalfsize / 2 * blockSize;
                 Vector3 newpos = c.transform.position;
-                Vector3 testCenterChunk = centerChunk;
+                Vector3 testCenterChunk = centerBlock;
                 if (Mathf.Abs(c.transform.position.x - newCenterChunk.x) > dist ||
                     Mathf.Abs(c.transform.position.z - newCenterChunk.z) > dist)
                 {
@@ -243,28 +450,33 @@ namespace JStuff.Generation.Terrain
                 UpdateBlock(c, newCenterChunk, newpos);
             }
 
-            centerChunk = newCenterChunk;
+            centerBlock = newCenterChunk;
         }
 
         private (int x, int y) ChunkPosition(Vector2 pos)
         {
-            int x_ = Mathf.RoundToInt(pos.x / chunkSize);
-            int y_ = Mathf.RoundToInt(pos.y / chunkSize);
+            int x_ = Mathf.RoundToInt(pos.x / blockSize);
+            int y_ = Mathf.RoundToInt(pos.y / blockSize);
 
             return (x_, y_);
         }
 
         private (int x, int y) ChunkPosition(Vector3 pos)
         {
-            int x_ = Mathf.RoundToInt(pos.x / chunkSize);
-            int y_ = Mathf.RoundToInt(pos.z / chunkSize);
+            int x_ = Mathf.RoundToInt(pos.x / blockSize);
+            int y_ = Mathf.RoundToInt(pos.z / blockSize);
 
             return (x_, y_);
         }
 
         private Vector2 ChunkPosition((int x, int y) pos)
         {
-            return new Vector2(pos.x * chunkSize, pos.y * chunkSize);
+            return new Vector2(pos.x * blockSize, pos.y * blockSize);
+        }
+
+        public Vector3 GetCenterChunkPosition()
+        {
+            return transform.position - new Vector3(transform.position.x % blockSize, 0, transform.position.z % blockSize);
         }
     }
 }

@@ -1,6 +1,5 @@
 using UnityEngine;
 using System.Collections;
-using JStuff.Random;
 using JStuff.Generation;
 
 //https://github.com/SebLague/Procedural-Landmass-Generation
@@ -70,7 +69,7 @@ public static class PerlinNoise
 		//mapHeight++;
 		float[,] noiseMap = new float[mapWidth, mapHeight];
 
-		(float s0, float s1) = Generator.GetNormalSeeds(seed);
+		(float s0, float s1) = Noise.GetNormalSeeds(seed);
 
 		if (scale <= 0)
 		{

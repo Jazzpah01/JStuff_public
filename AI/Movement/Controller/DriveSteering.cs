@@ -42,7 +42,7 @@ namespace JStuff.AI.Steering
         private void Start()
         {
             agent = GetComponent<SteeringAgent2D>();
-            agent.SetTask<Transform>(this, target);
+            agent.SetBehavior<Transform>(this, target);
         }
 
         private void Update()

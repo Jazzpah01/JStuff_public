@@ -19,6 +19,8 @@ namespace JStuff.GraphCreator
 
         public override Type PortType => type;
 
+        public override bool IsInput => true;
+
         public override void Init(Node node, int index, Orientation rotientation, Direction direction, Capacity capacity)
         {
             this._orientation = orientation;
@@ -31,12 +33,24 @@ namespace JStuff.GraphCreator
 
         public void LinkPort(Link outputPort)
         {
-            outputLinks.Add((IOutputLink<T>)outputLinks);
+            outputLinks.Add((IOutputLink<T>)outputPort);
         }
 
         public void RemoveLink()
         {
-            throw new NotImplementedException();
+            outputLinks.Clear();
+        }
+
+        public T[] EvaluateAll()
+        {
+            T[] retval = new T[outputLinks.Count];
+
+            for (int i = 0; i < outputLinks.Count; i++)
+            {
+                retval[i] = outputLinks[i].Evaluate();
+            }
+
+            return retval;
         }
 
         public override Link Clone(Node node)

@@ -10,13 +10,14 @@ using gvDirection = UnityEditor.Experimental.GraphView.Direction;
 using JStuff.GraphCreator;
 using Node = JStuff.GraphCreator.Node;
 using JStuff.GraphCreator.Editor;
+using UnityEditor;
 
 [Serializable]
 public class SimpleNodeView : gvNode, INodeView
 {
     public Node node;
-    public List<Port> ports = new List<Port>();
-    public Map<Port, PortView> portData = new Map<Port, PortView>();
+    public List<UnityEditor.Experimental.GraphView.Port> ports = new List<UnityEditor.Experimental.GraphView.Port>();
+    public Map<UnityEditor.Experimental.GraphView.Port, int> portData = new Map<UnityEditor.Experimental.GraphView.Port, int>();
     public SimpleGraphView graphView;
 
     public Action<SimpleNodeView> OnNodeSelected;
@@ -40,17 +41,18 @@ public class SimpleNodeView : gvNode, INodeView
         //    throw new System.Exception("All nodes must have atleast one port.");
         //}
 
-        for (int i = 0; i < node.portViews.Count; i++)
+        for (int i = 0; i < node.ports.Count; i++)
         {
 
         }
 
-        foreach (PortView port in node.portViews)
+        foreach (JStuff.GraphCreator.Port port in node.ports)
         {
-            Port p = InstantiatePort(port.orientation.Get(), port.direction.Get(), port.capacity.Get(), port.PortType);
+            UnityEditor.Experimental.GraphView.Port p = base.InstantiatePort(port.orientation.Get(), port.direction.Get(), port.capacity.Get(), port.PortType);
             p.portName = port.portName;
             ports.Add(p);
-            portData.Add(p, port);
+
+            portData.Add(p, port.nodeIndex);
 
             if (p.direction.Get() == Link.Direction.Input)
             {
@@ -69,14 +71,24 @@ public class SimpleNodeView : gvNode, INodeView
 
     public override void SetPosition(Rect newPos)
     {
+        Undo.RecordObject(node, "Graph Creator (Node position)");
+        EditorUtility.SetDirty(node);
         base.SetPosition(newPos);
         node.nodePosition.x = newPos.xMin;
         node.nodePosition.y = newPos.yMin;
     }
 
-    public PortView GetPortView(Port port) => portData.Forward[port];
+    public JStuff.GraphCreator.Port GetPortView(UnityEditor.Experimental.GraphView.Port port) => node.ports[portData.Forward[port]];
 
-    public Port GetPort(PortView port) => portData.Reverse[port];
+    public UnityEditor.Experimental.GraphView.Port GetPort(JStuff.GraphCreator.Port port)
+    {
+        if (!node.ports.Contains(port))
+        {
+            throw new Exception($"{port} of {node} doesn't exist in node of nodeview.");
+        }
+
+        return portData.Reverse[node.ports.IndexOf(port)];
+    }
 
     public override void OnSelected()
     {
@@ -100,7 +112,7 @@ public class SimpleNodeView : gvNode, INodeView
 
     private void OnNodeChange()
     {
-        foreach (Port p in ports)
+        foreach (UnityEditor.Experimental.GraphView.Port p in ports)
         {
             p.DisconnectAll();
         }

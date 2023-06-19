@@ -3,11 +3,10 @@ using System.Collections.Generic;
 using UnityEngine;
 using JStuff.GraphCreator;
 using JStuff.Generation;
-using JStuff.Random;
 
 namespace JStuff.Generation.Terrain
 {
-    [CreateNodePath("Terrain/Points/Uniform")]
+    [CreateNodePath("Terrain/Points/New/Poisson Disc Sampling")]
     public class Uniform2DPoints : TerrainNode
     {
         public float pointDistance = 10;
@@ -19,6 +18,7 @@ namespace JStuff.Generation.Terrain
         OutputLink<List<Vector2>> points;
 
         public override bool CacheOutput => true;
+        //public override bool IsConstant() => false;
 
         protected override void SetupPorts()
         {
@@ -30,9 +30,8 @@ namespace JStuff.Generation.Terrain
         public List<Vector2> Evaluate()
         {
             float size = sizeInput.Evaluate();
-            float seed = 1.0f / seedInput.Evaluate();
-            float seed0 = Generator.NormalValue(seed, 0.05136f);
-            return PoissonDiscSampling.GeneratePoints(seed, seed0, pointDistance, new Vector2(size, size));
+            int seed = seedInput.Evaluate();
+            return PoissonDiscSampling.GeneratePoints(pointDistance, new Vector2(size - 1, size - 1), seed);
         }
 
         public override Node Clone()

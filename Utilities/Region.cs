@@ -12,33 +12,39 @@ namespace JStuff.Utilities
 
         public virtual UpAxis Up => up;
 
-        public Vector2 PositionMin
+        public virtual void Start()
+        {
+            Destroy(GetComponent<SpriteRenderer>());
+        }
+
+
+        public Vector2 MinPosition
         {
             get
             {
                 if (Up == UpAxis.Y)
                 {
-                    return transform.position.xz() - transform.localScale.xz() / 2;
+                    return transform.position.xz() - Range / 2;
                 }
                 else
                 {
-                    return transform.position.xy() - transform.localScale.xy() / 2;
+                    return transform.position.xy() - Range / 2;
                 }
             }
         }
         public Vector2 Size => transform.localScale;
 
-        public Vector2 PositionMax
+        public Vector2 MaxPosition
         {
             get
             {
                 if (Up == UpAxis.Y)
                 {
-                    return transform.position.xz() + transform.localScale.xz() / 2;
+                    return transform.position.xz() + Range / 2;
                 }
                 else
                 {
-                    return transform.position.xy() + transform.localScale.xy() / 2;
+                    return transform.position.xy() + Range / 2;
                 }
             }
         }
@@ -47,14 +53,7 @@ namespace JStuff.Utilities
         {
             get
             {
-                if (Up == UpAxis.Y)
-                {
-                    return transform.localScale.xz();
-                }
-                else
-                {
-                    return transform.localScale.xy();
-                }
+                return new Vector2(Mathf.Abs(transform.localScale.x), Mathf.Abs(transform.localScale.y));
             }
         }
 

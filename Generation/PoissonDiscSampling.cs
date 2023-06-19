@@ -1,7 +1,6 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
-using JStuff.Random;
 using JStuff.Utilities;
 
 namespace JStuff.Generation
@@ -11,8 +10,10 @@ namespace JStuff.Generation
 
     public static class PoissonDiscSampling
     {
-        public static List<Vector2> GeneratePoints(float seed0, float seed1, float radius, Vector2 sampleRegionSize, int numSamplesBeforeRejection = 30)
+        public static List<Vector2> GeneratePoints(float radius, Vector2 sampleRegionSize, int seed, int numSamplesBeforeRejection = 30)
         {
+            System.Random rng = new System.Random(seed);
+
             float cellSize = radius / Mathf.Sqrt(2);
 
             int[,] grid = new int[Mathf.CeilToInt(sampleRegionSize.x / cellSize), Mathf.CeilToInt(sampleRegionSize.y / cellSize)];
@@ -22,18 +23,16 @@ namespace JStuff.Generation
             spawnPoints.Add(sampleRegionSize / 2);
             while (spawnPoints.Count > 0)
             {
-                int spawnIndex = (int)(Generator.NormalValue(seed0, seed1) * spawnPoints.Count);
+                int spawnIndex = (int)((float)rng.NextDouble() * spawnPoints.Count);
                 spawnIndex = spawnIndex.Clamp(0, spawnPoints.Count);
                 Vector2 spawnCentre = spawnPoints[spawnIndex];
                 bool candidateAccepted = false;
 
                 for (int i = 0; i < numSamplesBeforeRejection; i++)
                 {
-                    float angle = Generator.NormalValue(seed0, seed1) * Mathf.PI * 2;
-                    seed0 = Generator.NormalValue(angle, seed0);
-                    seed1 = Generator.NormalValue(seed1, seed0);
+                    float angle = (float)rng.NextDouble() * Mathf.PI * 2;
                     Vector2 dir = new Vector2(Mathf.Sin(angle), Mathf.Cos(angle));
-                    Vector2 candidate = spawnCentre + dir * (Generator.NormalValue(seed0, seed1) * radius + radius);
+                    Vector2 candidate = spawnCentre + dir * ((float)rng.NextDouble() * radius + radius);
                     if (IsValid(candidate, sampleRegionSize, cellSize, radius, points, grid))
                     {
                         points.Add(candidate);

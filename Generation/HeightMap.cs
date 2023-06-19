@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using UnityEngine;
 using System;
 using JStuff.AI.Pathfinding;
-using JStuff.Random;
 using JStuff.Utilities;
 
 namespace JStuff.Generation
@@ -11,6 +10,16 @@ namespace JStuff.Generation
     public class HeightMap
     {
         float[,] map;
+        public Options options;
+
+        [Flags]
+        public enum Options
+        {
+            None = 0,
+            Global = 0b1, // Heightmap of the gobal map
+            CheckRange = 0b10, // Make sure that no values is less than -1 or more than 1
+            ForceScale = 0b100, // Make so min is -1, max is 1
+        }
 
         /// <summary>
         /// Get length of second dimension.
@@ -27,6 +36,23 @@ namespace JStuff.Generation
         {
             get => map.GetLength(0);
         }
+
+        public bool Global
+        {
+            get => options.HasFlag(Options.Global);
+            set
+            {
+                if (value)
+                {
+                    options = options | Options.Global;
+                }
+                else
+                {
+                    options = options & ~Options.Global;
+                }
+            }
+        }
+
         public float this[int i, int j]
         {
             get { return map[i, j]; }
@@ -34,15 +60,16 @@ namespace JStuff.Generation
 
         public float[,] Array => map;
 
-        public HeightMap(float[,] map, bool forceScale = false, bool checkRange = true)
+        public HeightMap(float[,] map, Options options = Options.None)
         {
             this.map = map;
+            this.options = options;
 
-            if (forceScale)
+            if (options.HasFlag(Options.ForceScale))
             {
                 SetScale(checkBounds: true);
             }
-            else if (checkRange)
+            else if (options.HasFlag(Options.CheckRange))
             {
                 for (int i = 0; i < map.GetLength(0); i++)
                 {
@@ -82,7 +109,7 @@ namespace JStuff.Generation
                 }
             }
 
-            return new HeightMap(retval, checkRange: true);
+            return new HeightMap(retval, this.options);
         }
 
         public void SetScale(bool checkBounds = false)
@@ -115,7 +142,7 @@ namespace JStuff.Generation
             }
         }
 
-
+        //////////////// Utility ////////////////
         public Texture2D ToTexture()
         {
             int wh = map.GetLength(0);
@@ -246,7 +273,7 @@ namespace JStuff.Generation
             return texture;
         }
 
-
+        //////////////// Arithmetic ////////////////
         public static HeightMap operator +(HeightMap a, HeightMap b)
         {
             if (a.Length != b.Length)
@@ -264,7 +291,7 @@ namespace JStuff.Generation
                 }
             }
 
-            return new HeightMap(map);
+            return new HeightMap(map, a.options | b.options);
         }
 
         public static HeightMap operator -(HeightMap a, HeightMap b)
@@ -284,7 +311,7 @@ namespace JStuff.Generation
                 }
             }
 
-            return new HeightMap(map);
+            return new HeightMap(map, a.options | b.options);
         }
 
         /// <summary>
@@ -308,7 +335,7 @@ namespace JStuff.Generation
                 }
             }
 
-            return new HeightMap(map);
+            return new HeightMap(map, a.options);
         }
 
         public HeightMap Simplified(int skips)
@@ -422,7 +449,7 @@ namespace JStuff.Generation
                     if (map[i, j] < minHeight || map[i, j] > maxHeight)
                         continue;
 
-                    float r = Generator.Value(map[0, 0], map[j, i]);
+                    float r = Noise.Value(map[0, 0], map[j, i]);
 
                     if (j < Width-1 && map[i, j + 1] >= minHeight && map[i, j + 1] <= maxHeight && Mathf.Abs(map[i, j] - map[i, j + 1]) < maxHeightDifference)
                         retval.AddEdge(retval.GetVertices()[j + i * Width], 
@@ -459,8 +486,8 @@ namespace JStuff.Generation
 
         public float GetContinousHeight(float x, float y)
         {
-            if (x > Width - 1 || x < 0 || y > Width - 1 || y < 0)
-                throw new System.Exception("x and y must be between 0 and Length-1 (inclusive). x: " + x + ". y: " + y + ". Length: " + Width);
+            if (x > Width - 1 || x < 0 || y > Width - 1  || y < 0)
+                throw new System.Exception("x and y must be between 0 and Length (inclusive). x: " + x + ". y: " + y + ". Length: " + Width);
 
             int rx = Mathf.FloorToInt(x);
             int ry = Mathf.FloorToInt(y);
@@ -482,115 +509,130 @@ namespace JStuff.Generation
 
         }
 
-        public float GetSlope(float x, float y)
-        {
-            if ((float)((int)y) != y && (float)((int)x) != x)
-            {
-                return GetSlope((int)x, (int)y);
-            }
-
-            float min = 2;
-            float max = -2;
-
-            if (map[(int)x, (int)y] > max)
-                max = map[Mathf.FloorToInt(x), Mathf.FloorToInt(y)];
-
-            if (map[(int)x, (int)y] < min)
-                min = map[Mathf.FloorToInt(x), Mathf.FloorToInt(y)];
-
-            if ((float)((int)x) != x)
-            {
-                if (map[(int)x + 1, (int)y] > max)
-                    max = map[Mathf.RoundToInt(x), Mathf.RoundToInt(y)];
-                if (map[(int)x + 1, (int)y] < min)
-                    min = map[Mathf.RoundToInt(x), Mathf.RoundToInt(y)];
-            }
-
-            if ((float)((int)y) != y)
-            {
-                if (map[(int)x, (int)y + 1] > max)
-                    max = map[Mathf.RoundToInt(x), Mathf.RoundToInt(y)];
-
-                if (map[(int)x, (int)y + 1] < min)
-                    min = map[Mathf.RoundToInt(x), Mathf.RoundToInt(y)];
-            }
-
-            if ((float)((int)y) != y && (float)((int)x) != x)
-            {
-                if (map[(int)x + 1, (int)y + 1] > max)
-                    max = map[Mathf.RoundToInt(x), Mathf.RoundToInt(y)];
-
-                if (map[(int)x + 1, (int)y + 1] < min)
-                    min = map[Mathf.RoundToInt(x), Mathf.RoundToInt(y)];
-            }
-
-            return max - min;
-        }
-
+        //https://gamedev.stackexchange.com/questions/89824/how-can-i-compute-a-steepness-value-for-height-map-cells
         public float GetSlope(int x, int y)
         {
-            int width = Width;
-            float slope = 0;
-            float comp = 0;
+            float height = this[x, y];
 
-            if (x > 0)
-            {
-                comp = Mathf.Abs(map[x, y] - map[x - 1, y]);
-                if (comp > slope)
-                    slope = comp;
-            }
+            // Compute the differentials by stepping over 1 in both directions.
+            // TODO: Ensure these are inside the heightmap before sampling.
+            float dx = this[x + 1, y] - height;
+            float dy = this[x, y + 1] - height;
 
-            if (x < width - 1)
-            {
-                comp = Mathf.Abs(map[x, y] - map[x + 1, y]);
-                if (comp > slope)
-                    slope = comp;
-            }
-
-            if (y > 0)
-            {
-                comp = Mathf.Abs(map[x, y] - map[x, y - 1]);
-                if (comp > slope)
-                    slope = comp;
-            }
-
-            if (y < width - 1)
-            {
-                comp = Mathf.Abs(map[x, y] - map[x, y + 1]);
-                if (comp > slope)
-                    slope = comp;
-            }
-
-            if (y < width - 1 && x < width - 1)
-            {
-                comp = Mathf.Abs(map[x, y] - map[x + 1, y + 1]);
-                if (comp > slope)
-                    slope = comp;
-            }
-
-            if (x > 0 && y > 0)
-            {
-                comp = Mathf.Abs(map[x, y] - map[x - 1, y - 1]);
-                if (comp > slope)
-                    slope = comp;
-            }
-
-            if (x < width - 1 && y > 0)
-            {
-                comp = Mathf.Abs(map[x, y] - map[x + 1, y - 1]);
-                if (comp > slope)
-                    slope = comp;
-            }
-
-            if (x > 0 && y < width - 1)
-            {
-                comp = Mathf.Abs(map[x, y] - map[x - 1, y + 1]);
-                if (comp > slope)
-                    slope = comp;
-            }
-
-            return slope * (width - 1);
+            // The "steepness" is the magnitude of the gradient vector
+            // For a faster but not as accurate computation, you can just use abs(dx) + abs(dy)
+            return Mathf.Sqrt(dx * dx + dy * dy);
         }
+
+        //public float GetSlope(float x, float y)
+        //{
+        //    if ((float)((int)y) == y && (float)((int)x) == x)
+        //    {
+        //        return GetSlope((int)x, (int)y);
+        //    }
+
+        //    float min = 2;
+        //    float max = -2;
+
+        //    if (map[(int)x, (int)y] > max)
+        //        max = map[Mathf.FloorToInt(x), Mathf.FloorToInt(y)];
+
+        //    if (map[(int)x, (int)y] < min)
+        //        min = map[Mathf.FloorToInt(x), Mathf.FloorToInt(y)];
+
+        //    if ((float)((int)x) != x)
+        //    {
+        //        if (map[(int)x + 1, (int)y] > max)
+        //            max = map[Mathf.RoundToInt(x), Mathf.RoundToInt(y)];
+        //        if (map[(int)x + 1, (int)y] < min)
+        //            min = map[Mathf.RoundToInt(x), Mathf.RoundToInt(y)];
+        //    }
+
+        //    if ((float)((int)y) != y)
+        //    {
+        //        if (map[(int)x, (int)y + 1] > max)
+        //            max = map[Mathf.RoundToInt(x), Mathf.RoundToInt(y)];
+
+        //        if (map[(int)x, (int)y + 1] < min)
+        //            min = map[Mathf.RoundToInt(x), Mathf.RoundToInt(y)];
+        //    }
+
+        //    if ((float)((int)y) != y && (float)((int)x) != x)
+        //    {
+        //        if (map[(int)x + 1, (int)y + 1] > max)
+        //            max = map[Mathf.RoundToInt(x), Mathf.RoundToInt(y)];
+
+        //        if (map[(int)x + 1, (int)y + 1] < min)
+        //            min = map[Mathf.RoundToInt(x), Mathf.RoundToInt(y)];
+        //    }
+
+        //    return max - min;
+        //}
+
+        //public float GetSlope(int x, int y)
+        //{
+        //    int width = Width;
+        //    float slope = 0;
+        //    float comp = 0;
+
+        //    if (x > 0)
+        //    {
+        //        comp = Mathf.Abs(map[x, y] - map[x - 1, y]);
+        //        if (comp > slope)
+        //            slope = comp;
+        //    }
+
+        //    if (x < width - 1)
+        //    {
+        //        comp = Mathf.Abs(map[x, y] - map[x + 1, y]);
+        //        if (comp > slope)
+        //            slope = comp;
+        //    }
+
+        //    if (y > 0)
+        //    {
+        //        comp = Mathf.Abs(map[x, y] - map[x, y - 1]);
+        //        if (comp > slope)
+        //            slope = comp;
+        //    }
+
+        //    if (y < width - 1)
+        //    {
+        //        comp = Mathf.Abs(map[x, y] - map[x, y + 1]);
+        //        if (comp > slope)
+        //            slope = comp;
+        //    }
+
+        //    if (y < width - 1 && x < width - 1)
+        //    {
+        //        comp = Mathf.Abs(map[x, y] - map[x + 1, y + 1]);
+        //        if (comp > slope)
+        //            slope = comp;
+        //    }
+
+        //    if (x > 0 && y > 0)
+        //    {
+        //        comp = Mathf.Abs(map[x, y] - map[x - 1, y - 1]);
+        //        if (comp > slope)
+        //            slope = comp;
+        //    }
+
+        //    if (x < width - 1 && y > 0)
+        //    {
+        //        comp = Mathf.Abs(map[x, y] - map[x + 1, y - 1]);
+        //        if (comp > slope)
+        //            slope = comp;
+        //    }
+
+        //    if (x > 0 && y < width - 1)
+        //    {
+        //        comp = Mathf.Abs(map[x, y] - map[x - 1, y + 1]);
+        //        if (comp > slope)
+        //            slope = comp;
+        //    }
+
+        //    return slope * (width - 1);
+        //}
 
         public float[,] GetSlopeMap()
         {

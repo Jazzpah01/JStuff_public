@@ -1,6 +1,8 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using JStuff.Collections;
+using System.Linq;
 
 namespace JStuff.Utilities
 {
@@ -61,6 +63,144 @@ namespace JStuff.Utilities
             return retval;
         }
 
+        public static float GetWeightOfPrefab(this IList<WeightedPrefab> list, GameObject prefab)
+        {
+            foreach (WeightedPrefab item in list)
+            {
+                if (item.prefab == prefab)
+                    return item.weight;
+            }
+            return 0;
+        }
+
+        public static bool ContainsPrefab(this IList<WeightedPrefab> list, GameObject prefab)
+        {
+            foreach (WeightedPrefab item in list)
+            {
+                if (item.prefab == prefab)
+                    return true;
+            }
+            return false;
+        }
+
+        public static IWeightedPrefab GetWeightedPrefab(this IList<IWeightedPrefab> list, System.Random rng)
+        {
+            if (list.Count == 0)
+                throw new System.Exception("List is empty exception.");
+
+            if (list.Count == 1)
+                return list[0];
+
+            float totalWeight = list.Aggregate(0f, (acc, elm) => acc + elm.Weight);
+
+            float r = ((float)rng.NextDouble()) * totalWeight;
+            float acc = 0;
+            IWeightedPrefab retval = list[0];
+
+            for (int i = 0; i < list.Count; i++)
+            {
+                acc += list[i].Weight;
+                if (r < acc)
+                {
+                    return list[i];
+                }
+            }
+
+            return retval;
+        }
+
+        public static GameObject GetRandomPrefab(this List<IWeightedPrefab> list, System.Random rng)
+        {
+            if (list.Count == 1)
+                return list[0].Prefab;
+
+            float totalWeight = list.Aggregate(0f, (acc, elm) => acc + elm.Weight);
+
+            float r = ((float)rng.NextDouble()) * totalWeight;
+            float acc = 0;
+            IWeightedPrefab retval = list[0];
+
+            for (int i = 0; i < list.Count; i++)
+            {
+                acc += list[i].Weight;
+                if (r < acc)
+                {
+                    return list[i].Prefab;
+                }
+            }
+
+            return retval.Prefab;
+        }
+
+        public static GameObject GetRandomPrefab(this IList<IWeightedPrefab> list, System.Random rng)
+        {
+            if (list.Count == 1)
+                return list[0].Prefab;
+
+            float totalWeight = list.Aggregate(0f, (acc, elm) => acc + elm.Weight);
+
+            float r = ((float)rng.NextDouble()) * totalWeight;
+            float acc = 0;
+            IWeightedPrefab retval = list[0];
+
+            for (int i = 0; i < list.Count; i++)
+            {
+                acc += list[i].Weight;
+                if (r < acc)
+                {
+                    return list[i].Prefab;
+                }
+            }
+
+            return retval.Prefab;
+        }
+
+        public static GameObject GetRandomPrefab(this IList<WeightedPrefab> list)
+        {
+            if (list.Count == 1)
+                return list[0].prefab;
+
+            float totalWeight = list.Aggregate(0f, (acc, elm) => acc + elm.weight);
+
+            float r = (float)UnityEngine.Random.value * totalWeight;
+            float acc = 0;
+            WeightedPrefab retval = list[0];
+
+            for (int i = 0; i < list.Count; i++)
+            {
+                acc += list[i].weight;
+                if (r < acc)
+                {
+                    return list[i].prefab;
+                }
+            }
+
+            return retval.prefab;
+        }
+
+        public static GameObject GetRandomPrefab(this List<WeightedPrefab> list)
+        {
+            if (list.Count == 1)
+                return list[0].prefab;
+
+            float totalWeight = list.Aggregate(0f, (acc, elm) => acc + elm.weight);
+
+            float r = (float)UnityEngine.Random.value * totalWeight;
+            float acc = 0;
+            WeightedPrefab retval = list[0];
+
+            for (int i = 0; i < list.Count; i++)
+            {
+                acc += list[i].weight;
+                if (r < acc)
+                {
+                    return list[i].prefab;
+                }
+            }
+
+            return retval.prefab;
+        }
+
         // https://forum.unity.com/threads/re-map-a-number-from-one-range-to-another.119437/
         public static float Remap(this float value, float from1, float to1, float from2, float to2)
         {
@@ -116,9 +256,17 @@ namespace JStuff.Utilities
         //    return orientation;
         //}
 
-        public static float Orientation(this Vector2 v)
+        // Signed difference between two orientations
+        public static float OrientationDifference(float source, float target)
         {
-            float orientation = Vector2.Angle(new Vector3(1, 0), v);
+            return Mathf.Atan2(Mathf.Sin(target * 0.01745329252f - source * 0.01745329252f), 
+                Mathf.Cos(target * 0.01745329252f - source * 0.01745329252f)) / 0.01745329252f;
+        }
+
+        public static float GetOrientation(this Vector2 v)
+        {
+            v = v.normalized;
+            float orientation = Vector2.Angle(new Vector2(1, 0), v);
 
             float dot = Vector2.Dot(new Vector3(0, 1), v);
 
@@ -130,19 +278,19 @@ namespace JStuff.Utilities
             return orientation;
         }
 
-        public static float Orientation(this Vector3 v, UpAxis up)
+        public static float GetOrientation(this Vector3 v, UpAxis up)
         {
             if (up == UpAxis.Y)
             {
-                return Orientation(v);
+                return GetOrientation(v);
             }
             else
             {
-                return v.Orientation3D();
+                return v.GetOrientation3D();
             }
         }
 
-        private static float Orientation3D(this Vector3 v)
+        private static float GetOrientation3D(this Vector3 v)
         {
             float orientation = Vector2.Angle(new Vector3(1, 0, 0), v);
 
@@ -156,24 +304,24 @@ namespace JStuff.Utilities
             return orientation;
         }
 
-        public static Vector3 GetOrientationVector(this float f, UpAxis up)
+        public static Vector3 GetDirection(this float orientation, UpAxis up)
         {
             Quaternion rotation = Quaternion.identity;
 
             if (up == UpAxis.Y)
             {
-                rotation = Quaternion.Euler(0, f, 0);
+                rotation = Quaternion.Euler(0, orientation, 0);
             }
             else
             {
-                rotation = Quaternion.Euler(0, 0, f);
+                rotation = Quaternion.Euler(0, 0, orientation);
             }
 
             Matrix4x4 m = Matrix4x4.Rotate(rotation);
             return (m * Vector3.right).normalized;
         }
 
-        public static Vector2 GetOrientationVector(this float f)
+        public static Vector2 GetDirection(this float f)
         {
             Quaternion rotation = Quaternion.identity;
 
@@ -200,6 +348,11 @@ namespace JStuff.Utilities
             {
                 return target;
             }
+        }
+
+        public static bool IsDestroyed(this object o)
+        {
+            return !(o as UnityEngine.Object);
         }
     }
 }

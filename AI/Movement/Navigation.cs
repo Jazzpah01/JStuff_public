@@ -10,7 +10,7 @@ public static class Navigation {
 
     public static void GetPath(ISteeringAgent agent, IGraph<Vector2> goal)
     {
-        ShortestPath.AStar<Vector2>(graph, )
+        //ShortestPath.AStar<Vector2>(graph, )
     }
 
     public static void SetupGraph(IGraph<Vector2> graph)

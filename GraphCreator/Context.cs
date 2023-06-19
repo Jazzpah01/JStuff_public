@@ -10,16 +10,33 @@ public class Context : ScriptableObject
     private Dictionary<string, Link> indexer = new Dictionary<string, Link>();
     [NonSerialized]public bool runmode = false;
 
+    public bool Runmode
+    {
+        get => runmode;
+        set
+        {
+            if (value != runmode)
+            {
+                indexer.Clear();
+            }
+
+            runmode = value;
+        }
+    }
+
     // For Editor mode
     public List<string> propertyNames = new List<string>();
     public List<string> propertyTypes = new List<string>();
+    public List<bool> propertyIsConstant = new List<bool>();
     public Graph graph;
+
+    public string guid;
 
     [NonSerialized]public bool isSetup = false;
 
     public bool Contains(string name)
     {
-        if (runmode)
+        if (Runmode)
         {
             return indexer.ContainsKey(name);
         } else
@@ -35,17 +52,17 @@ public class Context : ScriptableObject
 
     public void Clear()
     {
-        runmode = false;
+        Runmode = false;
         indexer.Clear();
         propertyNames.Clear();
         propertyTypes.Clear();
     }
 
-    public void AddPropertyLink<T>(T value, string propertyName)
+    public void AddPropertyLink<T>(T value, string propertyName, bool isConstant)
     {
         Link.Direction direction = (graph.InputPortDirection == Link.Direction.Input) ? Link.Direction.Output : Link.Direction.Input;
         string propertyNameType = $"[{typeof(T).Name}] {propertyName}";
-        if (runmode)
+        if (Runmode)
         {
             if (!propertyNames.Contains(propertyName))
             {
@@ -57,18 +74,20 @@ public class Context : ScriptableObject
 
             PropertyLink<T> nodePort = new PropertyLink<T>();
             nodePort.Init(null, 0, graph.Orientation, direction, Link.Capacity.Multi);
+            nodePort.isConstant = isConstant;
             nodePort.cachedValue = value;
             indexer.Add(propertyName, nodePort);
         } else
         {
             propertyNames.Add(propertyName);
             propertyTypes.Add(typeof(T).FullName);
+            propertyIsConstant.Add(isConstant);
         }
     }
 
     public Link GetPropertyLink(string propertyName)
     {
-        if (!runmode)
+        if (!Runmode)
             throw new System.Exception("Cannot get a property that isn't initialized!");
 
         if (!Contains(propertyName))

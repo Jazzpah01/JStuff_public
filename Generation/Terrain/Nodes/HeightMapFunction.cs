@@ -26,18 +26,18 @@ namespace JStuff.Generation.Terrain
 
         public HeightMap GenerateHeightMap()
         {
-            float[,] array = input.Evaluate().Array;
-            float[,] retval = new float[array.GetLength(0), array.GetLength(1)];
+            HeightMap array = input.Evaluate();
+            float[,] retval = new float[array.Width, array.Length];
 
-            for (int y = 0; y < array.GetLength(1); y++)
+            for (int y = 0; y < array.Width; y++)
             {
-                for (int x = 0; x < array.GetLength(0); x++)
+                for (int x = 0; x < array.Length; x++)
                 {
                     retval[x, y] = Mathf.Clamp01(function.Evaluate((array[x, y] + 1) / 2)) * 2 - 1;
                 }
             }
 
-            return new HeightMap(retval);
+            return new HeightMap(retval, array.options);
         }
 
         public override Node Clone()

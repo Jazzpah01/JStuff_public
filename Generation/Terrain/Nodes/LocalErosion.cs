@@ -36,6 +36,7 @@ namespace JStuff.Generation.Terrain
         HeightMap Evaluate1()
         {
             float[,] retval = input.Evaluate().ToArray();
+            float[,] buffer = new float[retval.GetLength(0), retval.GetLength(1)];
             int size = retval.GetLength(0);
 
             System.Random rng = new System.Random(30);
@@ -46,9 +47,14 @@ namespace JStuff.Generation.Terrain
                 {
                     for (int x = 0; x < size; x++)
                     {
-                        retval[x, y] = NewHeight(x, y, retval, size, rng);
+                        buffer[x, y] = NewHeight(x, y, retval, size, rng);
                     }
                 }
+
+                // Swap buffer and retval
+                float[,] temp = retval;
+                retval = buffer;
+                buffer = temp;
             }
 
             return new HeightMap(retval);
@@ -150,7 +156,7 @@ namespace JStuff.Generation.Terrain
             }
 
             //float r = Mathf.Abs((float)rng.NextDouble() % 1f);
-            float r = JStuff.Random.Generator.NormalValue(max, min);
+            float r = Noise.NormalValue(max, min);
 
             if (min < val && val < max)
             {

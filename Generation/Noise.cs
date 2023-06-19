@@ -1,106 +1,102 @@
-﻿//using System;
-using System.Collections;
+﻿using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using System;
+using JStuff.Utilities;
+using UnityEngine.UIElements;
 
 namespace JStuff.Generation
 {
-    public class Noise
+    public static class Noise
     {
-        public int NoiseRandom(int value)
+        private static int[] numbers;
+        private static int index;
+
+        /// <summary>
+        /// Generate an array of numbers, in the interval [start;end].
+        /// </summary>
+        /// <param name="start"></param>
+        /// <param name="end"></param>
+        public static void GenerateNumbers(int start, int end, int amount)
         {
-            return UnityEngine.Random.Range(-1, 1) + value;
+            numbers = new int[amount];
+            index = 0;
+
+            int m = 2147483647;
+            int a = 16807;
+            int c = 10211;
+            int X = Mathf.Abs(DateTime.UtcNow.Second) % (m - 1) + 1;
+
+            for (int i = 0; i < amount; i++)
+            {
+                numbers[i] = (a * X + c) % m % (end - start) - start;
+                X = numbers[i];
+            }
         }
 
-        //public enum ParticleDopStrategy
-        //{
-        //    Normal,
-        //    Random
-        //}
-
-        private static int[,] array1 = { { 0, 0, 0 }, { 0, 1, 0 }, { 0, 0, 0 } };
-
-
-
-
-
-
-
-
-
-        public static Texture2D GenerateHightMap(int[,] map)
+        public static int NextInteger()
         {
-            Texture2D retval = new Texture2D(map.GetLength(0), map.GetLength(1));
-
-            int maxVal = 0;
-            int minVal = int.MaxValue;
-
-            foreach (int i in map)
+            int retval = numbers[index];
+            if (numbers.Length <= index)
             {
-                if (i > maxVal)
-                    maxVal = i;
-                if (i < minVal)
-                    minVal = i;
+                throw new Exception("Random numbers are exhausted!");
             }
-
-            for (int i = 0; i < map.GetLength(0); i++)
-            {
-                for (int j = 0; j < map.GetLength(1); j++)
-                {
-                    float value = ((float)map[i, j] - (float)minVal) / ((float)maxVal - (float)minVal);
-                    retval.SetPixel(i, j, new Color(value, value, value));
-                }
-            }
-            retval.Apply();
+            index++;
             return retval;
         }
 
-        public static Texture2D GenerateHightMap(int[,] map, int floor, int ceil)
+
+        /// <summary>
+        /// A random float from -1 to 1 (inclusive) generated deterministically from 2 input numbers.
+        /// </summary>
+        /// <param name="a">First float used as seed.</param>
+        /// <param name="b">Second float used as seed.</param>
+        /// <returns>A random value from -1 to 1.</returns>
+        public static float Value(float a, float b)
         {
-            Texture2D retval = new Texture2D(map.GetLength(0), map.GetLength(1));
-
-            int maxVal = ceil;
-            int minVal = floor;
-
-            for (int i = 0; i < map.GetLength(0); i++)
-            {
-                for (int j = 0; j < map.GetLength(1); j++)
-                {
-                    float value = ((float)map[i, j] - (float)minVal) / ((float)maxVal - (float)minVal);
-                    retval.SetPixel(i, j, new Color(value, value, value));
-                }
-            }
-            retval.Apply();
-            return retval;
+            //float retval = Mathf.PI * a + Mathf.PI * b;
+            float retval = (Mathf.PI + a) * (Mathf.PI + b);
+            return retval.FractionalDigits() * 2 - 1;
+        }
+        public static float Value(float a, float b, float c)
+        {
+            float retval = (Mathf.PI + a) * (Mathf.PI + b) * (Mathf.PI + c);
+            return retval.FractionalDigits() * 2 - 1;
+        }
+        public static float Value(float a, float b, float c, float d)
+        {
+            float retval = (Mathf.PI + a) * (Mathf.PI + b) * (Mathf.PI + c) * (Mathf.PI + d);
+            return retval.FractionalDigits() * 2 - 1;
         }
 
-        public static void LoadTerrain(Texture2D texture2D, TerrainData aTerrain)
+        /// <summary>
+        /// A random float from 0 to 1 (inclusive) generated deterministically from 2 input numbers.
+        /// </summary>
+        /// <param name="a"></param>
+        /// <param name="b"></param>
+        /// <returns></returns>
+        public static float NormalValue(float a, float b)
         {
-            int h = aTerrain.heightmapResolution;
-            int w = aTerrain.heightmapResolution;
-            float[,] data = new float[h, w];
+            float retval = (Mathf.PI + Mathf.Abs(a)) * (Mathf.PI + Mathf.Abs(b));
+            return retval.FractionalDigits();
+        }
 
-            for (int i = 0; i < h; i++)
-            {
-                for (int j = 0; j < w; j++)
-                {
-                    float v = texture2D.GetPixel(w, h).r;
-                }
-            }
+        public static (float, float) GetNormalSeeds(int seed)
+        {
+            return (1.0f / seed, 1.0f / seed * 0.05136f);
+        }
 
-            //using (var file = System.IO.File.OpenRead(aFileName))
-            //using (var reader = new System.IO.BinaryReader(file))
-            //{
-            //    for (int y = 0; y < h; y++)
-            //    {
-            //        for (int x = 0; x < w; x++)
-            //        {
-            //            float v = (float)reader.ReadUInt16() / 0xFFFF;
-            //            data[y, x] = v;
-            //        }
-            //    }
-            //}
-            aTerrain.SetHeights(0, 0, data);
+        public static (float, float) GetSeedValue(float s0, float s1)
+        {
+            float s2 = Value(s0, s1);
+            return (s2, Value(s0, s2));
+        }
+
+        public static Vertex GetVertex(Vertex a, Vertex b, float distanceFactor, float heightFactor = 0f)
+        {
+            float r = Noise.Value(a.r, b.r);
+            float h = (a.h + b.h) / 2 + (a.xz - b.xz).magnitude * r * distanceFactor + Mathf.Abs(a.h - b.h) * r * heightFactor;
+            return new Vertex((a.xz + b.xz) / 2.0f, h, r);
         }
     }
 }

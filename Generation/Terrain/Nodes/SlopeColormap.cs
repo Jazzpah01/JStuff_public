@@ -70,6 +70,8 @@ namespace JStuff.Generation.Terrain
                             currentSlope = s;
                     }
 
+                    currentSlope /= Mathf.Abs(data.vertices[0].x - data.vertices[1].x);
+
                     float t = interpolateFunction.Evaluate((currentSlope / maxSlope).Clamp(0.0f, 1.0f));
 
                     float ht = Mathf.Abs(data.vertices[x + z * size].y + maxHeight) / (2 * maxHeight);

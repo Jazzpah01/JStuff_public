@@ -327,7 +327,7 @@ namespace JStuff.Threading
             throw new System.Exception("Not implemented exception.");
         }
 
-        private void ConsumeAll()
+        public void ConsumeAll()
         {
             // CONSUME ALL
             lock (consumeLock)

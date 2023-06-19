@@ -9,12 +9,17 @@ namespace JStuff.GraphCreator
     public class InputLink<T> : Link, ILinkable
     {
         public bool optional = false;
-        public IOutputLink<T> linkedPort;
-        public IOutputLink<T> LinkedPort => linkedPort;
+        public IOutputLink<T> connectedLink;
+        public IOutputLink<T> LinkedPort => connectedLink;
         Type type;
         public override Type PortType => type;
 
-        ILink ILinkable.LinkedPort => linkedPort;
+        ILink ILinkable.LinkedPort => connectedLink;
+
+        public override bool IsInput => true;
+
+        public bool collapsed;
+        public T CollapsedValue;
 
         public override void Init(Node node, int index, Link.Orientation rotientation, Link.Direction direction, Link.Capacity capacity)
         {
@@ -29,22 +34,41 @@ namespace JStuff.GraphCreator
         public void LinkPort(Link outputLink)
         {
             IOutputLink<T> realLink = (IOutputLink<T>)outputLink;
-            linkedPort = realLink;
+            connectedLink = realLink;
         }
 
         public void RemoveLink()
         {
-            linkedPort = null;
+            connectedLink = null;
         }
 
         public virtual T Evaluate()
         {
-            return linkedPort.Evaluate();
+            return connectedLink.Evaluate();
         }
 
         public override Link Clone(Node node)
         {
             throw new Exception("Method not implemented exception.");
+        }
+
+        public override void Collapse()
+        {
+            if (connectedLink == null && optional)
+                return;
+
+            T value = connectedLink.Evaluate();
+            connectedLink = new CollapsedLink<T>(value);
+        }
+
+        public override bool IsConstant()
+        {
+            ICollapsable c = ((ICollapsable)connectedLink);
+
+            if (c == null)
+                return true;
+
+            return c.IsConstant();
         }
     }
 }

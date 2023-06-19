@@ -20,7 +20,7 @@ namespace JStuff.Generation.Terrain
 
         HeightMap Evaluate()
         {
-            float[,] hs = new float[65, 65];
+            float[,] hs = new float[size, size];
 
             for (int i = 0; i < size; i++)
             {

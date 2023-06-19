@@ -6,12 +6,13 @@ using UnityEngine;
 
 namespace JStuff.GraphCreator
 {
-    public class PropertyLink<T> : Link, IOutputLink<T>
+    public class PropertyLink<T> : Link, IOutputLink<T>, ICollapsable
     {
         public Graph graph;
         public Func<object> function;
         public T cachedValue;
         public Type type;
+        public bool isConstant = false;
 
         public override Type PortType => throw new NotImplementedException();
 
@@ -24,9 +25,16 @@ namespace JStuff.GraphCreator
         {
             set
             {
+                if (isConstant)
+                {
+                    throw new Exception("Cannot change a constant property at runtime.");
+                }
+
                 cachedValue = value;
             }
         }
+
+        public override bool IsInput => false;
 
         public T Evaluate()
         {
@@ -41,6 +49,11 @@ namespace JStuff.GraphCreator
             type = typeof(T);
             this.node = node;
             this.nodeIndex = index;
+        }
+
+        public override bool IsConstant()
+        {
+            return isConstant;
         }
     }
 }

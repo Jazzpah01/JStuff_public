@@ -16,5 +16,6 @@ namespace JStuff.AI.Steering
         float Orientation { get; }
         UpAxis Up { get; }
         Transform CollisionTransform { get; }
+        float Stationary { get; } // A fussy variable. 0 is not stationary. 1 is complete stationary.
     }
 }

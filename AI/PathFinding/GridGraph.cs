@@ -3,7 +3,6 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
-using System.Linq;
 
 namespace JStuff.AI.Pathfinding
 {
@@ -11,25 +10,21 @@ namespace JStuff.AI.Pathfinding
     /// A grid graph of T with weight and existance of edge determined on a function of T.
     /// </summary>
     /// <typeparam name="T"></typeparam>
-    public class GridGraph<T> : IGraph<T>
+    public class GridGraph : IGraph<Vector2>
     {
-        T[] nodes;
-        NeighborWeight[] weight;
+        Vector2 offset;
+        Vector2 stride;
+        Vector2 minimumWeight;
+        NeighborWeight[] weights;
         List<int>[] neighbors;
-        int size;
 
         int length0;
         int length1;
 
-        float D;
-        float D2; // TODO: find this
-
-        Vector2 offset;
-        float cellDistance;
-
-        bool initialized = false;
-
-        bool diagonalEdges;
+        public int Length0 => length0;
+        public int Length1 => length1;
+        public int Length => length0 * length1;
+        public Vector2 Stride => stride;
 
         public struct NeighborWeight
         {
@@ -43,132 +38,193 @@ namespace JStuff.AI.Pathfinding
             public float dr;
         }
 
-        public void Construct(T[] nodes, Func<T, T, float> weightFunction, Func<T, T, bool> hasEdge, bool diagonalEdges, Func<T, T, float> distance)
+        public GridGraph(Vector2[,] nodes)
         {
-            this.initialized = true;
-
-            this.nodes = nodes;
-            this.weight = new NeighborWeight[nodes.GetLength(0) * nodes.GetLength(1)];
-            this.neighbors = new List<int>[nodes.GetLength(0) * nodes.GetLength(1)];
-            this.size = nodes.GetLength(0) * nodes.GetLength(1);
-
-            this.D = float.MaxValue;
-            this.D2 = float.MaxValue;
-
             this.length0 = nodes.GetLength(0);
             this.length1 = nodes.GetLength(1);
+            this.offset = nodes[0, 0];
+            this.stride = new Vector2(Mathf.Abs(nodes[0, 0].x - nodes[1, 0].x), Mathf.Abs(nodes[0, 0].y - nodes[0, 1].y));
+            this.weights = new NeighborWeight[length0 * length1];
+            this.neighbors = new List<int>[length0 * length1];
+        }
 
-            this.diagonalEdges = diagonalEdges;
+        public GridGraph(Vector2 offset, NeighborWeight[] weights, List<int>[] neighbors, int length0, int length1, Vector2 stride)
+        {
+            this.offset = offset;
+            this.weights = new NeighborWeight[length0 * length1];
+            this.neighbors = new List<int>[length0 * length1];
+            this.length0 = length0;
+            this.length1 = length1;
 
-            for (int i = 0; i < nodes.GetLength(0); i++)
+            if (weights != null)
             {
-                for (int j = 0; j < nodes.GetLength(1); j++)
+                for (int i = 0; i < weights.Length; i++)
                 {
-                    int index = i * nodes.GetLength(0) + j;
+                    this.weights[i] = weights[i];
+                }
+            }
 
-                    T newNode = nodes[index];
+            if (neighbors != null)
+            {
+                for (int i = 0; i < neighbors.Length; i++)
+                {
+                    if (neighbors[i] == null || neighbors[i].Count == 0)
+                        continue;
+
+                    for (int j = 0; j < neighbors[i].Count; j++)
+                    {
+                        this.neighbors[i].Add(neighbors[i][j]);
+                    }
+                }
+            }
+
+            this.stride = stride;
+        }
+
+        public void ConstructEdges<T>(T[,] nodeValues, Func<T, T, bool> hasEdge, Func<T, T, float> weightFunction, EdgeOptions edgeOptions)
+        {
+            if (nodeValues == null)
+                throw new Exception("nodeValues cannot be null.");
+
+            float diagonalStride = stride.magnitude;
+
+            neighbors = new List<int>[length0 * length1];
+
+            for (int y = 0; y < length1; y++)
+            {
+                for (int x = 0; x < length0; x++) // TODO: Optimisation
+                {
+                    int index = x + y * length0;
 
                     this.neighbors[index] = new List<int>();
 
-                    this.weight[index] = new NeighborWeight();
-                    this.nodes[index] = newNode;
+                    this.weights[index] = new NeighborWeight();
 
-                    if ((i + 1).InRange(0, nodes.GetLength(0) - 1) && hasEdge(nodes[index], nodes[index + nodes.GetLength(0)]))
+                    float weight = weightFunction(nodeValues[x, y], nodeValues[x, y]); // TODO: Optimisation
+                    float horizontalWeight = weight;
+                    float verticalWeight = weight;
+                    float diagonalWeight = weight;
+
+                    if (edgeOptions.HasFlag(EdgeOptions.MultiplyDistance))
                     {
-                        float nweight = weightFunction(nodes[index], nodes[index + nodes.GetLength(0)]);// nodes[i + 1, j]);
-                        if (nweight <= 0) throw new System.Exception("Can't have non-positive weight.");
-                        this.weight[index].r = nweight;
-                        this.neighbors[index].Add(index + nodes.GetLength(0));
-                        if (nweight < this.D) this.D = nweight;
+                        horizontalWeight *= stride.x;
+                        verticalWeight   *= stride.y;
+                        diagonalWeight   *= diagonalStride;
                     }
-                    if ((i - 1).InRange(0, nodes.GetLength(0) - 1) && hasEdge(nodes[index], nodes[index - nodes.GetLength(0)]))
+                    if (edgeOptions.HasFlag(EdgeOptions.AddDistance))
                     {
-                        float nweight = weightFunction(nodes[index], nodes[index - nodes.GetLength(0)]);
-                        if (nweight <= 0) throw new System.Exception("Can't have non-positive weight.");
-                        this.weight[index].l = nweight;
-                        this.neighbors[index].Add(index - nodes.GetLength(0));
-                        if (nweight < this.D) this.D = nweight;
-                    }
-                    if ((j + 1).InRange(0, nodes.GetLength(1) - 1) && hasEdge(nodes[index], nodes[index + 1]))
-                    {
-                        float nweight = weightFunction(nodes[index], nodes[index + 1]);
-                        if (nweight <= 0) throw new System.Exception("Can't have non-positive weight.");
-                        this.weight[index].u = nweight;
-                        this.neighbors[index].Add(index + 1);
-                        if (nweight < this.D) this.D = nweight;
-                    }
-                    if ((j - 1).InRange(0, nodes.GetLength(1) - 1) && hasEdge(nodes[index], nodes[index - 1]))
-                    {
-                        float nweight = weightFunction(nodes[index], nodes[index - 1]);
-                        if (nweight <= 0) throw new System.Exception("Can't have non-positive weight.");
-                        this.weight[index].d = nweight;
-                        this.neighbors[index].Add(index - 1);
-                        if (nweight < this.D) this.D = nweight;
+                        horizontalWeight += stride.x;
+                        verticalWeight += stride.y;
+                        diagonalWeight += diagonalStride;
                     }
 
-                    if (diagonalEdges)
+                    if ((x + 1).InRange(0, length0 - 1) && hasEdge(nodeValues[x, y], nodeValues[x + 1, y]))
                     {
-                        if ((i + 1).InRange(0, nodes.GetLength(0) - 1) && hasEdge(nodes[index], nodes[index + nodes.GetLength(0)]) &&
-                            (j + 1).InRange(0, nodes.GetLength(1) - 1) && hasEdge(nodes[index], nodes[index + 1]))
+                        AddDirectedEdge(x + length0 * y, (x + 1) + length0 * y, horizontalWeight);
+                    }
+                    if ((x - 1).InRange(0, length0 - 1) && hasEdge(nodeValues[x, y], nodeValues[x - 1, y]))
+                    {
+                        AddDirectedEdge(x + length0 * y, (x - 1) + length0 * y, horizontalWeight);
+                    }
+                    if ((y + 1).InRange(0, length1 - 1) && hasEdge(nodeValues[x, y], nodeValues[x, y + 1]))
+                    {
+                        AddDirectedEdge(x + length0 * y, x + length0 * (y + 1), verticalWeight);
+                    }
+                    if ((y - 1).InRange(0, length1 - 1) && hasEdge(nodeValues[x, y], nodeValues[x, y - 1]))
+                    {
+                        AddDirectedEdge(x + length0 * y, x + length0 * (y - 1), verticalWeight);
+                    }
+
+                    if (edgeOptions.HasFlag(EdgeOptions.UseDiagonals))
+                    {
+                        if ((x + 1).InRange(0, length0 - 1) && hasEdge(nodeValues[x, y], nodeValues[x + 1, y]) &&
+                            (y + 1).InRange(0, length1 - 1) && hasEdge(nodeValues[x, y], nodeValues[x, y + 1]))
                         {
-                            float nweight = weightFunction(nodes[index], nodes[index + nodes.GetLength(0) + 1]);
-                            if (nweight <= 0) throw new System.Exception("Can't have non-positive weight.");
-                            this.weight[index].ru = nweight;
-                            this.neighbors[index].Add(index + nodes.GetLength(0) + 1);
-                            if (nweight < this.D2) this.D2 = nweight;
+                            AddDirectedEdge(x + length0 * y, (x + 1) + length0 * (y + 1), diagonalWeight);
                         }
-                        if ((i - 1).InRange(0, nodes.GetLength(0) - 1) && hasEdge(nodes[index], nodes[index - nodes.GetLength(0)]) &&
-                            (j + 1).InRange(0, nodes.GetLength(1) - 1) && hasEdge(nodes[index], nodes[index + 1]))
+                        if ((x + 1).InRange(0, length0 - 1) && hasEdge(nodeValues[x, y], nodeValues[x + 1, y]) &&
+                            (y - 1).InRange(0, length1 - 1) && hasEdge(nodeValues[x, y], nodeValues[x, y - 1]))
                         {
-                            float nweight = weightFunction(nodes[index], nodes[index - nodes.GetLength(0) + 1]);
-                            if (nweight <= 0) throw new System.Exception("Can't have non-positive weight.");
-                            this.weight[index].ul = nweight;
-                            this.neighbors[index].Add(index - nodes.GetLength(0) + 1);
-                            if (nweight < this.D2) this.D2 = nweight;
+                            AddDirectedEdge(x + length0 * y, (x + 1) + length0 * (y - 1), diagonalWeight);
                         }
-                        if ((i + 1).InRange(0, nodes.GetLength(0) - 1) && hasEdge(nodes[index], nodes[index + nodes.GetLength(0)]) &&
-                            (j - 1).InRange(0, nodes.GetLength(1) - 1) && hasEdge(nodes[index], nodes[index - 1]))
+                        if ((x - 1).InRange(0, length0 - 1) && hasEdge(nodeValues[x, y], nodeValues[x - 1, y]) &&
+                            (y + 1).InRange(0, length1 - 1) && hasEdge(nodeValues[x, y], nodeValues[x, y + 1]))
                         {
-                            float nweight = weightFunction(nodes[index], nodes[index + nodes.GetLength(0) - 1]);
-                            if (nweight <= 0) throw new System.Exception("Can't have non-positive weight.");
-                            this.weight[index].dr = nweight;
-                            this.neighbors[index].Add(index + nodes.GetLength(0) - 1);
-                            if (nweight < this.D2) this.D2 = nweight;
+                            AddDirectedEdge(x + length0 * y, (x - 1) + length0 * (y + 1), diagonalWeight);
                         }
-                        if ((i - 1).InRange(0, nodes.GetLength(0) - 1) && hasEdge(nodes[index], nodes[index - nodes.GetLength(0)]) &&
-                            (j - 1).InRange(0, nodes.GetLength(1) - 1) && hasEdge(nodes[index], nodes[index - 1]))
+                        if ((x - 1).InRange(0, length0 - 1) && hasEdge(nodeValues[x, y], nodeValues[x - 1, y]) &&
+                            (y - 1).InRange(0, length1 - 1) && hasEdge(nodeValues[x, y], nodeValues[x, y - 1]))
                         {
-                            float nweight = weightFunction(nodes[index], nodes[index - nodes.GetLength(0) - 1]);
-                            if (nweight <= 0) throw new System.Exception("Can't have non-positive weight.");
-                            this.weight[index].ld = nweight;
-                            this.neighbors[index].Add(index - nodes.GetLength(0) - 1);
-                            if (nweight < this.D2) this.D2 = nweight;
+                            AddDirectedEdge(x + length0 * y, (x - 1) + length0 * (y - 1), diagonalWeight);
                         }
                     }
                 }
             }
         }
 
-        public T this[int i]
+        public void AddUndirectedEdge(int v, int u, float weight)
         {
-            get
-            {
-                return nodes[i];
-            }
+            AddDirectedEdge(v, u, weight);
+            AddDirectedEdge(u, v, weight);
         }
 
-        public int Size => size;
-
-        T IGraph<T>.this[int i] => throw new NotImplementedException();
-
-        public int[] AdjacentNodes(int index)
+        public void AddDirectedEdge(int v, int u, float weight)
         {
-            return neighbors[index].ToArray();
+            if (weight <= 0)
+                throw new System.Exception("Can't have non-positive weights.");
+
+            int diff = u - v;
+            if (diff == 1)
+            {
+                weights[v].r = weight;
+            }
+            if (diff == -1)
+            {
+                weights[v].l = weight;
+            }
+            if (diff == length0)
+            {
+                weights[v].u = weight;
+            }
+            if (diff == -length0)
+            {
+                weights[v].d = weight;
+            }
+
+            if (diff == 1 + length0)
+            {
+                weights[v].ru = weight;
+            }
+            if (diff == 1 - length0)
+            {
+                weights[v].dr = weight;
+            }
+            if (diff == -1 + length0)
+            {
+                weights[v].ul = weight;
+            }
+            if (diff == -1 - length0)
+            {
+                weights[v].ld = weight;
+            }
+
+
+            this.weights[v].r = weight;
+            this.neighbors[v].Add(u);
+            //TODO: Do this optimisation:
+            //if (weight < this.Dx) this.Dx = weight;
+        }
+
+        public int Size => Length;
+
+        public IList<int> AdjacentNodes(int index)
+        {
+            return neighbors[index];
         }
 
         public bool Contains(int index)
         {
-            return index.InRange(0, size);
+            return index.InRange(0, Length);
         }
 
         public float GetWeight(int index_from, int index_to)
@@ -176,53 +232,84 @@ namespace JStuff.AI.Pathfinding
             int diff = index_to - index_from;
             if (diff == 1)
             {
-                return weight[index_from].u;
+                return weights[index_from].r;
             }
             if (diff == -1)
             {
-                return weight[index_from].d;
+                return weights[index_from].l;
             }
-            if (diff == length1)
+            if (diff == length0)
             {
-                return weight[index_from].l;
+                return weights[index_from].u;
             }
-            if (diff == -length1)
+            if (diff == -length0)
             {
-                return weight[index_from].r;
-            }
-            if (!diagonalEdges)
-                throw new Exception("Weight does not exist in graph.");
-            if (diff == 1 + length1)
-            {
-                return weight[index_from].ru;
-            }
-            if (diff == 1 - length1)
-            {
-                return weight[index_from].dr;
-            }
-            if (diff == -1 + length1)
-            {
-                return weight[index_from].ul;
-            }
-            if (diff == -1 - length1)
-            {
-                return weight[index_from].ld;
+                return weights[index_from].d;
             }
 
-            throw new Exception("Weight does not exist in graph.");
+            if (diff == 1 + length0)
+            {
+                return weights[index_from].ru;
+            }
+            if (diff == 1 - length0)
+            {
+                return weights[index_from].dr;
+            }
+            if (diff == -1 + length0)
+            {
+                return weights[index_from].ul;
+            }
+            if (diff == -1 - length0)
+            {
+                return weights[index_from].ld;
+            }
+
+            throw new Exception("Edge does not exist in graph.");
         }
 
-        public int GetIndexOfNode(T node)
+        public int GetIndexOfNode(Vector2 p)
         {
-            for (int i = 0; i < nodes.Length; i++)
-            {
-                if (EqualityComparer<T>.Default.Equals(node, nodes[i]))
-                {
-                    return i;
-                }
-            }
+            //Change to get closest!
+            int x = Mathf.RoundToInt((p.x - offset.x) / stride.x);
+            int y = Mathf.RoundToInt((p.y - offset.y) / stride.y);
 
-            throw new System.Exception("Could not find node in nodes collection.");
+            if (x < 0 || x >= length0)
+                throw new Exception("x is out of bounds!");
+            if (y < 0 || y >= length0)
+                throw new Exception("y is out of bounds!");
+
+            return x * length0 + y;
+        }
+
+        public Vector2 this[int i, int j]
+        {
+            get { return new Vector2(i * stride.x, j * stride.y) + offset; }
+        }
+
+        public Vector2 this[int i]
+        {
+            get
+            {
+                int x = i % length0;
+                int y = i / length0;
+                return this[x, y];
+            }
+        }
+
+        public int GetClosestNode(Vector2 p)
+        {
+            int x = Mathf.RoundToInt((p.x - offset.x) / stride.x);
+            int y = Mathf.RoundToInt((p.y - offset.y) / stride.y);
+
+            x = Mathf.Clamp(x, 0, length0-1);
+            y = Mathf.Clamp(y, 0, length0-1);
+
+            return x + length0 * y;
+        }
+
+        public GridGraph Clone()
+        {
+            return new GridGraph(offset, weights, neighbors, length0, length1, stride);
         }
 
         /// <summary>
@@ -238,7 +325,7 @@ namespace JStuff.AI.Pathfinding
             float vx = (v - vy) / length0;
             float uy = u % length1;
             float ux = (u - uy) / length0;
-            return (Mathf.Abs(vx - ux) + Mathf.Abs(vy - uy)) * D;
+            return Mathf.Abs(vx - ux) * stride.x + Mathf.Abs(vy - uy) * stride.y;
         }
 
         /// <summary>
@@ -256,7 +343,7 @@ namespace JStuff.AI.Pathfinding
             float ux = (u - uy) / length0;
             float dx = Mathf.Abs(vx - ux);
             float dy = Mathf.Abs(vy - uy);
-            return D * (dx + dy) + (D2 - 2 * D) * Mathf.Min(dx, dy);
+            return stride.x * (dx + dy) + (stride.magnitude - 2 * stride.y) * Mathf.Min(dx, dy);
         }
 
         /// <summary>

@@ -21,7 +21,7 @@ namespace JStuff.GraphCreator
         public Link output;
         public Link input;
 
-        public DropDownList list;
+        public DropDownList list = new DropDownList();
 
 #if UNITY_EDITOR
         public override void OnGUIStart(/*INodeView nodeView*/)
@@ -42,6 +42,22 @@ namespace JStuff.GraphCreator
         }
 #endif
 
+        public override bool Valid { 
+            get {
+                bool retval = base.Valid;
+
+                if (ports.Count == 0 || ports[0].portType != typeName || ports[0].portName != propertyName)
+                {
+                    valid = false;
+                    return false;
+                }
+
+                return retval;
+            } 
+            set { 
+            } 
+        }
+
         public void InitPropertyPortView()
         {
 
@@ -54,8 +70,10 @@ namespace JStuff.GraphCreator
 
         private void ValueChanged(string value)
         {
+            Debug.Log("Changed!");
             propertyName = value;
-            graph.UpdateNodes();
+            typeName = graph.GetPropertyType(value);
+            graph.UpdateGraph();
             base.OnNodeChange();
         }
 
@@ -80,6 +98,11 @@ namespace JStuff.GraphCreator
             retval.propertyName = propertyName;
             retval.typeName = typeName;
             return retval;
+        }
+
+        public override bool IsConstant()
+        {
+            return false;
         }
     }
 }

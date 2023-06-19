@@ -13,6 +13,8 @@ namespace JStuff.GraphCreator
         Type type;
         public override Type PortType => type;
 
+        public override bool IsInput => false;
+
         public override void Init(Node node, int index, Orientation rotientation, Direction direction, Capacity capacity)
         {
             this._orientation = orientation;
@@ -21,6 +23,8 @@ namespace JStuff.GraphCreator
             type = typeof(T);
             this.node = node;
             this.nodeIndex = index;
+            if (node == null)
+                Debug.Log("Node is null! :(");
         }
 
         public void SubscribePort(OutputFunction<T> function)
@@ -39,6 +43,11 @@ namespace JStuff.GraphCreator
             //retval.Init(node.Clone(), index, this.Orientation, this.Direction, this.Capacity);
             //return retval;
             throw new Exception("Method not implemented exception.");
+        }
+
+        public override bool IsConstant()
+        {
+            return node.IsConstant();
         }
     }
 }

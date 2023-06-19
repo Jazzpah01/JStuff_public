@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using UnityEngine;
 using JStuff.GraphCreator;
 using JStuff.Generation;
-using JStuff.Random;
 
 namespace JStuff.Generation.Terrain
 {

@@ -7,18 +7,21 @@ using UnityEditor.Experimental.GraphView;
 #endif
 using UnityEngine;
 using UnityEngine.UIElements;
+using System.Linq;
 
 namespace JStuff.GraphCreator
 {
     [Serializable]
-    public abstract class Node : ScriptableObject, ISimpleNode, IInvalid
+    public abstract class Node : ScriptableObject, ISimpleNode, IInvalid, ICollapsable
     {
         [HideInInspector] public bool isSetup = false;
 
         [HideInInspector] public Vector2 nodePosition;
         [HideInInspector] public List<Link> links = new List<Link>();
         [HideInInspector] public List<Link> cacheLinks = new List<Link>();
-        [HideInInspector] [SerializeReference] public List<PortView> portViews = new List<PortView>();
+        [HideInInspector] public List<Link> propertyLinks = new List<Link>();
+        /*[HideInInspector]*/
+        [SerializeReference] public List<Port> ports = new List<Port>();
         [HideInInspector] public string guid;
         [HideInInspector] public Graph graph;
         public bool valid = false;
@@ -29,7 +32,9 @@ namespace JStuff.GraphCreator
 
         public virtual StyleSheet StyleSheet => null;
 
-        public int Length => Mathf.Max(links.Count, portViews.Count);
+        public int Length => Mathf.Max(links.Count, ports.Count);
+
+        public int SignatureLength => portSignature.Count(f => f == ';');
 
         public virtual string path => this.GetType().Name;
 
@@ -94,18 +99,39 @@ namespace JStuff.GraphCreator
         protected virtual void SetupNode() { }
         public List<Link> Ports => links;
 
-        public bool Valid
+        public virtual bool Valid
         {
-            get => valid;
+            get {
+                if (ports == null)
+                {
+                    valid = false;
+                    return false;
+                }
+
+                foreach (Port port in ports)
+                {
+                    if (port == null || !port.Valid)
+                    {
+                        valid = false;
+                    }
+                }
+
+                if (graph == null)
+                {
+                    valid = false;
+                }
+
+                return valid;
+            }
             set
             {
                 valid = value;
 
-                if (!value)
+                if (!value && ports != null)
                 {
-                    foreach (PortView view in portViews)
+                    foreach (Port port in ports)
                     {
-                        view.Valid = false;
+                        port.Valid = false;
                     }
                 }
             }
@@ -127,6 +153,9 @@ namespace JStuff.GraphCreator
         {
             if (!isSetup)
             {
+                if (ports == null)
+                    ports = new List<Port>();
+
                 portSignature = "";
                 SetupNode();
                 SetupPorts_Editor(InitPortStrategy.StringGeneration);
@@ -141,16 +170,20 @@ namespace JStuff.GraphCreator
             portSignature = "";
             SetupPorts_Editor(InitPortStrategy.StringGeneration);
 
-            if (oldPortSignature == portSignature)
+            if (oldPortSignature == portSignature && SignatureLength == ports.Count)
             {
                 // Unchanged port signatures
             }
             else
             {
-                // New signature!
-                Valid = false;
+                ports = new List<Port>();
 
-                portViews = new List<PortView>();
+                SetupPorts_Editor(InitPortStrategy.StringGeneration);
+                SetupPorts_Editor(InitPortStrategy.PortViewGeneration);
+
+                // New signature!
+                Valid = true;
+
                 //SetupPorts_Editor(InitPortStrategy.PortViewGeneration);
 
                 if (OnNodeChange != null)
@@ -160,12 +193,14 @@ namespace JStuff.GraphCreator
 
         public void SetupLinks()
         {
-            // Application.isPlaying, then do that
-            if (Application.isPlaying)
-            {
-                SetupPorts_Editor(InitPortStrategy.LinkGeneration);
-                return;
-            }
+            SetupPorts_Editor(InitPortStrategy.LinkGeneration);
+            return;
+            //// Application.isPlaying, then do that
+            //if (Application.isPlaying)
+            //{
+            //    SetupPorts_Editor(InitPortStrategy.LinkGeneration);
+            //    return;
+            //}
         }
 
         private void SetupPorts_Editor(InitPortStrategy strategy)
@@ -189,12 +224,12 @@ namespace JStuff.GraphCreator
             InputPortSettings inputPortSettings = InputPortSettings.None)
         {
             Link.Capacity capacity = Link.Capacity.Multi;
-            PortView portView;
+            Port portView;
             switch (currentStrategy)
             {
                 case InitPortStrategy.None when (portSetup & PortSetup.Editor) != 0:
                     // Editor port view
-                    portView = CreateInstance<PortView>();
+                    portView = new Port();
                     AddPortView(portView, typeof(T).FullName, capacity, graph.InputPortDirection, portName);
                     break;
                 case InitPortStrategy.None:
@@ -204,7 +239,7 @@ namespace JStuff.GraphCreator
                     break;
                 case InitPortStrategy.PortViewGeneration when (portSetup & PortSetup.Editor) != 0:
                     // Editor port view
-                    portView = CreateInstance<PortView>();
+                    portView = new Port();
                     AddPortView(portView, typeof(T).FullName, capacity, graph.InputPortDirection, portName);
                     break;
                 case InitPortStrategy.LinkGeneration when (portSetup & PortSetup.Runtime) != 0:
@@ -221,12 +256,12 @@ namespace JStuff.GraphCreator
             InputPortSettings inputPortSettings = InputPortSettings.None)
         {
             Link.Capacity capacity = Link.Capacity.Single;
-            PortView portView;
+            Port portView;
             switch (currentStrategy)
             {
                 case InitPortStrategy.None when (portSetup & PortSetup.Editor) != 0:
                     // Editor port view
-                    portView = CreateInstance<PortView>();
+                    portView = new Port();
                     AddPortView(portView, typeof(T).FullName, capacity, graph.InputPortDirection, portName);
                     break;
                 case InitPortStrategy.None:
@@ -236,7 +271,7 @@ namespace JStuff.GraphCreator
                     break;
                 case InitPortStrategy.PortViewGeneration when (portSetup & PortSetup.Editor) != 0:
                     // Editor port view
-                    portView = CreateInstance<PortView>();
+                    portView = new Port();
                     AddPortView(portView, typeof(T).FullName, capacity, graph.InputPortDirection, portName);
                     break;
                 case InitPortStrategy.LinkGeneration when (portSetup & PortSetup.Runtime) != 0:
@@ -263,13 +298,13 @@ namespace JStuff.GraphCreator
             PortSetup portSetup = PortSetup.Editor | PortSetup.Signature | PortSetup.Runtime)
         {
             Link.Direction direction = (graph.InputPortDirection == Link.Direction.Input) ? Link.Direction.Output : Link.Direction.Input;
-            PortView portView;
+            Port portView;
 
             switch (currentStrategy)
             {
                 case InitPortStrategy.None when (portSetup & PortSetup.Editor) != 0:
                     // Editor port view
-                    portView = CreateInstance<PortView>();
+                    portView = new Port();
                     AddPortView(portView, typeof(T).FullName, capacity, direction, portName);
                     break;
                 case InitPortStrategy.None:
@@ -279,7 +314,7 @@ namespace JStuff.GraphCreator
                     break;
                 case InitPortStrategy.PortViewGeneration when (portSetup & PortSetup.Editor) != 0:
                     // Editor port view
-                    portView = CreateInstance<PortView>();
+                    portView = new Port();
                     AddPortView(portView, typeof(T).FullName, capacity, direction, portName);
                     break;
                 case InitPortStrategy.LinkGeneration when (portSetup & PortSetup.Runtime) != 0:
@@ -305,7 +340,7 @@ namespace JStuff.GraphCreator
         protected Link AddPropertyOutputLink(string propertyName)
         {
             Link.Direction direction = (graph.InputPortDirection == Link.Direction.Input) ? Link.Direction.Output : Link.Direction.Input;
-            PortView portView;
+            Port portView;
 
             switch (currentStrategy)
             {
@@ -313,7 +348,7 @@ namespace JStuff.GraphCreator
                     AddLinkSignature("PropertyOutputLink<" + propertyName + ":" + graph.GetPropertyType(propertyName) + ">");
                     break;
                 case InitPortStrategy.PortViewGeneration:
-                    portView = CreateInstance<PortView>();
+                    portView = new Port();
                     AddPortView(portView, graph.GetPropertyType(propertyName), Link.Capacity.Multi, direction, propertyName);
                     break;
                 case InitPortStrategy.LinkGeneration:
@@ -329,7 +364,7 @@ namespace JStuff.GraphCreator
 
         protected InputLink<T> AddPropertyInputLink<T>(string propertyName)
         {
-            PortView portView;
+            Port portView;
 
             switch (currentStrategy)
             {
@@ -367,7 +402,7 @@ namespace JStuff.GraphCreator
             if (currentStrategy != InitPortStrategy.StringGeneration)
                 return;
 
-            portSignature += type.FullName;
+            portSignature += type.FullName + ";";
         }
 
         public void AddLinkSignature(string name)
@@ -375,7 +410,7 @@ namespace JStuff.GraphCreator
             if (currentStrategy != InitPortStrategy.StringGeneration)
                 return;
 
-            portSignature += name;
+            portSignature += name + ";";
         }
 
         private void AddLink<T>(Link link, Link.Capacity capacity, Link.Direction direction)
@@ -385,39 +420,26 @@ namespace JStuff.GraphCreator
             link.Valid = true;
         }
 
-        private void AddPortView(PortView portView, string type, Link.Capacity capacity, Link.Direction direction, string portName)
+        private void AddPortView(Port portView, string type, Link.Capacity capacity, Link.Direction direction, string portName)
         {
-            portView.Init(this, graph.Orientation, direction, capacity, type, portViews.Count, portName);
+            portView.Init(this, graph.Orientation, direction, capacity, type, ports.Count, portName);
             portView.Valid = true;
-#if UNITY_EDITOR
-            if (!Application.isPlaying)
-            {
-                EditorUtility.SetDirty(portView);
-                AssetDatabase.AddObjectToAsset(portView, graph);
-            }
-#endif
-            portViews.Add(portView);
-#if UNITY_EDITOR
-            if (!Application.isPlaying)
-            {
-                AssetDatabase.SaveAssets();
-            }
-#endif
+            ports.Add(portView);
         }
 
         public void ConnectLinks()
         {
-            if (links == null || portViews == null || links.Count != portViews.Count)
+            if (links == null || ports == null || links.Count != ports.Count)
                 throw new Exception("Wrong ports setup.");
 
             for (int i = 0; i < links.Count; i++)
             {
                 ILinkable inputlink = links[i] as ILinkable;
-                if (inputlink != null && portViews[i].linked.Count > 0)
+                if (inputlink != null && ports[i].connectedNodes.Count > 0)
                 {
-                    foreach (PortView otherPortView in portViews[i].linked)
+                    foreach (Port otherPortView in ports[i].GetConnectedPorts())
                     {
-                        int otherIndex = otherPortView.index;
+                        int otherIndex = otherPortView.nodeIndex;
                         Link outputPort = otherPortView.node.links[otherIndex];
                         inputlink.LinkPort(outputPort);
                     }
@@ -454,6 +476,69 @@ namespace JStuff.GraphCreator
             retval.nodePosition = this.nodePosition;
 
             return retval;
+        }
+
+        private void OnDestroy()
+        {
+            foreach (Port port in ports)
+            {
+                port.Destroy();
+            }
+        }
+
+        public virtual bool IsConstant()
+        {
+            if (Application.isPlaying)
+            {
+                foreach (Link item in links)
+                {
+                    if (item.IsInput && !item.IsConstant())
+                        return false;
+                }
+                foreach (Link item in cacheLinks)
+                {
+                    if (item.IsInput && !item.IsConstant())
+                        return false;
+                }
+                foreach (Link item in propertyLinks)
+                {
+                    if (item.IsInput && !item.IsConstant())
+                        return false;
+                }
+
+                return true;
+            } else
+            {
+                foreach (Port item in ports)
+                {
+                    foreach (Port outputPort in item.GetConnectedPorts())
+                    {
+                        if (!outputPort.node.IsConstant())
+                            return false;
+                    }
+                }
+
+                return true;
+            }
+        }
+
+        public void Collapse()
+        {
+            foreach (Link item in links)
+            {
+                if (item.IsConstant())
+                    item.Collapse();
+            }
+            foreach (Link item in cacheLinks)
+            {
+                if (item.IsConstant())
+                    item.Collapse();
+            }
+            foreach (Link item in propertyLinks)
+            {
+                if (item.IsConstant())
+                    item.Collapse();
+            }
         }
     }
 }

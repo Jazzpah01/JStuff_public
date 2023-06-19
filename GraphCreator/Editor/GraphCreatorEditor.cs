@@ -18,7 +18,6 @@ public class GraphCreatorEditor : EditorWindow
         //SimpleGraph obj = Selection.activeObject as SimpleGraph;
         if (obj != null)
         {
-            obj.UpdateGraph();
             OpenWindow();
             return true;
         }
@@ -78,5 +77,18 @@ public class GraphCreatorEditor : EditorWindow
 
         selectedNodeView = nodeView;
         inspectorView.UpdateSelection(nodeView);
+    }
+
+    void SaveGraph(Graph g)
+    {
+        EditorUtility.SetDirty(g);
+        AssetDatabase.SaveAssets();
+    }
+
+    void SaveContexts(Graph g)
+    {
+        EditorUtility.SetDirty(g.sharedContext);
+        EditorUtility.SetDirty(g.uniqueContext);
+        AssetDatabase.SaveAssets();
     }
 }

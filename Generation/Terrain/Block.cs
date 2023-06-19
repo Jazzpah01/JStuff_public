@@ -13,7 +13,7 @@ namespace JStuff.Generation.Terrain
 
         bool inJob = false;
 
-        WorldTerrain terrain;
+        public WorldTerrain terrain;
 
         TerrainGraph graph;
         MeshFilter meshFilter;
@@ -30,6 +30,8 @@ namespace JStuff.Generation.Terrain
         public Vector3 oldTargetPosition;
 
         public bool waitingJobResult = false;
+        public bool waitingCoroutine = false;
+        public string coroutine = "";
 
         public List<GameObject> terrainGameObjects = new List<GameObject>();
         List<TerrainObject> terrainObjects;
@@ -37,6 +39,11 @@ namespace JStuff.Generation.Terrain
         private void Start()
         {
             meshFilter = GetComponent<MeshFilter>();
+        }
+
+        public void SetLOD(int LOD)
+        {
+
         }
 
         public void Initialize(WorldTerrain worldTerrain, TerrainGraph graph, Material material)
@@ -51,10 +58,12 @@ namespace JStuff.Generation.Terrain
             colliderObject.transform.localPosition = Vector3.zero;
             meshCollider = colliderObject.AddComponent<MeshCollider>();
             colliderObject.SetActive(false);
+            colliderObject.layer = gameObject.layer;
 
 
             this.graph = graph;
-            graph.InitializeGraph();
+            //this.graph.GetConnections(graph.GetPorts());
+            //graph.InitializeGraph();
 
             terrain = worldTerrain;
 
@@ -62,6 +71,20 @@ namespace JStuff.Generation.Terrain
 
             oldTargetPosition = new Vector3(0, 0, float.MinValue);
         }
+
+#if UNITY_EDITOR
+        public void EditorGenerateRenderMesh()
+        {
+            BlockData data = ((TerrainGraph)graph).EvaluateGraph(TerrainRoot.BlockDataType.RenderMesh);
+            ConsumeJob(data);
+        }
+
+        public void EditorGenerateAll()
+        {
+            BlockData data = ((TerrainGraph)graph).EvaluateGraph();
+            ConsumeJob(data);
+        }
+#endif
 
         public object Job(object graph)
         {
@@ -78,6 +101,13 @@ namespace JStuff.Generation.Terrain
         public void JobFailed()
         {
             throw new System.NotImplementedException("Job failed!");
+        }
+
+        public void UpdateValues(Vector3 centerPosition, Vector3 newPosition)
+        {
+            graph.CenterPosition = new Vector2(centerPosition.x, centerPosition.z);
+            graph.ChunkPosition = new Vector2(newPosition.x, newPosition.z);
+            targetPosition = newPosition;
         }
 
         public void UpdateBlock(Vector3 centerPosition, Vector3 newPosition)
@@ -105,13 +135,28 @@ namespace JStuff.Generation.Terrain
 
         public void ApplyData()
         {
+            if (waitingCoroutine)
+                StopCoroutine("ApplyDataCoroutine");
+
             StartCoroutine(ApplyDataCoroutine());
         }
 
         IEnumerator ApplyDataCoroutine()
         {
+            waitingCoroutine = true;
+
             // Remove terrain objects
-            if (terrainObjects != null && currentData.terrainObjects.Count != terrainObjects.Count)
+            if (targetPosition != oldTargetPosition && terrainObjects != null)
+            {
+                for (int i = 0; i < terrainGameObjects.Count; i++)
+                {
+                    TerrainPool.DestroyTerrainObject(terrainGameObjects[i]);
+                    terrainGameObjects.RemoveAt(i);
+                    i--;
+                }
+                terrainGameObjects.Clear();
+                terrainObjects.Clear();
+            } else if (terrainObjects != null && currentData.terrainObjects.Count != terrainObjects.Count)
             {
                 int size = terrainGameObjects.Count;
                 int j = (currentData.terrainObjects.Count > 0) ? currentData.terrainObjects.Count : 0;
@@ -121,9 +166,8 @@ namespace JStuff.Generation.Terrain
                     terrainGameObjects.RemoveAt(i);
                     i--;
                 }
-                terrainGameObjects.Clear();
             }
-            yield return null;
+
 
             // Mesh renderer
             if (targetPosition != oldTargetPosition)
@@ -139,9 +183,9 @@ namespace JStuff.Generation.Terrain
                 meshFilter.sharedMesh = mesh;
 
                 SetPosition(targetPosition);
-            }
 
-            yield return null;
+                yield return null;
+            }
 
             // Mesh collider
             if (oldData == null || currentData.meshColliderData != oldData.meshColliderData)
@@ -156,14 +200,14 @@ namespace JStuff.Generation.Terrain
                     colliderMesh.triangles = currentData.meshColliderData.triangles;
 
                     meshCollider.sharedMesh = colliderMesh;
+
+                    yield return null;
                 }
                 else
                 {
                     colliderObject.SetActive(false);
                 }
             }
-
-            yield return null;
 
             // Spawn terrain objects
             if (currentData.terrainObjects != null)
@@ -183,15 +227,20 @@ namespace JStuff.Generation.Terrain
                 }
             }
 
-            yield return null;
-
             oldTargetPosition = targetPosition;
             oldData = currentData;
+
+            waitingCoroutine = false;
         }
 
         public void SetPosition(Vector3 position)
         {
             transform.position = position;
+        }
+
+        public TerrainCoordinate GetCoordinates()
+        {
+            return new TerrainCoordinate(terrain.blockSize, targetPosition);
         }
 
         //public float HeightAtPoint(float x, float z)

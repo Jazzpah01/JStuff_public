@@ -9,7 +9,7 @@ namespace JStuff.AI.Steering
     {
         public override SteeringOutput GetSteering(ISteeringAgent agent, Vector2 target)
         {
-            Vector2 direction = Utilities.Utilities.GetOrientationVector(agent.Orientation, agent.Up);
+            Vector2 direction = Utilities.Utilities.GetDirection(agent.Orientation, agent.Up);
 
             Vector2 targetVelocity = direction.normalized * agent.MaxSpeed;
 

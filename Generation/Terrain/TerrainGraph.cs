@@ -1,9 +1,6 @@
-using System.Collections;
-using System.Collections.Generic;
-using UnityEngine;
 using JStuff.GraphCreator;
 using System;
-using JStuff.Generation;
+using UnityEngine;
 
 namespace JStuff.Generation.Terrain
 {
@@ -159,32 +156,33 @@ namespace JStuff.Generation.Terrain
         }
 
         public override Type RootNodeType => typeof(TerrainRoot);
-        public override List<Type> NodeTypes
+        public override Type[] NodeTypes
         {
             get
             {
-                List<Type> types = new List<Type>();
-                types.Add(typeof(CommonNode));
-                types.Add(typeof(MathNode));
-                types.Add(typeof(TerrainNode));
-                return types;
+                return new Type[] { 
+                    typeof(CommonNode), 
+                    typeof(MathNode), 
+                    typeof(TerrainNode) };
             }
         }
 
-        public BlockData EvaluateGraph()
+        public override bool Collapsable => true;
+
+        public BlockData EvaluateGraph(TerrainRoot.BlockDataType toEvaluate = TerrainRoot.BlockDataType.All)
         {
-            return ((TerrainRoot)rootNode).Evaluate();
+            return ((TerrainRoot)rootNode).Evaluate(toEvaluate);
         }
 
         protected override void SetupProperties()
         {
-            chunkPositionProperty = AddProperty(Vector2.zero, "chunkPosition", PropertyContext.Unique);
-            centerPositionProperty = AddProperty(Vector2.zero, "centerPosition", PropertyContext.Unique);
-            chunkSizeProperty = AddProperty(chunkSize, "chunkSize", PropertyContext.Unique);
-            seedProperty = AddProperty(seed, "seed", PropertyContext.Unique);
-            AddProperty(Vector2.zero, "offset", PropertyContext.Unique);
-            scaleProperty = AddProperty<float>(scale, "scale", PropertyContext.Unique);
-            zoomProperty = AddProperty<float>(zoom, "zoom", PropertyContext.Unique);
+            chunkPositionProperty = AddProperty(Vector2.zero, "chunkPosition", PropertyContext.Unique, false);
+            centerPositionProperty = AddProperty(Vector2.zero, "centerPosition", PropertyContext.Unique, false);
+            chunkSizeProperty = AddProperty(chunkSize, "chunkSize", PropertyContext.Shared, true);
+            seedProperty = AddProperty(seed, "seed", PropertyContext.Shared, true);
+            AddProperty(Vector2.zero, "offset", PropertyContext.Shared, false);
+            scaleProperty = AddProperty<float>(scale, "scale", PropertyContext.Shared, true);
+            zoomProperty = AddProperty<float>(zoom, "zoom", PropertyContext.Shared, true);
         }
 
         public override Graph Clone()

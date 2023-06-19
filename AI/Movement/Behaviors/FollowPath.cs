@@ -12,6 +12,8 @@ namespace JStuff.AI.Steering
 
         private Seek seek;
 
+        GameObject visual;
+
         private void OnEnable()
         {
             seek = CreateInstance<Seek>();
@@ -19,19 +21,19 @@ namespace JStuff.AI.Steering
 
         public override SteeringOutput GetSteering(ISteeringAgent agent, IList<Vector2> path)
         {
-            if ((path[path.Count-1] - agent.Position).sqrMagnitude < stopDistance * stopDistance)
+            if ((path[path.Count - 1] - agent.Position).sqrMagnitude < stopDistance * stopDistance)
             {
                 return new SteeringOutput();
             }
 
-            Vector2 point = Vector2.zero;
+            Vector2 point = path[0];
             float dist = float.MaxValue;
-            Vector2 dir = Vector2.zero;
+            Vector2 dir = path[1] - path[0];
 
             for (int i = 1; i < path.Count; i++)
             {
-                Vector2 npoint = NearestPointOnLine(path[i - 1], path[i], agent.transform.position);
-                float ndist = (point - agent.Position).sqrMagnitude;
+                Vector2 npoint = NearestPointOnLine(path[i - 1], path[i], agent.Position);
+                float ndist = (npoint - agent.Position).magnitude;
                 if (ndist < dist)
                 {
                     dist = ndist;
@@ -39,6 +41,15 @@ namespace JStuff.AI.Steering
                     dir = path[i] - path[i - 1];
                 }
             }
+
+            Vector2 target = point + dir.normalized * offset;
+
+            //if (visual == null)
+            //{
+            //    visual = GameObject.CreatePrimitive(PrimitiveType.Sphere);
+            //    MonoBehaviour.Destroy(visual.GetComponent<Collider>());
+            //}
+            //visual.transform.position = new Vector3(target.x, 0, target.y);
 
             return seek.GetSteering(agent, point + dir.normalized * offset);
         }
@@ -55,16 +66,16 @@ namespace JStuff.AI.Steering
             lineDir /= lineLength;
 
             Vector2 v = pnt - linePnt0;
-            float d = Vector3.Dot(v, lineDir);
+            float d = Vector2.Dot(v, lineDir);
             Vector2 candidate = linePnt0 + lineDir * d;
 
-            float canDist = (candidate - linePnt0).sqrMagnitude;
+            float canDist = (candidate - linePnt0).magnitude;
 
             if (d < 0)
             {
                 return linePnt0;
             }
-            else if (canDist <= lineLength * lineLength)
+            else if (d < lineLength)
             {
                 return candidate;
             } else {

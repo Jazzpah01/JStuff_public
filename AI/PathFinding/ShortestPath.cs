@@ -14,7 +14,7 @@ namespace JStuff.AI.Pathfinding
         public delegate float Heuristic(int v, int u);
 
 
-        public static N[] AStar<N>(IGraph<N> G, int s, int t, Heuristic heuristic, bool invertedRoute = false)
+        public static N[] AStar<N>(IGraph<N> graph, int s, int t, Heuristic heuristic, bool invertedRoute = false)
         {
             // Distance f(v) to u is g(v) + h(v). g is shortest path s->v, h is heuristic for v->t.
             // where g is the current shortest distance and h is a heuristic function mapping
@@ -25,44 +25,48 @@ namespace JStuff.AI.Pathfinding
             if (s == t)
                 return null;
 
-            if (!G.Contains(s))
+            if (!graph.Contains(s))
                 return null;
 
-            if (!G.Contains(t))
+            if (!graph.Contains(t))
                 return null;
 
             // Begin algorithm
-            float[] g = new float[G.Size]; // Current shortest distance to node
-            float[] f = new float[G.Size]; // Current shortest distance + estimated distance to goal
-            int[] prev = new int[G.Size]; // Previous node of index
+            float[] g = new float[graph.Size]; // Current shortest distance to node
+            float[] f = new float[graph.Size]; // Current shortest distance + estimated distance to goal
+            int[] prev = new int[graph.Size]; // Previous node of index
+
+            for (int i = 0; i < graph.Size; i++)
+            {
+                g[i] = float.PositiveInfinity;
+                f[i] = float.PositiveInfinity;
+            }
+
             prev.Populate<int>(-1);
             g.Populate<float>(Mathf.Infinity);
 
-            List<int> S = new List<int>();
+            List<int> openSet = new List<int>();
             List<int> T = new List<int>();
 
-            S.Add(s);
+            openSet.Add(s);
             f[s] = heuristic(s, t);
             g[s] = 0;
 
             bool goalReached = false;
 
-            int control = 1000;
-            while (S.Count > 0 || goalReached)
+            while (openSet.Count > 0 || goalReached)
             {
-                int v = S[0];
-                int index = 0;
+                int v = openSet[0];
 
-                for (int i = 1; i < S.Count; i++)
+                for (int i = 1; i < openSet.Count; i++)
                 {
-                    if (f[S[i]] < f[v])
+                    if (f[openSet[i]] < f[v])
                     {
-                        v = S[i];
-                        index = i;
+                        v = openSet[i];
                     }
                 }
 
-                S.Remove(v);
+                openSet.Remove(v);
                 T.Add(v);
 
                 if (v == t)
@@ -71,17 +75,14 @@ namespace JStuff.AI.Pathfinding
                     break;
                 }
 
-                foreach (int u in G.AdjacentNodes(v))
+                foreach (int u in graph.AdjacentNodes(v))
                 {
-                    if (T.Contains(u))
-                        continue;
-
-                    float tentative_cost = g[v] + G.GetWeight(v, u);
+                    float tentative_cost = g[v] + graph.GetWeight(v, u);
                     // TODO: Need to check for excluded vertices
-                    if (((g[u] == 0) || (tentative_cost < g[u])) && u != s)
+                    if (tentative_cost < g[u] && u != s)
                     {
-                        if (!S.Contains(u))
-                            S.Add(u);
+                        if (!openSet.Contains(u))
+                            openSet.Add(u);
                         g[u] = tentative_cost;
                         f[u] = g[u] + heuristic(u, t);
                         prev[u] = v;
@@ -100,10 +101,10 @@ namespace JStuff.AI.Pathfinding
                         throw new System.Exception("Error in code. A node doesn't have a previous.");
                     }
 
-                    route.Add(G[p]);
+                    route.Add(graph[p]);
                     p = prev[p];
                 }
-                route.Add(G[s]);
+                route.Add(graph[s]);
 
                 if (invertedRoute)
                 {
@@ -122,6 +123,29 @@ namespace JStuff.AI.Pathfinding
             {
                 return null;
             }
+        }
+
+        public static void AddSorted(this List<float> @this, float item)
+        {
+            if (@this.Count == 0)
+            {
+                @this.Add(item);
+                return;
+            }
+            if (@this[@this.Count - 1].CompareTo(item) <= 0)
+            {
+                @this.Add(item);
+                return;
+            }
+            if (@this[0].CompareTo(item) >= 0)
+            {
+                @this.Insert(0, item);
+                return;
+            }
+            int index = @this.BinarySearch(item);
+            if (index < 0)
+                index = ~index;
+            @this.Insert(index, item);
         }
 
         //public static Node[] AStar(Graph G, Node s, Node t, HeuristicOld h, HashSet<Node> excludedVertices = null, object hData = null)

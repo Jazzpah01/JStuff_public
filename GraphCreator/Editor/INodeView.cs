@@ -4,12 +4,13 @@ using System.Collections.Generic;
 using UnityEditor.Experimental.GraphView;
 using UnityEngine;
 using UnityEngine.UIElements;
+using Port = JStuff.GraphCreator.Port;
 
 namespace JStuff.GraphCreator
 {
     public interface INodeView
     {
-        Port GetPort(PortView port);
+        UnityEditor.Experimental.GraphView.Port GetPort(Port port);
         UnityEditor.Experimental.GraphView.Node Node { get; }
     }
 }

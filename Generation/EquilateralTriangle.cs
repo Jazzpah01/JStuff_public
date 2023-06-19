@@ -1,5 +1,4 @@
-﻿using JStuff.Random;
-using System.Collections;
+﻿using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using System;
@@ -38,11 +37,11 @@ namespace JStuff.Generation
             EquilateralTriangle generator = new EquilateralTriangle(cacheAtDepth);
 
             if (ah < -1 || ah > 1)
-                ah = Generator.Value(s, 0.5236f);
+                ah = Noise.Value(s, 0.5236f);
             if (bh < -1 || bh > 1)
-                bh = Generator.Value(ah, -0.3251f);
+                bh = Noise.Value(ah, -0.3251f);
             if (ch < -1 || ch > 1)
-                ch = Generator.Value(ah, bh);
+                ch = Noise.Value(ah, bh);
 
             // Height of TRIANGLE
             float hei = Mathf.Sqrt(3) / 2;
@@ -110,19 +109,19 @@ namespace JStuff.Generation
             float r;
             float distance = (a.xz - b.xz).magnitude;
 
-            r = Generator.Value(a.r, b.r);
+            r = Noise.Value(a.r, b.r);
             newheight = d * r * (a.xz-b.xz).magnitude + Mathf.Abs(a.h - b.h) * h * r + (a.h + b.h) / 2;
             if (newheight < -1) newheight = -1;
             if (newheight > 1) newheight = 1;
             Vertex ab = new Vertex((a.xz + b.xz) / 2, newheight, r);
 
-            r = Generator.Value(a.r, c.r);
+            r = Noise.Value(a.r, c.r);
             newheight = d * r * (a.xz - c.xz).magnitude + Mathf.Abs(a.h - c.h) * h * r + (a.h + c.h) / 2;
             if (newheight < -1) newheight = -1;
             if (newheight > 1) newheight = 1;
             Vertex ac = new Vertex((a.xz + c.xz) / 2, newheight, r);
 
-            r = Generator.Value(b.r, c.r);
+            r = Noise.Value(b.r, c.r);
             newheight = d * r * (b.xz - c.xz).magnitude + Mathf.Abs(b.h - c.h) * h * r + (b.h + c.h) / 2;
             if (newheight < -1) newheight = -1;
             if (newheight > 1) newheight = 1;

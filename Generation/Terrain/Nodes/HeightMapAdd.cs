@@ -28,9 +28,9 @@ namespace JStuff.Generation.Terrain
         {
             HeightMap hm = hmInput1.Evaluate();
             float[,] retval = new float[hm.Width, hm.Length];
-            float val = (valueInput.linkedPort == null) ? 0 : valueInput.Evaluate();
+            float val = (valueInput.connectedLink == null) ? 0 : valueInput.Evaluate();
 
-            if (hmInput2.linkedPort == null)
+            if (hmInput2.connectedLink == null)
             {
                 for (int y = 0; y < hm.Length; y++)
                 {

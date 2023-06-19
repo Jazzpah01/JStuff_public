@@ -11,7 +11,7 @@ namespace JStuff.GraphCreator
 
         public override T Evaluate()
         {
-            if (iteration == node.graph.rootNode.iteration)
+            if (iteration == node.graph.rootNode.iteration && iteration > 0)
             {
                 return cachedValue;
             }

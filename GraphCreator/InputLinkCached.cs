@@ -18,7 +18,7 @@ namespace JStuff.GraphCreator
 
         public bool ReEvaluate()
         {
-            if (linkedPort == null && optional)
+            if (connectedLink == null && optional)
                 return false;
 
             T val = base.Evaluate();

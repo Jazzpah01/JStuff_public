@@ -6,6 +6,10 @@ namespace JStuff.Generation
 {
     public struct Vertex : IEquatable<Vertex>
     {
+        public Vector2 xz;
+        public float h;
+        public float r;
+
         public Vertex(Vector2 xz, float h, float r)
         {
             this.xz = xz;
@@ -18,9 +22,6 @@ namespace JStuff.Generation
             this.h = h;
             this.r = r;
         }
-        public Vector2 xz;
-        public float h;
-        public float r;
 
         public bool Equals(Vertex other)
         {
@@ -32,17 +33,11 @@ namespace JStuff.Generation
                 return false;
             return true;
         }
-    }
 
-    public struct Edge
-    {
-        public Edge(bool river, float h)
+        public override string ToString()
         {
-            this.river = river;
-            this.h = h;
+            return $"Vertex: ({xz.x},{xz.y},{h},{r})";
         }
-        public bool river;
-        public float h;
     }
 
     public struct Triangle : IEquatable<Triangle>
@@ -105,6 +100,11 @@ namespace JStuff.Generation
             if ((c.x - b.x) * (s.y - b.y) - (c.y - b.y) * (s.x - b.x) > 0 != s_ab) return false;
 
             return true;
+        }
+
+        public static float Distance(Vertex a, Vertex b)
+        {
+            return Vector2.Distance(a.xz, b.xz);
         }
     }
 }
