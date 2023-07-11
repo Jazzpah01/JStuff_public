@@ -30,7 +30,7 @@ namespace JStuff.Generation.Terrain
 
         private MeshData Evaluate()
         {
-            MeshData data = TerrainMeshGeneration.GenerateMesh(hmInput.Evaluate(), chunkSizeInput.Evaluate(), scaleInput.Evaluate());
+            MeshData data = TerrainMeshGeneration.GenerateMeshData(hmInput.Evaluate(), chunkSizeInput.Evaluate(), scaleInput.Evaluate());
             return data;
         }
     }

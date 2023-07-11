@@ -78,7 +78,7 @@ namespace JStuff.Generation.Terrain
                     float normY = (float)j / (heightmap.Length-1);
                     float v0 = heightmap[i, j];
                     float v1 = falloffmap.GetContinousHeight(normX * (falloffmap.Width-1),
-                                                            normX * (falloffmap.Length-1));
+                                                            normY * (falloffmap.Length-1));
 
                     float t = Vector2.Distance(new Vector2(normX, normY) * chunkSize + chunkPosition, midpoint);
                     t /= maxDistance;

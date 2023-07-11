@@ -16,15 +16,15 @@ namespace JStuff.Generation.Terrain
         public WorldTerrain terrain;
 
         TerrainGraph graph;
-        MeshFilter meshFilter;
-        MeshFilter colliderMeshFilter;
-        MeshCollider meshCollider;
+        public MeshFilter meshFilter;
+        public MeshFilter colliderMeshFilter;
+        public MeshCollider meshCollider;
         Material material;
 
         BlockData oldData;
         BlockData currentData;
 
-        GameObject colliderObject;
+        public GameObject colliderObject;
 
         public Vector3 targetPosition;
         public Vector3 oldTargetPosition;
@@ -34,16 +34,21 @@ namespace JStuff.Generation.Terrain
         public string coroutine = "";
 
         public List<GameObject> terrainGameObjects = new List<GameObject>();
-        List<TerrainObject> terrainObjects;
+
+        public int iteration = 0;
+        int terrainObjectsAmount = 0;
+
+        Mesh[] meshLOD;
+        MeshRenderer[] meshRendererLOD;
+        int currenMeshLOD = -1;
+        int targetLOD = -1;
+
+        public int Priority => priority;
+        int priority = 0;
 
         private void Start()
         {
             meshFilter = GetComponent<MeshFilter>();
-        }
-
-        public void SetLOD(int LOD)
-        {
-
         }
 
         public void Initialize(WorldTerrain worldTerrain, TerrainGraph graph, Material material)
@@ -70,6 +75,8 @@ namespace JStuff.Generation.Terrain
             initialized = true;
 
             oldTargetPosition = new Vector3(0, 0, float.MinValue);
+
+            meshLOD = new Mesh[worldTerrain.meshLOD.Length];
         }
 
 #if UNITY_EDITOR
@@ -88,7 +95,14 @@ namespace JStuff.Generation.Terrain
 
         public object Job(object graph)
         {
-            return ((TerrainGraph)graph).EvaluateGraph();
+            BlockData retval = ((TerrainGraph)graph).EvaluateGraph();
+
+            retval._meshRendererData = TerrainMeshGeneration.GenerateLODMeshData(retval.meshRendererData, targetLOD);
+            retval._colormap = TerrainMeshGeneration.GenerateLODColormap(retval.colormap, targetLOD);
+
+            retval._meshColliderData = TerrainMeshGeneration.GenerateLODMeshData(retval.meshColliderData, terrain.colliderLOD);
+
+            return retval;
         }
 
         public void ConsumeJob(object data)
@@ -112,15 +126,23 @@ namespace JStuff.Generation.Terrain
 
         public void UpdateBlock(Vector3 centerPosition, Vector3 newPosition)
         {
+            (int LOD, int index) = terrain.GetTerrainLOD(Vector3.Distance(newPosition, centerPosition));
+
+            if (iteration != 0 && (LOD == currenMeshLOD && newPosition == oldTargetPosition))
+                return;
+
             if (waitingJobResult)
             {
                 JobManagerComponent.instance.manager.FinishJobs();
             }
 
+            graph.LOD = LOD;
             graph.CenterPosition = new Vector2(centerPosition.x, centerPosition.z);
             graph.ChunkPosition = new Vector2(newPosition.x, newPosition.z);
             targetPosition = newPosition;
             waitingJobResult = true;
+            priority = index;
+            targetLOD = LOD;
 
             if (terrain.enableThreading)
             {
@@ -138,70 +160,70 @@ namespace JStuff.Generation.Terrain
             if (waitingCoroutine)
                 StopCoroutine("ApplyDataCoroutine");
 
-            StartCoroutine(ApplyDataCoroutine());
+            ApplyDataCoroutine();
         }
 
         IEnumerator ApplyDataCoroutine()
         {
+            //TODO: move most of this into TerrainPool and just send the job data there - less copying of data
+
             waitingCoroutine = true;
+            bool newPos = false;
+
+            if (targetPosition != oldTargetPosition)
+            {
+                iteration++;
+                newPos = true;
+            }
 
             // Remove terrain objects
-            if (targetPosition != oldTargetPosition && terrainObjects != null)
+            if (newPos)
             {
                 for (int i = 0; i < terrainGameObjects.Count; i++)
                 {
-                    TerrainPool.DestroyTerrainObject(terrainGameObjects[i]);
-                    terrainGameObjects.RemoveAt(i);
-                    i--;
+                    TerrainPool.QueueDestroyTerrainObject(terrainGameObjects[i], this, iteration);
+                    //TerrainPool.DestroyTerrainObject(terrainGameObjects[i]);
+                    //terrainGameObjects.RemoveAt(i);
+                    //i--;
                 }
-                terrainGameObjects.Clear();
-                terrainObjects.Clear();
-            } else if (terrainObjects != null && currentData.terrainObjects.Count != terrainObjects.Count)
+                //terrainGameObjects.Clear();
+            } else if (currentData.terrainObjects != null && currentData.terrainObjects.Count != terrainObjectsAmount)
             {
                 int size = terrainGameObjects.Count;
                 int j = (currentData.terrainObjects.Count > 0) ? currentData.terrainObjects.Count : 0;
                 for (int i = j; i < terrainGameObjects.Count; i++)
                 {
-                    TerrainPool.DestroyTerrainObject(terrainGameObjects[i]);
-                    terrainGameObjects.RemoveAt(i);
-                    i--;
+                    TerrainPool.QueueDestroyTerrainObject(terrainGameObjects[i], this, iteration);
+                    //TerrainPool.DestroyTerrainObject(terrainGameObjects[i]);
+                    //terrainGameObjects.RemoveAt(i);
+                    //i--;
                 }
             }
 
-
             // Mesh renderer
-            if (targetPosition != oldTargetPosition)
-            {
-                Mesh mesh = new Mesh();
-                mesh.vertices = currentData.meshRendererData.vertices;
-                mesh.uv = currentData.meshRendererData.uv;
-                mesh.triangles = currentData.meshRendererData.triangles;
-                mesh.colors = currentData.colormap;
-                mesh.RecalculateNormals();
-                mesh.RecalculateTangents();
+            (int LOD, int index) = terrain.GetTerrainLOD(Vector3.Distance(terrain.GetCenterChunkPosition(), targetPosition));
 
-                meshFilter.sharedMesh = mesh;
+            if (newPos)
+            {
+                currenMeshLOD = -1;
 
                 SetPosition(targetPosition);
+            }
 
-                yield return null;
+            if (LOD != currenMeshLOD)
+            {
+                //meshFilter.sharedMesh = TerrainMeshGeneration.GenerateMesh(currentData.meshLOD[index], currentData.colormapLOD[index]);
+                TerrainPool.QueueRenderMesh(this, iteration, currentData._meshRendererData, currentData._colormap, targetPosition);
+                currenMeshLOD = LOD;
             }
 
             // Mesh collider
             if (oldData == null || currentData.meshColliderData != oldData.meshColliderData)
             {
-                if (currentData.meshColliderData != null)
+                if (currentData.meshColliderData != null && Vector3.Distance(terrain.GetCenterChunkPosition(), targetPosition) < terrain.colliderAtDistance)
                 {
-                    colliderObject.SetActive(true);
-
-                    Mesh colliderMesh = new Mesh();
-                    colliderMesh.vertices = currentData.meshColliderData.vertices;
-                    colliderMesh.uv = currentData.meshColliderData.uv;
-                    colliderMesh.triangles = currentData.meshColliderData.triangles;
-
-                    meshCollider.sharedMesh = colliderMesh;
-
-                    yield return null;
+                    TerrainPool.QueueColliderMesh(
+                        this, iteration, currentData.meshColliderData);
                 }
                 else
                 {
@@ -212,18 +234,16 @@ namespace JStuff.Generation.Terrain
             // Spawn terrain objects
             if (currentData.terrainObjects != null)
             {
-                if (terrainObjects == null)
-                    terrainObjects = new List<TerrainObject>();
-
-                if (currentData.terrainObjects.Count > terrainObjects.Count)
+                if (currentData.terrainObjects.Count > terrainObjectsAmount)
                 {
-                    int j = (currentData.terrainObjects.Count > 0) ? terrainObjects.Count : 0;
+                    int j = (currentData.terrainObjects.Count > 0) ? terrainObjectsAmount : 0;
                     for (int i = j; i < currentData.terrainObjects.Count; i++)
                     {
-                        terrainGameObjects.Add(TerrainPool.CreateTerrainObject(currentData.terrainObjects[i], this));
+                        TerrainPool.QueueTerrainObject(currentData.terrainObjects[i], this, iteration);
+                        //terrainGameObjects.Add(TerrainPool.CreateTerrainObject(currentData.terrainObjects[i], this));
                     }
 
-                    terrainObjects = currentData.terrainObjects;
+                    terrainObjectsAmount = currentData.terrainObjects.Count;
                 }
             }
 
@@ -231,6 +251,8 @@ namespace JStuff.Generation.Terrain
             oldData = currentData;
 
             waitingCoroutine = false;
+
+            return null;
         }
 
         public void SetPosition(Vector3 position)

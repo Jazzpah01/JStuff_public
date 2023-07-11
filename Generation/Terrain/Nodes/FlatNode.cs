@@ -12,6 +12,11 @@ namespace JStuff.Generation.Terrain
         public float height = 0;
         OutputLink<HeightMap> output;
 
+        public override bool IsConstant()
+        {
+            return false;
+        }
+
         protected override void SetupPorts()
         {
             output = AddOutputLink<HeightMap>(Evaluate);

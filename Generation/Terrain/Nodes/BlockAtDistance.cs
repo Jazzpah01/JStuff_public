@@ -9,13 +9,14 @@ namespace JStuff.Generation.Terrain
     [CreateNodePath("Terrain/Terrain Objects/LOD")]
     public class BlockAtDistance : TerrainNode
     {
-        public int coordDistance;
+        public int LOD;
 
         InputLink<List<TerrainObject>> input;
 
         InputLink<float> sizeInput;
         InputLink<Vector2> positionInput;
         InputLink<Vector2> centerPosInput;
+        InputLink<int> lodInput;
 
         OutputLink<List<TerrainObject>> output;
 
@@ -28,6 +29,8 @@ namespace JStuff.Generation.Terrain
             sizeInput = AddPropertyInputLink<float>("chunkSize");
             positionInput = AddPropertyInputLink<Vector2>("chunkPosition");
             centerPosInput = AddPropertyInputLink<Vector2>("centerPosition");
+
+            lodInput = AddPropertyInputLink<int>("lod");
 
             output = AddOutputLink(Evaluate, portName: "TerrainObjects");
         }
@@ -44,7 +47,7 @@ namespace JStuff.Generation.Terrain
 
             int dist = Mathf.RoundToInt(j / size);
 
-            if (dist > coordDistance)
+            if (lodInput.Evaluate() > LOD)
             {
                 return new List<TerrainObject>();
             } else
@@ -56,7 +59,7 @@ namespace JStuff.Generation.Terrain
         public override Node Clone()
         {
             BlockAtDistance retval = base.Clone() as BlockAtDistance;
-            retval.coordDistance = coordDistance;
+            retval.LOD = LOD;
 
             return retval;
         }

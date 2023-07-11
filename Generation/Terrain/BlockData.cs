@@ -10,5 +10,9 @@ namespace JStuff.Generation.Terrain
         public MeshData meshColliderData;
         public Color[] colormap;
         public List<TerrainObject> terrainObjects;
+
+        public MeshData _meshRendererData;
+        public Color[] _colormap;
+        public MeshData _meshColliderData;
     }
 }

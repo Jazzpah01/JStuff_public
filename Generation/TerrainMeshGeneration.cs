@@ -6,7 +6,7 @@ namespace JStuff.Generation
 {
     public static class TerrainMeshGeneration
     {
-        public static MeshData GenerateMesh(HeightMap map, float chunksize, float multiplier = 1)
+        public static MeshData GenerateMeshData(HeightMap map, float chunksize, float multiplier = 1)
         {
             Vector3[] vertices = new Vector3[map.Width * map.Length];
             Vector2[] uv = new Vector2[vertices.Length];
@@ -39,7 +39,7 @@ namespace JStuff.Generation
             return new MeshData(vertices, uv, triangles, multiplier, map.Length, map.Width);
         }
 
-        public static MeshData GenerateLODMesh(MeshData meshData, int LOD)
+        public static MeshData GenerateLODMeshData(MeshData meshData, int LOD)
         {
             int inputWidth = meshData.Width();
 
@@ -48,9 +48,9 @@ namespace JStuff.Generation
 
             int newWidth = (inputWidth - 1) / LOD + 1;
 
-            Vector3[] vertices = new Vector3[inputWidth * inputWidth];
+            Vector3[] vertices = new Vector3[newWidth * newWidth];
             Vector2[] uv = new Vector2[vertices.Length];
-            int[] triangles = new int[(inputWidth - 1) * (inputWidth - 1) * 6];
+            int[] triangles = new int[(newWidth - 1) * (newWidth - 1) * 6];
 
             int i = 0;
 
@@ -77,6 +77,62 @@ namespace JStuff.Generation
             }
 
             return new MeshData(vertices, uv, triangles, meshData.heightFactor, newWidth, newWidth);
+        }
+
+        public static Mesh GenerateMesh(MeshData inputMeshData, Color[] colormap, int LOD = 1)
+        {
+            MeshData meshData = inputMeshData;
+
+            if (LOD > 1)
+            {
+                meshData = GenerateLODMeshData(inputMeshData, LOD);
+            }
+
+            if (colormap != null)
+            {
+                Mesh mesh = new Mesh();
+                mesh.vertices = meshData.vertices;
+                mesh.uv = meshData.uv;
+                mesh.triangles = meshData.triangles;
+                mesh.colors = colormap;
+                mesh.RecalculateNormals();
+                mesh.RecalculateTangents();
+
+                return mesh;
+            } else
+            {
+                Mesh mesh = new Mesh();
+                mesh.vertices = meshData.vertices;
+                mesh.uv = meshData.uv;
+                mesh.triangles = meshData.triangles;
+
+                return mesh;
+            }
+        }
+
+        public static Color[] GenerateLODColormap(Color[] colormap, int LOD = 1)
+        {
+            if (LOD == 1)
+                return colormap;
+
+            int inputWidth = (int)Mathf.Sqrt(colormap.Length);
+
+            if (((inputWidth - 1) / LOD - (int)(inputWidth - 1) / LOD) != 0)
+                throw new System.Exception("Error: LOD doesn't fit.");
+
+            int newWidth = (inputWidth - 1) / LOD + 1;
+
+            Color[] retval = new Color[newWidth * newWidth];
+
+            for (int x = 0; x < newWidth; x++)
+            {
+                for (int z = 0; z < newWidth; z++)
+                {
+                    retval[x + z * newWidth] = colormap[(x * LOD) + (z * LOD) * inputWidth];
+                }
+            }
+
+            return retval;
         }
     }
 

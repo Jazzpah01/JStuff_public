@@ -27,6 +27,10 @@ namespace JStuff.Generation.Terrain
         [Min(1)] public int terrainHalfsize = 1;
         public Transform cameraTransform;
 
+        public TerrainLOD[] meshLOD;
+        public int colliderLOD = 2;
+        public float colliderAtDistance = 200;
+
         [Header("Debug")]
         public TerrainGraph initializedGraph;
         public bool debugTime = false;
@@ -35,6 +39,9 @@ namespace JStuff.Generation.Terrain
         private Stack<Block> depricatedBlocks;
         public GameObject parentBlock;
         public GameObject savedBlocksParent;
+
+
+
 
         private Block[] savedBlocks;
 
@@ -52,6 +59,9 @@ namespace JStuff.Generation.Terrain
         [HideInInspector]public float zoom;
 
         bool shouldUpdate = false;
+
+
+        System.Diagnostics.Stopwatch stopwatch = new Stopwatch();
 
         public bool IsUpdating
         {
@@ -214,6 +224,8 @@ namespace JStuff.Generation.Terrain
             blocks = null;
         }
 
+        Coroutine coroutine;
+
         private void Update()
         {
             if ((new Vector3(cameraTransform.position.x, 0, cameraTransform.position.z) - transform.position).magnitude > blockSize / 2f && !shouldUpdate)
@@ -231,9 +243,11 @@ namespace JStuff.Generation.Terrain
                 if (JobManagerComponent.instance.manager.Pending != 0)
                 {
                     JobManagerComponent.instance.manager.FinishJobs();
+                    Debug.Log("Running FinishedJobs!");
                 }
 
-                UpdateAll(newCenterChunk);
+                //UpdateAll(newCenterChunk);
+                coroutine = StartCoroutine(UpdateAllCoroutine(newCenterChunk));
                 centerBlock = newCenterChunk;
             }
 
@@ -304,7 +318,10 @@ namespace JStuff.Generation.Terrain
 
             HashSet<Block> updated = new HashSet<Block>();
 
-            while(newPositions.Count > 0)
+            Debug.Log("New positions amound: " + newPositions.Count);
+            Debug.Log("Depricated Blocks: " + depricatedBlocks.Count);
+
+            while (newPositions.Count > 0)
             {
                 Vector3 p = newPositions.Dequeue();
 
@@ -328,6 +345,120 @@ namespace JStuff.Generation.Terrain
 
             foreach (Block b in blocks)
             {
+                if (!updated.Contains(b))
+                    UpdateBlock(b, newCenterChunk, b.targetPosition);
+            }
+
+            centerBlock = newCenterChunk;
+        }
+
+
+
+        public IEnumerator UpdateAllCoroutine(Vector3 newCenterChunk)
+        {
+            bool halted = false;
+            stopwatch.Restart();
+
+            // Big optimisation missing
+            for (int i = -terrainHalfsize; i < terrainHalfsize + 1; i++)
+            {
+                if (halted)
+                {
+                    halted = false;
+                    stopwatch.Restart();
+                }
+                else if (stopwatch.ElapsedMilliseconds > 5)
+                {
+                    halted = true;
+                    yield return null;
+                }
+
+                for (int j = -terrainHalfsize; j < terrainHalfsize + 1; j++)
+                {
+                    //newPositions.Enqueue(newCenterChunk + new Vector3(i - Mathf.Sqrt(blocks.Length) / 2, 0, j - Mathf.Sqrt(blocks.Length) / 2) * chunkSize);
+                    Vector3 pos = newCenterChunk + new Vector3(i, 0, j) * blockSize;
+
+                    if (!oldPositions.Contains(pos) && (pos - newCenterChunk).magnitude <= generateDistance)
+                    {
+                        newPositions.Enqueue(pos);
+                    }
+                }
+            }
+
+
+            for (int i = 0; i < usedBlocks.Count; i++)
+            {
+                if (halted)
+                {
+                    halted = false;
+                    stopwatch.Restart();
+                }
+                else if (stopwatch.ElapsedMilliseconds > 5)
+                {
+                    halted = true;
+                    yield return null;
+                }
+
+                if (Vector3.Distance(usedBlocks[i].transform.position, newCenterChunk) >= generateDistance)
+                {
+                    oldPositions.Remove(usedBlocks[i].targetPosition);
+                    depricatedBlocks.Push(usedBlocks[i]);
+                    usedBlocks.Remove(usedBlocks[i]);
+                    i--;
+                }
+            }
+
+            HashSet<Block> updated = new HashSet<Block>();
+
+            Debug.Log("New positions amound: " + newPositions.Count);
+            Debug.Log("Depricated Blocks: " + depricatedBlocks.Count);
+
+            while (newPositions.Count > 0)
+            {
+                if (halted)
+                {
+                    halted = false;
+                    stopwatch.Restart();
+                } else if (stopwatch.ElapsedMilliseconds > 5)
+                {
+                    halted = true;
+                    yield return null;
+                }
+
+                Vector3 p = newPositions.Dequeue();
+
+                Block b = null;
+
+                if (depricatedBlocks.Count > 0)
+                {
+                    b = depricatedBlocks.Pop();
+                }
+                else
+                {
+                    b = NewBlock();
+                }
+
+                usedBlocks.Add(b);
+
+                oldPositions.Add(p);
+
+                UpdateBlock(b, newCenterChunk, p);
+                updated.Add(b);
+            }
+
+            foreach (Block b in blocks)
+            {
+                if (halted)
+                {
+                    halted = false;
+                    stopwatch.Restart();
+                }
+                else if (stopwatch.ElapsedMilliseconds > 5)
+                {
+                    halted = true;
+                    yield return null;
+                }
+
                 if (!updated.Contains(b))
                     UpdateBlock(b, newCenterChunk, b.targetPosition);
             }
@@ -477,6 +608,22 @@ namespace JStuff.Generation.Terrain
         public Vector3 GetCenterChunkPosition()
         {
             return transform.position - new Vector3(transform.position.x % blockSize, 0, transform.position.z % blockSize);
+        }
+
+        public (int LOD, int index) GetTerrainLOD(float distance)
+        {
+            if (meshLOD == null || meshLOD.Length == 0)
+            {
+                return (1, 0);
+            }
+
+            for (int i = meshLOD.Length - 1; i > 0; i--)
+            {
+                if (distance > meshLOD[i].distance)
+                    return (meshLOD[i].LOD, i);
+            }
+
+            return (1, 0);
         }
     }
 }

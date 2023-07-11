@@ -183,6 +183,7 @@ public class SimpleGraphView : UnityEditor.Experimental.GraphView.GraphView
 
     void CheckGraphValidity()
     {
+        graph.RefreshProperties();
         graph.RefreshNodes();
         if (!graph.Valid)
         {

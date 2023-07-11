@@ -287,6 +287,16 @@ namespace JStuff.GraphCreator
             return node;
         }
 
+        public void RefreshProperties()
+        {
+            if (sharedContext != null)
+                sharedContext.Clear();
+            if (uniqueContext != null)
+                uniqueContext.Clear();
+            if (uniqueContext != null || sharedContext != null)
+                SetupProperties();
+        }
+
         public void RefreshNodes()
         {
             for (int i = 0; i < nodes.Count; i++)

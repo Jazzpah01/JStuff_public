@@ -46,7 +46,7 @@ namespace JStuff.Generation.Terrain
                 
             if (meshRendererData.connectedLink != null && toEvaluate.HasFlag(BlockDataType.ColliderMesh))
             {
-                blockData.meshColliderData = TerrainMeshGeneration.GenerateLODMesh(blockData.meshRendererData, colliderLOD);
+                blockData.meshColliderData = TerrainMeshGeneration.GenerateLODMeshData(blockData.meshRendererData, colliderLOD);
             }
                 
             if (colormap.connectedLink != null && toEvaluate.HasFlag(BlockDataType.RenderMesh))

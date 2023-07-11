@@ -28,7 +28,7 @@ namespace JStuff.Generation.Terrain
             MeshData meshData = meshDataInput.Evaluate();
             int inputWidth = meshData.Width();
 
-            return TerrainMeshGeneration.GenerateLODMesh(meshData, LOD);
+            return TerrainMeshGeneration.GenerateLODMeshData(meshData, LOD);
         }
     }
 }

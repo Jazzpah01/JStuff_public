@@ -20,6 +20,7 @@ namespace JStuff.Generation.Terrain
         PropertyLink<int> seedProperty;
         PropertyLink<float> scaleProperty;
         PropertyLink<float> zoomProperty;
+        PropertyLink<int> LODProperty;
 
         public float Zoom
         {
@@ -155,6 +156,17 @@ namespace JStuff.Generation.Terrain
             }
         }
 
+        public int LOD
+        {
+            set
+            {
+                if (initialized)
+                {
+                    LODProperty.cachedValue = value;
+                }
+            }
+        }
+
         public override Type RootNodeType => typeof(TerrainRoot);
         public override Type[] NodeTypes
         {
@@ -183,6 +195,7 @@ namespace JStuff.Generation.Terrain
             AddProperty(Vector2.zero, "offset", PropertyContext.Shared, false);
             scaleProperty = AddProperty<float>(scale, "scale", PropertyContext.Shared, true);
             zoomProperty = AddProperty<float>(zoom, "zoom", PropertyContext.Shared, true);
+            LODProperty = AddProperty<int>(1, "lod", PropertyContext.Unique, false);
         }
 
         public override Graph Clone()
