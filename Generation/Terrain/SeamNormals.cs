@@ -81,11 +81,13 @@ public class Seam
 
     public static void UpdateNormals(ref Vector3[] normals, Vector3[] otherSeamNormals, int direction)
     {
-        int thisNormalSeamCount = (int)Mathf.Sqrt(normals.Length);
+        int thisNormalSeamCount = Mathf.RoundToInt(Mathf.Sqrt(normals.Length));
         int otherNormalSeamCount = otherSeamNormals.Length;
 
         int thisScale = 1 / (thisNormalSeamCount - 1);
         int otherScale = 1 / (otherNormalSeamCount - 1);
+
+        //return;
 
         if (thisNormalSeamCount == otherNormalSeamCount)
         {
@@ -93,48 +95,62 @@ public class Seam
             {
                 int meshIndex = SeamToArrayIndex(thisNormalSeamCount, direction, i);
 
-                normals[meshIndex] = otherSeamNormals[i];
+                normals[meshIndex] += otherSeamNormals[i];
             }
         }
         if (thisNormalSeamCount < otherNormalSeamCount)
         {
             // No interpolation
             int j = 0;
+
+            int LOD = (otherNormalSeamCount - 1) / (thisNormalSeamCount - 1);
             for (int i = 0; i < thisNormalSeamCount; i++)
             {
-                while((j - 1) * otherScale < (i - 1) * thisScale && Mathf.Abs((j - 1) * otherScale - (i - 1) * thisScale) > 0.0001f)
-                {
-                    j++;
-                }
-
                 int meshIndex = SeamToArrayIndex(thisNormalSeamCount, direction, i);
 
-                normals[meshIndex] += otherSeamNormals[j];
-            }
-        } else if (thisNormalSeamCount > otherNormalSeamCount)
-        {
-            // Needs interpolation
-            int j = 0;
-            for (int i = 0; i < thisNormalSeamCount; i++)
-            {
-                while ((j - 1) * otherScale < (i - 1) * thisScale && Mathf.Abs((j - 1) * otherScale - (i - 1) * thisScale) > 0.0001f)
-                {
-                    j++;
-                }
+                (int x, int z) = (i % thisNormalSeamCount, i / thisNormalSeamCount);
 
-                int meshIndex = SeamToArrayIndex(thisNormalSeamCount, direction, i);
+                //Debug.Log($"Pos: {(x, z)}. LOD: {LOD}. otherSeamIndex: {i * LOD}. This seam length: {thisNormalSeamCount}. Other seam length: {otherNormalSeamCount}.");
 
-                if (Mathf.Abs((j - 1f) * otherScale - (i - 1f) * thisScale) < 0.0001f)
-                {
-                    // same index
-                    normals[meshIndex] += otherSeamNormals[j];
-                } else
-                {
-                    float t = ((i - 1f) * thisScale).Remap((j - 2f) * otherScale, (j - 1f) * otherScale, 0f, 1f);
-                    normals[meshIndex] += otherSeamNormals[j - 1] * (1-t) + otherSeamNormals[j] * t;
-                }
+                normals[meshIndex] += otherSeamNormals[i * LOD];
+
+                //while ((j - 1) * otherScale < (i - 1) * thisScale && Mathf.Abs((j - 1) * otherScale - (i - 1) * thisScale) > 0.000001f)
+                //while (j * otherScale < i * thisScale && 
+                //    Mathf.Abs(j * otherScale - i * thisScale) > 0.00000001f)
+                //{
+                //    j++;
+                //}
+
+                //int meshIndex = SeamToArrayIndex(thisNormalSeamCount, direction, i);
+
+                //normals[meshIndex] += otherSeamNormals[j];
             }
         }
+        //else if (thisNormalSeamCount > otherNormalSeamCount)
+        //{
+        //    // Needs interpolation
+        //    int j = 0;
+        //    for (int i = 0; i < thisNormalSeamCount; i++)
+        //    {
+        //        while ((j - 1) * otherScale < (i - 1) * thisScale && Mathf.Abs((j - 1) * otherScale - (i - 1) * thisScale) > 0.0001f)
+        //        {
+        //            j++;
+        //        }
+
+        //        int meshIndex = SeamToArrayIndex(thisNormalSeamCount, direction, i);
+
+        //        if (Mathf.Abs((j - 1f) * otherScale - (i - 1f) * thisScale) < 0.0001f)
+        //        {
+        //            // same index
+        //            normals[meshIndex] += otherSeamNormals[j];
+        //        }
+        //        else
+        //        {
+        //            float t = ((i - 1f) * thisScale).Remap((j - 2f) * otherScale, (j - 1f) * otherScale, 0f, 1f);
+        //            normals[meshIndex] += otherSeamNormals[j - 1] * (1 - t) + otherSeamNormals[j] * t;
+        //        }
+        //    }
+        //}
     }
 
     public static void UpdateColors(ref Color[] colormap, Color[] seamColormap, int direction)
@@ -144,11 +160,11 @@ public class Seam
             throw new System.Exception();
         }
 
-        int thisNormalSeamCount = (int)Mathf.Sqrt(colormap.Length);
+        int thisNormalSeamCount = Mathf.RoundToInt(Mathf.Sqrt(colormap.Length));
         int otherNormalSeamCount = seamColormap.Length;
 
-        int thisScale = 1 / (thisNormalSeamCount - 1);
-        int otherScale = 1 / (otherNormalSeamCount - 1);
+        float thisScale = 1f / (thisNormalSeamCount - 1f);
+        float otherScale = 1f / (otherNormalSeamCount - 1f);
 
         if (thisNormalSeamCount == otherNormalSeamCount)
         {
@@ -159,7 +175,7 @@ public class Seam
                 colormap[meshIndex] = (colormap[meshIndex] + seamColormap[i]) / 2f;
             }
         }
-        if (thisNormalSeamCount < otherNormalSeamCount)
+        else if (thisNormalSeamCount < otherNormalSeamCount)
         {
             // No interpolation
             int j = 0;
@@ -202,15 +218,12 @@ public class Seam
         }
     }
 
-    public static void UpdateSeamNormals(MeshData thisMesh, MeshData otherMesh, ref Vector3[] normals, int direction)
+    public static void UpdateSeamNormals(MeshData otherMesh, ref Vector3[] normals, int direction)
     {
-        if (normals.Length != thisMesh.vertices.Length)
-            throw new System.Exception($"Length of normals ({normals.Length}) must be equal to Length of vertices ({thisMesh.vertices.Length})");
-
-        for (int i = 0; i < normals.Length; i++)
-        {
-            normals[i] = Vector3.zero;
-        }
+        //for (int i = 0; i < normals.Length; i++)
+        //{
+        //    normals[i] = Vector3.zero;
+        //}
 
         int otherDireciton = (direction + 2) % 4;
 
@@ -218,17 +231,24 @@ public class Seam
 
         int seamSquareCount = Mathf.RoundToInt(Mathf.Sqrt(triangleCount / 2));
 
+        int LOD = (otherMesh.sizeX - 1) / ((int)Mathf.Sqrt(normals.Length) - 1);
+
         // Get seam normals of other
         Vector3[] otherSeamNormals = new Vector3[otherMesh.sizeX];
         for (int i = 0; i < seamSquareCount; i++)
         {
             int squareIndex = SeamToArrayIndex(seamSquareCount, otherDireciton, i);
 
-            int normalTriangleIndex = squareIndex * 2 * 3;
+            int triangleIndex = squareIndex * 2 * 3;
 
-            int vertexIndexA_0 = otherMesh.triangles[normalTriangleIndex];
-            int vertexIndexB_0 = otherMesh.triangles[normalTriangleIndex + 1];
-            int vertexIndexC_0 = otherMesh.triangles[normalTriangleIndex + 2];
+            (int x, int z) = otherMesh.GetXZ(triangleIndex);
+            int vertexIndexA_0 = otherMesh.GetIndex(x, z);
+            int vertexIndexB_0 = otherMesh.GetIndex(x, z + LOD);
+            int vertexIndexC_0 = otherMesh.GetIndex(x + LOD, z + LOD);
+
+            //int vertexIndexA_0 = otherMesh.triangles[triangleIndex];
+            //int vertexIndexB_0 = otherMesh.triangles[triangleIndex + 1];
+            //int vertexIndexC_0 = otherMesh.triangles[triangleIndex + 2];
 
             Vector3 surfaceNormal = otherMesh.SurfaceNormal(vertexIndexA_0, vertexIndexB_0, vertexIndexC_0);
 
@@ -248,11 +268,16 @@ public class Seam
                 }
             }
 
-            normalTriangleIndex += 3;
+            (int x, int z) = otherMesh.GetXZ(triangleIndex);
+            int vertexIndexA_1 = otherMesh.triangles[triangleIndex + 3];
+            int vertexIndexB_1 = otherMesh.triangles[triangleIndex + 4];
+            int vertexIndexC_1 = otherMesh.triangles[triangleIndex + 5];
 
-            int vertexIndexA_1 = otherMesh.triangles[normalTriangleIndex];
-            int vertexIndexB_1 = otherMesh.triangles[normalTriangleIndex + 1];
-            int vertexIndexC_1 = otherMesh.triangles[normalTriangleIndex + 2];
+            //int vertexIndexA_1 = otherMesh.triangles[triangleIndex + 3];
+            //int vertexIndexB_1 = otherMesh.triangles[triangleIndex + 4];
+            //int vertexIndexC_1 = otherMesh.triangles[triangleIndex + 5];
+
+            surfaceNormal = otherMesh.SurfaceNormal(vertexIndexA_1, vertexIndexB_1, vertexIndexC_1);
 
             foreach (var item in new int[] { vertexIndexA_1, vertexIndexB_1, vertexIndexC_1 })
             {

@@ -23,7 +23,7 @@ namespace JStuff.Generation
 
                     if (x != map.Width - 1 && z != map.Length - 1)
                     {
-                        triangles[i] = x + map.Width * z;
+                        triangles[i]     = x + map.Width * z;
                         triangles[i + 1] = x + map.Width * (z + 1);
                         triangles[i + 2] = x + 1 + map.Width * (z + 1);
 
@@ -112,9 +112,6 @@ namespace JStuff.Generation
 
         public static Color[] GenerateLODColormap(Color[] colormap, int LOD = 1)
         {
-            if (LOD == 1)
-                return colormap;
-
             int inputWidth = (int)Mathf.Sqrt(colormap.Length);
 
             if (((inputWidth - 1) / LOD - (int)(inputWidth - 1) / LOD) != 0)
@@ -233,6 +230,11 @@ namespace JStuff.Generation
         public (int, int) GetXZ(int vertexIndex)
         {
             return (vertexIndex % sizeX, vertexIndex / sizeZ);
+        }
+
+        public int GetIndex(int x, int z)
+        {
+            return x + z * sizeX;
         }
     }
 }

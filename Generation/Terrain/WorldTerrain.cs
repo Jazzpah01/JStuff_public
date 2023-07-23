@@ -621,9 +621,9 @@ namespace JStuff.Generation.Terrain
                 return (1, 0);
             }
 
-            for (int i = meshLOD.Length - 1; i > 0; i--)
+            for (int i = meshLOD.Length - 1; i >= 0; i--)
             {
-                if (distance > meshLOD[i].distance)
+                if (distance >= meshLOD[i].distance)
                     return (meshLOD[i].LOD, i);
             }
 

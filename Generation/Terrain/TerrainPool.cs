@@ -98,7 +98,7 @@ namespace JStuff.Generation.Terrain
 
         private void Start()
         {
-            // TESTING
+            // TESTING array seam index
             int[] testArray = new int[] {
                 5, 3, 5,
                 2, 5, 0,
@@ -115,6 +115,23 @@ namespace JStuff.Generation.Terrain
                 }
                 UnityEngine.Debug.Log($"TESTING SEAM INDEX {i}: {s}");
             }
+
+            // TESTING mesh GetXZ
+            float[,] testFArray = new float[,]
+            {
+                { 0.5f, 0.5f, 0.5f },
+                { 0.5f, 0.5f, 0.5f },
+                { 0.5f, 0.5f, 0.5f }
+            };
+
+            HeightMap hm = new HeightMap(testFArray);
+
+            var meshdata = TerrainMeshGeneration.GenerateMeshData(hm, 10);
+
+            UnityEngine.Debug.Log($"TESTING MESH GetXZ: index {0} has {meshdata.GetXZ(0)}");
+            UnityEngine.Debug.Log($"TESTING MESH GetXZ: index {2} has {meshdata.GetXZ(2)}");
+            UnityEngine.Debug.Log($"TESTING MESH GetXZ: index {4} has {meshdata.GetXZ(4)}");
+            UnityEngine.Debug.Log($"TESTING MESH GetXZ: index {8} has {meshdata.GetXZ(8)}");
         }
 
         public static Vector3[] GetSeamNormals(int length)
@@ -309,6 +326,8 @@ namespace JStuff.Generation.Terrain
                     bool redoSeams = false;
                     bool hasAllNeighbors = true;
 
+                    job.block.currentData._meshRendererData.CalculateUnormalizedNormals(ref job.block.currentData._normals);
+
                     for (int direction = 0; direction < 4; direction++)
                     {
                         if (WorldTerrain.instance.blockOfCoordinates.ContainsKey(coordinatesInDirection[direction]) && WorldTerrain.instance.blockOfCoordinates[coordinatesInDirection[direction]])
@@ -320,8 +339,8 @@ namespace JStuff.Generation.Terrain
 
                             int seamSize = Mathf.RoundToInt(Mathf.Sqrt(thisBlock.currentData._colormap.Length));
 
-                            if (job.block.neighborSeamSize[direction] != seamSize)
-                            {
+                            //if (job.block.neighborSeamSize[direction] != seamSize)
+                            //{
                                 if (otherBlock.currentData != null)
                                 {
                                     MeshData thisMesh = thisBlock.currentData._meshRendererData;
@@ -332,26 +351,26 @@ namespace JStuff.Generation.Terrain
 
                                     Color[] otherColormap = otherBlock.currentData.colormap;
 
-                                    //Seam.UpdateSeamNormals(thisMesh, otherMesh, ref thisNormals, direction);
+                                    Seam.UpdateSeamNormals(otherMesh, ref thisNormals, direction);
                                     Seam.UpdateSeamColormap(ref thisColormap, otherColormap, direction);
 
                                     job.block.neighborSeamSize[direction] = seamSize;
                                 }
                                 else
                                 {
-                                    QueueRenderMesh(job.block, job.blockIteration, job.meshData, job.colormap, job.targetPosition);
+                                    redoSeams = true;
                                 }
-                            }
+                            //}
                         }
                         else
                         {
                             seamless = false;
-                            redoSeams = true;
                             hasAllNeighbors = false;
                             job.block.neighborSeamSize[direction] = -1;
                         }
                     }
 
+                    // normalize
                     for (int i = 0; i < job.block.currentData._normals.Length; i++)
                     {
                         job.block.currentData._normals[i] = job.block.currentData._normals[i].normalized;
@@ -365,6 +384,11 @@ namespace JStuff.Generation.Terrain
                     job.block.meshFilter.sharedMesh = mesh;
 
                     job.block.SetPosition(job.targetPosition);
+
+                    if (redoSeams)
+                    {
+                        QueueRenderMesh(job.block, job.blockIteration, job.meshData, job.colormap, job.targetPosition);
+                    }
                 }
             }
 
