@@ -96,6 +96,27 @@ namespace JStuff.Generation.Terrain
         static Dictionary<int, Stack<Vector3[]>> unusedSeamNormals = new Dictionary<int, Stack<Vector3[]>>();
         static Dictionary<int, Stack<Color[]>> unusedSeamColormaps = new Dictionary<int, Stack<Color[]>>();
 
+        private void Start()
+        {
+            // TESTING
+            int[] testArray = new int[] {
+                5, 3, 5,
+                2, 5, 0,
+                5, 1, 5,
+            };
+
+            for (int i = 0; i < 4; i++)
+            {
+                string s = "";
+                for (int j = 0; j < 3; j++)
+                {
+                    int arrayIndex = Seam.SeamToArrayIndex(3, i, j);
+                    s += testArray[arrayIndex];
+                }
+                UnityEngine.Debug.Log($"TESTING SEAM INDEX {i}: {s}");
+            }
+        }
+
         public static Vector3[] GetSeamNormals(int length)
         {
             if (unusedSeamNormals.ContainsKey(length) && unusedSeamNormals[length].Count > 0)
@@ -288,59 +309,56 @@ namespace JStuff.Generation.Terrain
                     bool redoSeams = false;
                     bool hasAllNeighbors = true;
 
-                    for (int i = 0; i < 4; i++)
+                    for (int direction = 0; direction < 4; direction++)
                     {
-                        if (WorldTerrain.instance.blockOfCoordinates.ContainsKey(coordinatesInDirection[i]) && WorldTerrain.instance.blockOfCoordinates[coordinatesInDirection[i]].meshDataReady)
+                        if (WorldTerrain.instance.blockOfCoordinates.ContainsKey(coordinatesInDirection[direction]) && WorldTerrain.instance.blockOfCoordinates[coordinatesInDirection[direction]])
                         {
-                            int direction = i;
-                            int oppositeDirection = (i + 2) % 4;
+                            int oppositeDirection = (direction + 2) % 4;
 
-                            Block other = WorldTerrain.instance.blockOfCoordinates[coordinatesInDirection[direction]];
-                            Seam thisSeam = job.block.seams[i];
-                            var test = other.seams; //TODO: REMOVE
-                            Seam otherSeam = other.seams[oppositeDirection];
+                            Block thisBlock = job.block;
+                            Block otherBlock = WorldTerrain.instance.blockOfCoordinates[coordinatesInDirection[direction]];
 
-                            if (job.block.neighborSeamSize[i] <= WorldTerrain.instance.blockOfCoordinates[coordinatesInDirection[direction]].seams[oppositeDirection].unormalized_normals.Length)
+                            int seamSize = Mathf.RoundToInt(Mathf.Sqrt(thisBlock.currentData._colormap.Length));
+
+                            if (job.block.neighborSeamSize[direction] != seamSize)
                             {
-                                //Vector3[] seamNormals = job.block.seamNormals[direction];
-                                //Color[] seamColormap = job.block.seamColormap[direction];
+                                if (otherBlock.currentData != null)
+                                {
+                                    MeshData thisMesh = thisBlock.currentData._meshRendererData;
+                                    MeshData otherMesh = otherBlock.currentData.meshRendererData;
 
-                                RemoveSeamNormals(job.block.seamNormals[direction]);
-                                RemoveSeamColormap(job.block.seamColormap[direction]);
+                                    Color[] thisColormap = thisBlock.currentData._colormap;
+                                    Vector3[] thisNormals = thisBlock.currentData._normals;
 
-                                Vector3[] seamNormals = GetSeamNormals(job.block.seams[i].Length);
-                                Color[] seamColormap = GetSeamColormap(job.block.seams[i].Length);
+                                    Color[] otherColormap = otherBlock.currentData.colormap;
 
-                                job.block.seams[i].CombineSeams(otherSeam, ref seamNormals, ref seamColormap);
+                                    //Seam.UpdateSeamNormals(thisMesh, otherMesh, ref thisNormals, direction);
+                                    Seam.UpdateSeamColormap(ref thisColormap, otherColormap, direction);
 
-                                job.block.seamNormals[direction] = seamNormals;
-                                job.block.seamColormap[direction] = seamColormap;
-
-                                Seam.UpdateNormalsAndColors(ref job.block.normals, ref job.block.colormap, seamNormals, seamColormap, i);
-
-                                job.block.neighborSeamSize[i] = otherSeam.unormalized_normals.Length;
+                                    job.block.neighborSeamSize[direction] = seamSize;
+                                }
+                                else
+                                {
+                                    QueueRenderMesh(job.block, job.blockIteration, job.meshData, job.colormap, job.targetPosition);
+                                }
                             }
-
-                            if (thisSeam.positions.Length < otherSeam.unormalized_normals.Length)
-                            {
-                                seamless = false;
-                            }
-                        } else
+                        }
+                        else
                         {
                             seamless = false;
                             redoSeams = true;
                             hasAllNeighbors = false;
-                            job.block.neighborSeamSize[i] = -1;
+                            job.block.neighborSeamSize[direction] = -1;
                         }
                     }
 
-                    for (int i = 0; i < job.block.normals.Length; i++)
+                    for (int i = 0; i < job.block.currentData._normals.Length; i++)
                     {
-                        job.block.normals[i] = job.block.normals[i].normalized;
+                        job.block.currentData._normals[i] = job.block.currentData._normals[i].normalized;
                     }
 
-                    mesh.normals = job.block.normals;
-                    mesh.colors = job.block.colormap;
+                    mesh.normals = job.block.currentData._normals;
+                    mesh.colors = job.block.currentData._colormap;
 
                     job.block.seamless = seamless;
 

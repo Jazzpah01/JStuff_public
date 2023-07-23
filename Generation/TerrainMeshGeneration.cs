@@ -181,15 +181,6 @@ namespace JStuff.Generation
             }
         }
 
-        //public Seam CalculateSeam(int direction, int length)
-        //{
-        //    Vector3[] normals = new Vector3[length];
-        //    Color[] color = new Color[length];
-        //    float[] positions = new float[length];
-
-
-        //}
-
         public Vector3 SurfaceNormal(int indexA, int indexB, int indexC)
         {
             Vector3 a = vertices[indexA];

@@ -11,116 +11,128 @@ public class Seam
     public Vector3[] unormalized_normals;
     public float[] positions;
 
-    public Seam(Vector3[] unormalizedMeshNormals, Color[] colormap, int direction)
+    //public Seam(Vector3[] unormalizedMeshNormals, Color[] colormap, int direction)
+    //{
+    //    Length = (int) Mathf.Sqrt(unormalizedMeshNormals.Length);
+    //    seamColors = new Color[Length];
+    //    unormalized_normals = new Vector3[Length];
+    //    positions = new float[Length];
+
+    //    if (direction == 0)
+    //    {
+    //        // Right
+    //        for (int i = 0; i < Length; i++)
+    //        {
+    //            int meshIndex = i * Length + Length - 1;
+
+    //            unormalized_normals[i] = unormalizedMeshNormals[meshIndex];
+    //            seamColors[i] = colormap[meshIndex];
+    //        }
+    //    } else if (direction == 1)
+    //    {
+    //        // Up
+    //        for (int i = 0; i < Length; i++)
+    //        {
+    //            int meshIndex = i + Length * Length - Length;
+
+    //            unormalized_normals[i] = unormalizedMeshNormals[meshIndex];
+    //            seamColors[i] = colormap[meshIndex];
+    //        }
+    //    } else if (direction == 2)
+    //    {
+    //        // Left
+    //        for (int i = 0; i < Length; i++)
+    //        {
+    //            int meshIndex = i * Length;
+
+    //            unormalized_normals[i] = unormalizedMeshNormals[meshIndex];
+    //            seamColors[i] = colormap[meshIndex];
+    //        }
+    //    } else if (direction == 3)
+    //    {
+    //        // Down
+    //        for (int i = 0; i < Length; i++)
+    //        {
+    //            int meshIndex = i;
+
+    //            unormalized_normals[i] = unormalizedMeshNormals[meshIndex];
+    //            seamColors[i] = colormap[meshIndex];
+    //        }
+    //    }
+    //}
+
+    //public Seam(Color[] seamColors, Vector3[] unormalized_normals, float[] positions)
+    //{
+    //    if (seamColors == null || unormalized_normals == null || positions == null ||
+    //        seamColors.Length != unormalized_normals.Length || seamColors.Length != positions.Length)
+    //        throw new System.Exception();
+
+    //    this.seamColors = seamColors;
+    //    this.unormalized_normals = unormalized_normals;
+    //    this.positions = positions;
+
+    //    this.Length = positions.Length;
+    //}
+
+    //public bool SharedAmount(Seam other)
+    //{
+    //    return other.positions.Length == positions.Length;
+    //}
+
+    public static void UpdateNormals(ref Vector3[] normals, Vector3[] otherSeamNormals, int direction)
     {
-        Length = (int) Mathf.Sqrt(unormalizedMeshNormals.Length);
-        seamColors = new Color[Length];
-        unormalized_normals = new Vector3[Length];
-        positions = new float[Length];
+        int thisNormalSeamCount = (int)Mathf.Sqrt(normals.Length);
+        int otherNormalSeamCount = otherSeamNormals.Length;
 
-        if (direction == 0)
+        int thisScale = 1 / (thisNormalSeamCount - 1);
+        int otherScale = 1 / (otherNormalSeamCount - 1);
+
+        if (thisNormalSeamCount == otherNormalSeamCount)
         {
-            // Right
-            for (int i = 0; i < Length; i++)
+            for (int i = 0; i < thisNormalSeamCount; i++)
             {
-                int meshIndex = i * Length + Length - 1;
+                int meshIndex = SeamToArrayIndex(thisNormalSeamCount, direction, i);
 
-                unormalized_normals[i] = unormalizedMeshNormals[meshIndex];
-                seamColors[i] = colormap[meshIndex];
-            }
-        } else if (direction == 1)
-        {
-            // Up
-            for (int i = 0; i < Length; i++)
-            {
-                int meshIndex = i + Length * Length - Length;
-
-                unormalized_normals[i] = unormalizedMeshNormals[meshIndex];
-                seamColors[i] = colormap[meshIndex];
-            }
-        } else if (direction == 2)
-        {
-            // Left
-            for (int i = 0; i < Length; i++)
-            {
-                int meshIndex = i * Length;
-
-                unormalized_normals[i] = unormalizedMeshNormals[meshIndex];
-                seamColors[i] = colormap[meshIndex];
-            }
-        } else if (direction == 3)
-        {
-            // Down
-            for (int i = 0; i < Length; i++)
-            {
-                int meshIndex = i;
-
-                unormalized_normals[i] = unormalizedMeshNormals[meshIndex];
-                seamColors[i] = colormap[meshIndex];
+                normals[meshIndex] = otherSeamNormals[i];
             }
         }
-    }
-
-    public Seam(Color[] seamColors, Vector3[] unormalized_normals, float[] positions)
-    {
-        if (seamColors == null || unormalized_normals == null || positions == null ||
-            seamColors.Length != unormalized_normals.Length || seamColors.Length != positions.Length)
-            throw new System.Exception();
-
-        this.seamColors = seamColors;
-        this.unormalized_normals = unormalized_normals;
-        this.positions = positions;
-
-        this.Length = positions.Length;
-    }
-
-    public bool SharedAmount(Seam other)
-    {
-        return other.positions.Length == positions.Length;
-    }
-
-    public static void UpdateNormals(ref Vector3[] normals, Vector3[] seamNormals, int direction)
-    {
-        int sideCount = (int)Mathf.Sqrt(normals.Length);
-
-        if (direction == 0)
+        if (thisNormalSeamCount < otherNormalSeamCount)
         {
-            // Right
-            for (int i = 0; i < sideCount; i++)
+            // No interpolation
+            int j = 0;
+            for (int i = 0; i < thisNormalSeamCount; i++)
             {
-                int meshIndex = i * sideCount + sideCount - 1;
+                while((j - 1) * otherScale < (i - 1) * thisScale && Mathf.Abs((j - 1) * otherScale - (i - 1) * thisScale) > 0.0001f)
+                {
+                    j++;
+                }
 
-                normals[meshIndex] = seamNormals[i];
+                int meshIndex = SeamToArrayIndex(thisNormalSeamCount, direction, i);
+
+                normals[meshIndex] += otherSeamNormals[j];
             }
-        }
-        else if (direction == 1)
+        } else if (thisNormalSeamCount > otherNormalSeamCount)
         {
-            // Up
-            for (int i = 0; i < sideCount; i++)
+            // Needs interpolation
+            int j = 0;
+            for (int i = 0; i < thisNormalSeamCount; i++)
             {
-                int meshIndex = i + sideCount * sideCount - sideCount;
+                while ((j - 1) * otherScale < (i - 1) * thisScale && Mathf.Abs((j - 1) * otherScale - (i - 1) * thisScale) > 0.0001f)
+                {
+                    j++;
+                }
 
-                normals[meshIndex] = seamNormals[i];
-            }
-        }
-        else if (direction == 2)
-        {
-            // Left
-            for (int i = 0; i < sideCount; i++)
-            {
-                int meshIndex = i * sideCount;
+                int meshIndex = SeamToArrayIndex(thisNormalSeamCount, direction, i);
 
-                normals[meshIndex] = seamNormals[i];
-            }
-        }
-        else if (direction == 3)
-        {
-            // Down
-            for (int i = 0; i < sideCount; i++)
-            {
-                int meshIndex = i;
-
-                normals[meshIndex] = seamNormals[i];
+                if (Mathf.Abs((j - 1f) * otherScale - (i - 1f) * thisScale) < 0.0001f)
+                {
+                    // same index
+                    normals[meshIndex] += otherSeamNormals[j];
+                } else
+                {
+                    float t = ((i - 1f) * thisScale).Remap((j - 2f) * otherScale, (j - 1f) * otherScale, 0f, 1f);
+                    normals[meshIndex] += otherSeamNormals[j - 1] * (1-t) + otherSeamNormals[j] * t;
+                }
             }
         }
     }
@@ -132,233 +144,65 @@ public class Seam
             throw new System.Exception();
         }
 
-        int sideCount = (int)Mathf.Sqrt(colormap.Length);
+        int thisNormalSeamCount = (int)Mathf.Sqrt(colormap.Length);
+        int otherNormalSeamCount = seamColormap.Length;
 
-        if (direction == 0)
+        int thisScale = 1 / (thisNormalSeamCount - 1);
+        int otherScale = 1 / (otherNormalSeamCount - 1);
+
+        if (thisNormalSeamCount == otherNormalSeamCount)
         {
-            // Right
-            for (int i = 0; i < sideCount; i++)
+            for (int i = 0; i < thisNormalSeamCount; i++)
             {
-                int meshIndex = i * sideCount + sideCount - 1;
+                int meshIndex = SeamToArrayIndex(thisNormalSeamCount, direction, i);
 
-                colormap[meshIndex] = seamColormap[i];
+                colormap[meshIndex] = (colormap[meshIndex] + seamColormap[i]) / 2f;
             }
         }
-        else if (direction == 1)
-        {
-            // Up
-            for (int i = 0; i < sideCount; i++)
-            {
-                int meshIndex = i + sideCount * sideCount - sideCount;
-
-                colormap[meshIndex] = seamColormap[i];
-            }
-        }
-        else if (direction == 2)
-        {
-            // Left
-            for (int i = 0; i < sideCount; i++)
-            {
-                int meshIndex = i * sideCount;
-
-                colormap[meshIndex] = seamColormap[i];
-            }
-        }
-        else if (direction == 3)
-        {
-            // Down
-            for (int i = 0; i < sideCount; i++)
-            {
-                int meshIndex = i;
-
-                colormap[meshIndex] = seamColormap[i];
-            }
-        }
-    }
-
-    public static void UpdateNormalsAndColors(ref Vector3[] normals, ref Color[] colormap, Vector3[] seamNormals, Color[] seamColormap, int direction)
-    {
-        if (normals.Length != colormap.Length)
-        {
-            throw new System.Exception($"Length of normals ({normals.Length}) is not equal length of colormap ({colormap.Length}).");
-        }
-        if (normals.Length != seamNormals.Length * seamColormap.Length)
-        {
-            throw new System.Exception($"Length of normals ({normals.Length}) is not equal length of seam normals squared ({seamNormals.Length * seamNormals.Length}).");
-        }
-        if (seamNormals.Length != seamColormap.Length)
-        {
-            throw new System.Exception();
-        }
-        if (direction < 0 || direction >= 4)
-        {
-            throw new System.Exception();
-        }
-
-        int sideCount = (int)Mathf.Sqrt(normals.Length);
-
-        if (direction == 0)
-        {
-            // Right
-            for (int i = 0; i < sideCount; i++)
-            {
-                int meshIndex = i * sideCount + sideCount - 1;
-
-                normals[meshIndex] = seamNormals[i];
-                colormap[meshIndex] = seamColormap[i];
-            }
-        }
-        else if (direction == 1)
-        {
-            // Up
-            for (int i = 0; i < sideCount; i++)
-            {
-                int meshIndex = i + sideCount * sideCount - sideCount;
-
-                normals[meshIndex] = seamNormals[i];
-                colormap[meshIndex] = seamColormap[i];
-            }
-        }
-        else if (direction == 2)
-        {
-            // Left
-            for (int i = 0; i < sideCount; i++)
-            {
-                int meshIndex = i * sideCount;
-
-                normals[meshIndex] = seamNormals[i];
-                colormap[meshIndex] = seamColormap[i];
-            }
-        }
-        else if (direction == 3)
-        {
-            // Down
-            for (int i = 0; i < sideCount; i++)
-            {
-                int meshIndex = i;
-
-                normals[meshIndex] = seamNormals[i];
-                colormap[meshIndex] = seamColormap[i];
-            }
-        }
-    }
-
-    public void CombineSeams(Seam other, ref Vector3[] newSeamNormals, ref Color[] newSeamColors)
-    {
-        int diff = positions.Length - other.positions.Length;
-
-        if (diff == 0)
-        {
-            for (int i = 0; i < positions.Length; i++)
-            {
-                try
-                {
-                    newSeamNormals[i] = (unormalized_normals[i] + other.unormalized_normals[i]).normalized;
-                    newSeamColors[i] = Color.Lerp(seamColors[i], other.seamColors[i], 0.5f);
-                } catch
-                {
-                    Debug.Log($"Not wotking!!! Length of seam is {this.Length}. Length of normals is: {newSeamNormals.Length}");
-                }
-                
-            }
-        }
-        else if (positions.Length < other.positions.Length)
+        if (thisNormalSeamCount < otherNormalSeamCount)
         {
             // No interpolation
             int j = 0;
-            for (int i = 0; i < positions.Length; i++)
+            for (int i = 0; i < thisNormalSeamCount; i++)
             {
-                while (other.positions[j] < positions[i])
+                while ((j - 1) * otherScale < (i - 1) * thisScale && Mathf.Abs((j - 1) * otherScale - (i - 1) * thisScale) > 0.0001f)
                 {
                     j++;
                 }
 
-                newSeamNormals[i] = (unormalized_normals[i] + other.unormalized_normals[j]).normalized;
-                newSeamColors[i] = Color.Lerp(seamColors[i], other.seamColors[j], 0.5f);
+                int meshIndex = SeamToArrayIndex(thisNormalSeamCount, direction, i);
+
+                colormap[meshIndex] = (colormap[meshIndex] + seamColormap[j]) / 2f;
             }
         }
-        else if (positions.Length > other.positions.Length)
+        else if (thisNormalSeamCount > otherNormalSeamCount)
         {
             // Needs interpolation
             int j = 0;
-            for (int i = 0; i < positions.Length; i++)
+            for (int i = 0; i < thisNormalSeamCount; i++)
             {
-                while (other.positions[j] < positions[i])
+                while ((j - 1) * otherScale < (i - 1) * thisScale && Mathf.Abs((j - 1) * otherScale - (i - 1) * thisScale) > 0.0001f)
                 {
                     j++;
                 }
 
-                if (other.positions[j] == positions[i])
+                int meshIndex = SeamToArrayIndex(thisNormalSeamCount, direction, i);
+
+                if (Mathf.Abs((j - 1f) * otherScale - (i - 1f) * thisScale) < 0.0001f)
                 {
-                    newSeamNormals[i] = (unormalized_normals[i] + other.unormalized_normals[j]).normalized;
-                    newSeamColors[i] = Color.Lerp(seamColors[i], other.seamColors[j], 0.5f);
+                    // same index
+                    colormap[meshIndex] += seamColormap[j];
                 }
                 else
                 {
-                    // position i is between position j and position j - 1
-                    float t = (positions[i] - other.positions[j - 1]).Remap(0, other.positions[j] - other.positions[j - 1], 0, 1);
-                    Color otherColor = Color.Lerp(other.seamColors[j - 1], other.seamColors[j], t);
-                    Vector3 otherUNormal = other.unormalized_normals[j - 1] * (1 - t) + other.unormalized_normals[j] * t;
-                    newSeamNormals[i] = (unormalized_normals[i] + otherUNormal).normalized;
-                    newSeamColors[i] = Color.Lerp(seamColors[i], otherColor, 0.5f);
+                    float t = ((i - 1f) * thisScale).Remap((j - 2f) * otherScale, (j - 1f) * otherScale, 0f, 1f);
+                    colormap[meshIndex] = (colormap[meshIndex] + seamColormap[j - 1] * (1 - t) + seamColormap[j] * t) / 2;
                 }
             }
         }
     }
 
-    public Vector3[] CombineSeamsNormals(Seam other)
-    {
-        int diff = positions.Length - other.positions.Length;
-
-        Vector3[] retval = new Vector3[positions.Length];
-
-        if (diff == 0)
-        {
-            for (int i = 0; i < positions.Length; i++)
-            {
-                retval[i] = (unormalized_normals[i] + other.unormalized_normals[i]).normalized;
-            }
-        } else if (positions.Length < other.positions.Length)
-        {
-            // No interpolation
-            int j = 0;
-            for (int i = 0; i < positions.Length; i++)
-            {
-                while (other.positions[j] < positions[i])
-                {
-                    j++;
-                }
-
-                retval[i] = (unormalized_normals[i] + other.unormalized_normals[j]).normalized;
-            }
-        } else if (positions.Length > other.positions.Length)
-        {
-            // Needs interpolation
-            int j = 0;
-            for (int i = 0; i < positions.Length; i++)
-            {
-                while (other.positions[j] < positions[i])
-                {
-                    j++;
-                }
-
-                if (other.positions[j] == positions[i])
-                {
-                    retval[i] = (unormalized_normals[i] + other.unormalized_normals[j]).normalized;
-                } else
-                {
-                    // position i is between position j and position j - 1
-                    float t = (positions[i] - other.positions[j - 1]).Remap(0, other.positions[j] - other.positions[j - 1], 0, 1);
-                    Vector3 otherUNormal = other.unormalized_normals[j - 1] * (1 - t) + other.unormalized_normals[j] * t;
-                    retval[i] = (unormalized_normals[i] + otherUNormal).normalized;
-                }
-            }
-        }
-
-        return retval;
-    }
-
-    public void UpdateSeamNormals(MeshData thisMesh, MeshData otherMesh, ref Vector3[] normals, int direction)
+    public static void UpdateSeamNormals(MeshData thisMesh, MeshData otherMesh, ref Vector3[] normals, int direction)
     {
         if (normals.Length != thisMesh.vertices.Length)
             throw new System.Exception($"Length of normals ({normals.Length}) must be equal to Length of vertices ({thisMesh.vertices.Length})");
@@ -434,19 +278,19 @@ public class Seam
 
     public static void UpdateSeamColormap(ref Color[] colormap, Color[] otherColormap, int direction)
     {
-        int seamLength = Mathf.RoundToInt(Mathf.Sqrt(otherColormap.Length));
+        int otherSeamLength = Mathf.RoundToInt(Mathf.Sqrt(otherColormap.Length));
         int otherDirection = (direction + 2) % 4;
 
-        Color[] seamColors = new Color[seamLength];
+        Color[] seamColors = new Color[otherSeamLength];
 
-        for (int i = 0; i < seamLength; i++)
+        for (int i = 0; i < otherSeamLength; i++)
         {
-            int otherIndex = SeamToArrayIndex(seamLength, otherDirection, i);
+            int otherIndex = SeamToArrayIndex(otherSeamLength, otherDirection, i);
 
             seamColors[i] = otherColormap[otherIndex];
         }
 
-        
+        UpdateColors(ref colormap, seamColors, direction);
 
         // TODO: Implement this better solution, but where colormap can be of different size than otherColormap
         //int seamLength = Mathf.RoundToInt(Mathf.Sqrt(colormap.Length));
@@ -476,7 +320,7 @@ public class Seam
         {
             case 0:
                 // Right
-                return seamCount * i + seamCount;
+                return seamCount * i + (seamCount - 1);
             case 1:
                 // Up
                 return seamCount * (seamCount - 1) + i;

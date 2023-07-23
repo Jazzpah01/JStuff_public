@@ -13,8 +13,7 @@ namespace JStuff.Generation.Terrain
 
         public MeshData _meshRendererData;
         public Color[] _colormap;
+        public Vector3[] _normals;
         public MeshData _meshColliderData;
-
-        public List<Seam> _seamNormals;
     }
 }
