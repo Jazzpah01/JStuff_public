@@ -93,6 +93,64 @@ namespace JStuff.Generation.Terrain
 
         private static Stopwatch stopwatch = new Stopwatch();
 
+        static Dictionary<int, Stack<Vector3[]>> unusedSeamNormals = new Dictionary<int, Stack<Vector3[]>>();
+        static Dictionary<int, Stack<Color[]>> unusedSeamColormaps = new Dictionary<int, Stack<Color[]>>();
+
+        public static Vector3[] GetSeamNormals(int length)
+        {
+            if (unusedSeamNormals.ContainsKey(length) && unusedSeamNormals[length].Count > 0)
+            {
+                return unusedSeamNormals[length].Pop();
+            } else
+            {
+                return new Vector3[length];
+            }
+        }
+
+        public static void RemoveSeamNormals(Vector3[] seamNormals)
+        {
+            if (seamNormals == null || seamNormals.Length == 0)
+                return;
+
+            if (unusedSeamNormals.ContainsKey(seamNormals.Length))
+            {
+                unusedSeamNormals[seamNormals.Length].Push(seamNormals);
+            }
+            else
+            {
+                unusedSeamNormals.Add(seamNormals.Length, new Stack<Vector3[]>());
+                unusedSeamNormals[seamNormals.Length].Push(seamNormals);
+            }
+        }
+
+        public static Color[] GetSeamColormap(int length)
+        {
+            if (unusedSeamNormals.ContainsKey(length) && unusedSeamNormals[length].Count > 0)
+            {
+                return unusedSeamColormaps[length].Pop();
+            }
+            else
+            {
+                return new Color[length];
+            }
+        }
+
+        public static void RemoveSeamColormap(Color[] seamColormap)
+        {
+            if (seamColormap == null || seamColormap.Length == 0)
+                return;
+
+            if (unusedSeamColormaps.ContainsKey(seamColormap.Length))
+            {
+                unusedSeamColormaps[seamColormap.Length].Push(seamColormap);
+            }
+            else
+            {
+                unusedSeamColormaps.Add(seamColormap.Length, new Stack<Color[]>());
+                unusedSeamColormaps[seamColormap.Length].Push(seamColormap);
+            }
+        }
+
         private void Awake()
         {
             freeObjects = new Dictionary<GameObject, Stack<GameObject>>();
@@ -217,9 +275,74 @@ namespace JStuff.Generation.Terrain
                     mesh.vertices = job.meshData.vertices;
                     mesh.uv = job.meshData.uv;
                     mesh.triangles = job.meshData.triangles;
-                    mesh.colors = job.colormap;
-                    mesh.RecalculateNormals();
-                    mesh.RecalculateTangents();
+
+                    TerrainCoordinate blockCoordinates = job.block.GetCoordinates();
+                    TerrainCoordinate[] coordinatesInDirection = new TerrainCoordinate[] { 
+                        blockCoordinates + new TerrainCoordinate(1, 0),
+                        blockCoordinates + new TerrainCoordinate(0, 1),
+                        blockCoordinates + new TerrainCoordinate(-1, 0),
+                        blockCoordinates + new TerrainCoordinate(0, -1),
+                    };
+
+                    bool seamless = true;
+                    bool redoSeams = false;
+                    bool hasAllNeighbors = true;
+
+                    for (int i = 0; i < 4; i++)
+                    {
+                        if (WorldTerrain.instance.blockOfCoordinates.ContainsKey(coordinatesInDirection[i]) && WorldTerrain.instance.blockOfCoordinates[coordinatesInDirection[i]].meshDataReady)
+                        {
+                            int direction = i;
+                            int oppositeDirection = (i + 2) % 4;
+
+                            Block other = WorldTerrain.instance.blockOfCoordinates[coordinatesInDirection[direction]];
+                            Seam thisSeam = job.block.seams[i];
+                            var test = other.seams; //TODO: REMOVE
+                            Seam otherSeam = other.seams[oppositeDirection];
+
+                            if (job.block.neighborSeamSize[i] <= WorldTerrain.instance.blockOfCoordinates[coordinatesInDirection[direction]].seams[oppositeDirection].unormalized_normals.Length)
+                            {
+                                //Vector3[] seamNormals = job.block.seamNormals[direction];
+                                //Color[] seamColormap = job.block.seamColormap[direction];
+
+                                RemoveSeamNormals(job.block.seamNormals[direction]);
+                                RemoveSeamColormap(job.block.seamColormap[direction]);
+
+                                Vector3[] seamNormals = GetSeamNormals(job.block.seams[i].Length);
+                                Color[] seamColormap = GetSeamColormap(job.block.seams[i].Length);
+
+                                job.block.seams[i].CombineSeams(otherSeam, ref seamNormals, ref seamColormap);
+
+                                job.block.seamNormals[direction] = seamNormals;
+                                job.block.seamColormap[direction] = seamColormap;
+
+                                Seam.UpdateNormalsAndColors(ref job.block.normals, ref job.block.colormap, seamNormals, seamColormap, i);
+
+                                job.block.neighborSeamSize[i] = otherSeam.unormalized_normals.Length;
+                            }
+
+                            if (thisSeam.positions.Length < otherSeam.unormalized_normals.Length)
+                            {
+                                seamless = false;
+                            }
+                        } else
+                        {
+                            seamless = false;
+                            redoSeams = true;
+                            hasAllNeighbors = false;
+                            job.block.neighborSeamSize[i] = -1;
+                        }
+                    }
+
+                    for (int i = 0; i < job.block.normals.Length; i++)
+                    {
+                        job.block.normals[i] = job.block.normals[i].normalized;
+                    }
+
+                    mesh.normals = job.block.normals;
+                    mesh.colors = job.block.colormap;
+
+                    job.block.seamless = seamless;
 
                     job.block.meshFilter.sharedMesh = mesh;
 

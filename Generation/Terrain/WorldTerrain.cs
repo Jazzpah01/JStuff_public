@@ -40,7 +40,8 @@ namespace JStuff.Generation.Terrain
         public GameObject parentBlock;
         public GameObject savedBlocksParent;
 
-
+        // Coordinate to block
+        public Dictionary<TerrainCoordinate, Block> blockOfCoordinates;
 
 
         private Block[] savedBlocks;
@@ -150,9 +151,12 @@ namespace JStuff.Generation.Terrain
 
             Initialize();
 
+            blockOfCoordinates = new Dictionary<TerrainCoordinate, Block>();
+
             foreach (Block block in savedBlocks)
             {
-                savedCoordinates.Add(block.GetCoordinates());
+                savedCoordinates.Add(block.GetCoordinates()); // This is done in initialize too, double done???
+                blockOfCoordinates.Add(block.GetCoordinates(), block);
             }
 
             if (raymarchingTerrain)

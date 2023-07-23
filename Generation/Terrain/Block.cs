@@ -24,6 +24,18 @@ namespace JStuff.Generation.Terrain
         BlockData oldData;
         BlockData currentData;
 
+        // For calculating seam normals
+        public bool newNormals = true;
+        public Vector3[] normals;
+        public Color[] colormap;
+        public List<Vector3[]> seamNormals = new List<Vector3[]>();
+        public List<Color[]> seamColormap = new List<Color[]>();
+        public List<Seam> seams;
+        public int[] neighborSeamSize = new int[] { -1, -1, -1, -1 };
+        public bool meshDataReady = false;
+
+        public bool seamless = false;
+
         public GameObject colliderObject;
 
         public Vector3 targetPosition;
@@ -40,11 +52,43 @@ namespace JStuff.Generation.Terrain
 
         Mesh[] meshLOD;
         MeshRenderer[] meshRendererLOD;
-        int currenMeshLOD = -1;
-        int targetLOD = -1;
+        int currentMeshLOD = -1;
+        public int targetLOD = -1;
 
         public int Priority => priority;
         int priority = 0;
+
+        public bool RedoSeams
+        {
+            get
+            {
+                TerrainCoordinate blockCoordinates = GetCoordinates();
+                TerrainCoordinate[] coordinatesInDirection = new TerrainCoordinate[] {
+                        blockCoordinates + new TerrainCoordinate(1, 0),
+                        blockCoordinates + new TerrainCoordinate(0, 1),
+                        blockCoordinates + new TerrainCoordinate(-1, 0),
+                        blockCoordinates + new TerrainCoordinate(0, -1),
+                    };
+
+                for (int i = 0; i < 4; i++)
+                {
+                    if (terrain.blockOfCoordinates.ContainsKey(coordinatesInDirection[i]))
+                    {
+                        if (terrain.blockOfCoordinates[coordinatesInDirection[i]].currentData._seamNormals[(i + 2) % 4].positions.Length > neighborSeamSize[i] &&
+                        neighborSeamSize[i] < currentData._seamNormals[i].positions.Length)
+                        {
+
+                        }
+                        else
+                        {
+                            return true;
+                        }
+                    }
+                }
+
+                return false;
+            }
+        }
 
         private void Start()
         {
@@ -91,45 +135,49 @@ namespace JStuff.Generation.Terrain
             BlockData data = ((TerrainGraph)graph).EvaluateGraph();
             ConsumeJob(data);
         }
-#endif
-
-        public object Job(object graph)
-        {
-            BlockData retval = ((TerrainGraph)graph).EvaluateGraph();
-
-            retval._meshRendererData = TerrainMeshGeneration.GenerateLODMeshData(retval.meshRendererData, targetLOD);
-            retval._colormap = TerrainMeshGeneration.GenerateLODColormap(retval.colormap, targetLOD);
-
-            retval._meshColliderData = TerrainMeshGeneration.GenerateLODMeshData(retval.meshColliderData, terrain.colliderLOD);
-
-            return retval;
-        }
-
-        public void ConsumeJob(object data)
-        {
-            currentData = (BlockData)data;
-            ApplyData();
-            waitingJobResult = false;
-        }
-
-        public void JobFailed()
-        {
-            throw new System.NotImplementedException("Job failed!");
-        }
-
-        public void UpdateValues(Vector3 centerPosition, Vector3 newPosition)
-        {
-            graph.CenterPosition = new Vector2(centerPosition.x, centerPosition.z);
-            graph.ChunkPosition = new Vector2(newPosition.x, newPosition.z);
-            targetPosition = newPosition;
-        }
 
         public void UpdateBlock(Vector3 centerPosition, Vector3 newPosition)
         {
             (int LOD, int index) = terrain.GetTerrainLOD(Vector3.Distance(newPosition, centerPosition));
 
-            if (iteration != 0 && (LOD == currenMeshLOD && newPosition == oldTargetPosition))
+            if (iteration == 0)
+            {
+                meshDataReady = false;
+            }
+
+            if (iteration != 0 && (LOD == currentMeshLOD && newPosition == oldTargetPosition))
+            {
+                if (RedoSeams)
+                {
+                    TerrainPool.QueueRenderMesh(this, iteration, currentData._meshRendererData, currentData._colormap, targetPosition);
+                }
                 return;
+            }
+
+            if (LOD != targetLOD && iteration > 0)
+            {
+                int newSeamLength = ((currentData.meshRendererData.sizeX - 1) / LOD) + 1;
+                Debug.Log($"New seam length: {newSeamLength}. LOD: {LOD}.");
+                int newVertexLength = newSeamLength * newSeamLength;
+
+                normals = new Vector3[newVertexLength];
+                colormap = new Color[newVertexLength];
+
+                TerrainPool.RemoveSeamNormals(normals);
+                normals = TerrainPool.GetSeamNormals(newVertexLength);
+
+                TerrainPool.RemoveSeamColormap(colormap);
+                colormap = TerrainPool.GetSeamColormap(newVertexLength);
+
+                for (int i = 0; i < seamNormals.Count; i++)
+                {
+                    TerrainPool.RemoveSeamNormals(seamNormals[i]);
+                    seamNormals[i] = TerrainPool.GetSeamNormals(newSeamLength);
+
+                    TerrainPool.RemoveSeamColormap(seamColormap[i]);
+                    seamColormap[i] = TerrainPool.GetSeamColormap(newSeamLength);
+                }
+            }
 
             if (waitingJobResult)
             {
@@ -152,8 +200,97 @@ namespace JStuff.Generation.Terrain
             {
                 currentData = Job(graph) as BlockData;
                 ConsumeJob(currentData);
+                meshDataReady = true;
             }
         }
+#endif
+
+        public object Job(object graph)
+        {
+            BlockData retval = ((TerrainGraph)graph).EvaluateGraph();
+
+            retval._meshRendererData = TerrainMeshGeneration.GenerateLODMeshData(retval.meshRendererData, targetLOD);
+            retval._colormap = TerrainMeshGeneration.GenerateLODColormap(retval.colormap, targetLOD);
+
+            retval._meshColliderData = TerrainMeshGeneration.GenerateLODMeshData(retval.meshColliderData, terrain.colliderLOD);
+
+            if (normals == null || !initialized
+                //|| normals.Length != retval._meshRendererData.vertices.Length || targetPosition != oldTargetPosition
+                )
+            {
+                normals = new Vector3[retval._meshRendererData.vertices.Length];
+                colormap = new Color[retval._meshRendererData.vertices.Length];
+
+                int seamLength = Mathf.RoundToInt(Mathf.Sqrt(normals.Length));
+
+                seamNormals.Clear();
+                seamNormals.Add(new Vector3[seamLength]);
+                seamNormals.Add(new Vector3[seamLength]);
+                seamNormals.Add(new Vector3[seamLength]);
+                seamNormals.Add(new Vector3[seamLength]);
+
+                seamColormap.Clear();
+                seamColormap.Add(new Color[seamLength]);
+                seamColormap.Add(new Color[seamLength]);
+                seamColormap.Add(new Color[seamLength]);
+                seamColormap.Add(new Color[seamLength]);
+
+                retval._meshRendererData.CalculateUnormalizedNormals(ref normals);
+
+                for (int i = 0; i < colormap.Length; i++)
+                {
+                    colormap[i] = retval._colormap[i];
+                }
+
+                retval._seamNormals = new List<Seam>();
+                retval._seamNormals.Add(new Seam(normals, retval._colormap, 0));
+                retval._seamNormals.Add(new Seam(normals, retval._colormap, 1));
+                retval._seamNormals.Add(new Seam(normals, retval._colormap, 2));
+                retval._seamNormals.Add(new Seam(normals, retval._colormap, 3));
+            } else if (normals.Length != retval._meshRendererData.vertices.Length || targetPosition != oldTargetPosition)
+            {
+                int seamLength = Mathf.RoundToInt(Mathf.Sqrt(normals.Length));
+
+                retval._meshRendererData.CalculateUnormalizedNormals(ref normals);
+
+                for (int i = 0; i < colormap.Length; i++)
+                {
+                    colormap[i] = retval._colormap[i];
+                }
+
+                retval._seamNormals = new List<Seam>();
+                retval._seamNormals.Add(new Seam(normals, retval._colormap, 0));
+                retval._seamNormals.Add(new Seam(normals, retval._colormap, 1));
+                retval._seamNormals.Add(new Seam(normals, retval._colormap, 2));
+                retval._seamNormals.Add(new Seam(normals, retval._colormap, 3));
+            }
+
+            return retval;
+        }
+
+        public void ConsumeJob(object data)
+        {
+            currentData = (BlockData)data;
+            if (currentData._seamNormals != null)
+                seams = currentData._seamNormals;
+            ApplyData();
+            waitingJobResult = false;
+            meshDataReady = true;
+        }
+
+        public void JobFailed()
+        {
+            throw new System.NotImplementedException("Job failed!");
+        }
+
+        public void UpdateValues(Vector3 centerPosition, Vector3 newPosition)
+        {
+            graph.CenterPosition = new Vector2(centerPosition.x, centerPosition.z);
+            graph.ChunkPosition = new Vector2(newPosition.x, newPosition.z);
+            targetPosition = newPosition;
+        }
+
+        
 
         public void ApplyData()
         {
@@ -174,6 +311,7 @@ namespace JStuff.Generation.Terrain
             {
                 iteration++;
                 newPos = true;
+                seamless = false;
             }
 
             // Remove terrain objects
@@ -205,16 +343,16 @@ namespace JStuff.Generation.Terrain
 
             if (newPos)
             {
-                currenMeshLOD = -1;
+                currentMeshLOD = -1;
 
                 SetPosition(targetPosition);
             }
 
-            if (LOD != currenMeshLOD)
+            if (LOD != currentMeshLOD)
             {
                 //meshFilter.sharedMesh = TerrainMeshGeneration.GenerateMesh(currentData.meshLOD[index], currentData.colormapLOD[index]);
                 TerrainPool.QueueRenderMesh(this, iteration, currentData._meshRendererData, currentData._colormap, targetPosition);
-                currenMeshLOD = LOD;
+                currentMeshLOD = LOD;
             }
 
             // Mesh collider
@@ -245,6 +383,21 @@ namespace JStuff.Generation.Terrain
 
                     terrainObjectsAmount = currentData.terrainObjects.Count;
                 }
+            }
+
+            if (terrain.blockOfCoordinates.ContainsKey(new TerrainCoordinate(terrain.blockSize, oldTargetPosition)) && 
+                terrain.blockOfCoordinates[new TerrainCoordinate(terrain.blockSize, oldTargetPosition)] == this)
+            {
+                terrain.blockOfCoordinates.Remove(new TerrainCoordinate(terrain.blockSize, oldTargetPosition));
+            }
+
+            if (terrain.blockOfCoordinates.ContainsKey(GetCoordinates()))
+            {
+                terrain.blockOfCoordinates[GetCoordinates()] = this;
+            }
+            else
+            {
+                terrain.blockOfCoordinates.Add(GetCoordinates(), this);
             }
 
             oldTargetPosition = targetPosition;

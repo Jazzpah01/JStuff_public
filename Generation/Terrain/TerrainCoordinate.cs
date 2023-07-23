@@ -13,9 +13,20 @@ public struct TerrainCoordinate
         y = Mathf.RoundToInt(chunkPosition.z / chunkSize);
     }
 
+    public TerrainCoordinate(int x, int y)
+    {
+        this.x = x;
+        this.y = y;
+    }
+
     public Vector3 BlockPosition(float chunkSize)
     {
         return new Vector3(x * chunkSize, 0, y * chunkSize);
+    }
+
+    public static TerrainCoordinate operator +(TerrainCoordinate a, TerrainCoordinate b)
+    {
+        return new TerrainCoordinate(a.x + b.x, a.y + b.y);
     }
 
     public override string ToString()

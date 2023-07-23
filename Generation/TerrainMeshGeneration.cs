@@ -156,6 +156,49 @@ namespace JStuff.Generation
         public int sizeX;
         public int sizeZ;
 
+        public void CalculateUnormalizedNormals(ref Vector3[] normals)
+        {
+            if (normals.Length != vertices.Length)
+                throw new System.Exception($"Length of normals ({normals.Length}) must be equal to Length of vertices ({vertices.Length})");
+
+            for (int i = 0; i < normals.Length; i++)
+            {
+                normals[i] = Vector3.zero;
+            }
+
+            int triangleCount = triangles.Length / 3;
+            for (int i = 0; i < triangleCount; i++)
+            {
+                int normalTriangleIndex = i * 3;
+                int vertexIndexA = triangles[normalTriangleIndex];
+                int vertexIndexB = triangles[normalTriangleIndex + 1];
+                int vertexIndexC = triangles[normalTriangleIndex + 2];
+
+                Vector3 surfaceNormal = SurfaceNormal(vertexIndexA, vertexIndexB, vertexIndexC);
+                normals[vertexIndexA] += surfaceNormal;
+                normals[vertexIndexB] += surfaceNormal;
+                normals[vertexIndexC] += surfaceNormal;
+            }
+        }
+
+        //public Seam CalculateSeam(int direction, int length)
+        //{
+        //    Vector3[] normals = new Vector3[length];
+        //    Color[] color = new Color[length];
+        //    float[] positions = new float[length];
+
+
+        //}
+
+        public Vector3 SurfaceNormal(int indexA, int indexB, int indexC)
+        {
+            Vector3 a = vertices[indexA];
+            Vector3 b = vertices[indexB];
+            Vector3 c = vertices[indexC];
+
+            return Vector3.Cross(b - a, c - a).normalized;
+        }
+
         public int Width()
         {
             return (int)Mathf.Sqrt(vertices.Length);
@@ -194,6 +237,11 @@ namespace JStuff.Generation
             }
 
             return new MeshData(vertices, uv, triangles, this.heightFactor, this.sizeX, this.sizeZ);
+        }
+
+        public (int, int) GetXZ(int vertexIndex)
+        {
+            return (vertexIndex % sizeX, vertexIndex / sizeZ);
         }
     }
 }
