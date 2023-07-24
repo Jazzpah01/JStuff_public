@@ -218,6 +218,14 @@ public class Seam
         }
     }
 
+    static (int, int)[] directionThingie = new (int, int)[]
+        {
+            (1, 0),
+            (0, 1),
+            (-1, 0),
+            (0, -1),
+        };
+
     public static void UpdateSeamNormals(MeshData otherMesh, ref Vector3[] normals, int direction)
     {
         //for (int i = 0; i < normals.Length; i++)
@@ -227,28 +235,38 @@ public class Seam
 
         int otherDireciton = (direction + 2) % 4;
 
-        int triangleCount = otherMesh.triangles.Length / 3;
+        int otherTriangleCount = otherMesh.triangles.Length / 3;
 
-        int seamSquareCount = Mathf.RoundToInt(Mathf.Sqrt(triangleCount / 2));
+        //int otherSeamSquareCount = Mathf.RoundToInt(Mathf.Sqrt(otherTriangleCount / 2));
+        int otherSeamSquareCount = Mathf.RoundToInt(Mathf.Sqrt(normals.Length));
 
-        int LOD = (otherMesh.sizeX - 1) / ((int)Mathf.Sqrt(normals.Length) - 1);
+        int LOD = (otherMesh.sizeX - 1) / (otherSeamSquareCount - 1);
 
         // Get seam normals of other
-        Vector3[] otherSeamNormals = new Vector3[otherMesh.sizeX];
-        for (int i = 0; i < seamSquareCount; i++)
+        Vector3[] otherSeamNormals = new Vector3[otherSeamSquareCount];
+        for (int i = 0; i < otherSeamSquareCount - 1; i++)
         {
-            int squareIndex = SeamToArrayIndex(seamSquareCount, otherDireciton, i);
-
-            int triangleIndex = squareIndex * 2 * 3;
-
-            (int x, int z) = otherMesh.GetXZ(triangleIndex);
-            int vertexIndexA_0 = otherMesh.GetIndex(x, z);
-            int vertexIndexB_0 = otherMesh.GetIndex(x, z + LOD);
-            int vertexIndexC_0 = otherMesh.GetIndex(x + LOD, z + LOD);
-
-            //int vertexIndexA_0 = otherMesh.triangles[triangleIndex];
-            //int vertexIndexB_0 = otherMesh.triangles[triangleIndex + 1];
-            //int vertexIndexC_0 = otherMesh.triangles[triangleIndex + 2];
+            (int x0, int z0) = (0, 0);
+            if (otherDireciton == 0)
+            {
+                (x0, z0) = (LOD * (otherSeamSquareCount - 2), LOD * i);
+            }
+            else if (otherDireciton == 1)
+            {
+                (x0, z0) = (LOD * i, LOD * (otherSeamSquareCount - 2));
+            }
+            else if (otherDireciton == 2)
+            {
+                (x0, z0) = (0, LOD * i);
+            }
+            else if (otherDireciton == 3)
+            {
+                (x0, z0) = (LOD * i, 0);
+            }
+            
+            int vertexIndexA_0 = otherMesh.GetIndex(x0, z0);
+            int vertexIndexB_0 = otherMesh.GetIndex(x0, z0 + LOD);
+            int vertexIndexC_0 = otherMesh.GetIndex(x0 + LOD, z0 + LOD);
 
             Vector3 surfaceNormal = otherMesh.SurfaceNormal(vertexIndexA_0, vertexIndexB_0, vertexIndexC_0);
 
@@ -259,23 +277,19 @@ public class Seam
                 if ((otherDireciton == 0 || otherDireciton == 2) && (x == 0 || x == otherMesh.sizeX - 1))
                 {
                     // Horizontal
-                    otherSeamNormals[z] += surfaceNormal;
+                    otherSeamNormals[z / LOD] += surfaceNormal;
                 }
                 else if ((otherDireciton == 1 || otherDireciton == 3) && (z == 0 || z == otherMesh.sizeZ - 1))
                 {
                     // Vertical
-                    otherSeamNormals[x] += surfaceNormal;
+                    otherSeamNormals[x / LOD] += surfaceNormal;
                 }
             }
 
-            (int x, int z) = otherMesh.GetXZ(triangleIndex);
-            int vertexIndexA_1 = otherMesh.triangles[triangleIndex + 3];
-            int vertexIndexB_1 = otherMesh.triangles[triangleIndex + 4];
-            int vertexIndexC_1 = otherMesh.triangles[triangleIndex + 5];
-
-            //int vertexIndexA_1 = otherMesh.triangles[triangleIndex + 3];
-            //int vertexIndexB_1 = otherMesh.triangles[triangleIndex + 4];
-            //int vertexIndexC_1 = otherMesh.triangles[triangleIndex + 5];
+            (int x1, int z1) = (x0, z0);
+            int vertexIndexA_1 = otherMesh.GetIndex(x1, z1);
+            int vertexIndexB_1 = otherMesh.GetIndex(x1 + LOD, z1 + LOD);
+            int vertexIndexC_1 = otherMesh.GetIndex(x1 + LOD, z1);
 
             surfaceNormal = otherMesh.SurfaceNormal(vertexIndexA_1, vertexIndexB_1, vertexIndexC_1);
 
@@ -286,12 +300,12 @@ public class Seam
                 if ((otherDireciton == 0 || otherDireciton == 2) && (x == 0 || x == otherMesh.sizeX - 1))
                 {
                     // Horizontal
-                    otherSeamNormals[z] += surfaceNormal;
+                    otherSeamNormals[z / LOD] += surfaceNormal;
                 }
                 else if ((otherDireciton == 1 || otherDireciton == 3) && (z == 0 || z == otherMesh.sizeZ - 1))
                 {
                     // Vertical
-                    otherSeamNormals[x] += surfaceNormal;
+                    otherSeamNormals[x / LOD] += surfaceNormal;
 
                 }
             }

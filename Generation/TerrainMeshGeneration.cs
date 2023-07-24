@@ -180,11 +180,19 @@ namespace JStuff.Generation
 
         public Vector3 SurfaceNormal(int indexA, int indexB, int indexC)
         {
-            Vector3 a = vertices[indexA];
-            Vector3 b = vertices[indexB];
-            Vector3 c = vertices[indexC];
+            try
+            {
+                Vector3 a = vertices[indexA];
+                Vector3 b = vertices[indexB];
+                Vector3 c = vertices[indexC];
 
-            return Vector3.Cross(b - a, c - a).normalized;
+                return Vector3.Cross(b - a, c - a).normalized;
+            }
+            catch
+            {
+                throw new System.Exception($"ERROR: Size: {sizeX*sizeZ}. ({indexA}, {indexB}, {indexC}");
+            }
+            
         }
 
         public int Width()
