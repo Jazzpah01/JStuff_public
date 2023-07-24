@@ -42,15 +42,17 @@ namespace JStuff.Generation.Terrain
             public MeshData meshData;
             public Color[] colormap;
             public Vector3 targetPosition;
+            public bool recalculateSeams;
             //public int LOD;
 
-            public RenderMeshDataJob(Block block, int blockIteration, MeshData meshData, Color[] colormap, Vector3 targetPosition)
+            public RenderMeshDataJob(Block block, int blockIteration, MeshData meshData, Color[] colormap, Vector3 targetPosition, bool recalculateSeams)
             {
                 this.block = block;
                 this.blockIteration = blockIteration;
                 this.meshData = meshData;
                 this.colormap = colormap;
                 this.targetPosition = targetPosition;
+                this.recalculateSeams = recalculateSeams;
                 //this.LOD = LOD;
             }
         }
@@ -237,9 +239,9 @@ namespace JStuff.Generation.Terrain
             destroyJobs.Enqueue(new DestroyJob(go, block, iteration));
         }
 
-        public static void QueueRenderMesh(Block block, int iteration, MeshData meshData, Color[] colormap, Vector3 targetPosition)
+        public static void QueueRenderMesh(Block block, int iteration, MeshData meshData, Color[] colormap, Vector3 targetPosition, bool recalculateNormals)
         {
-            renderMeshJobs.Enqueue(new RenderMeshDataJob(block, iteration, meshData, colormap, targetPosition));
+            renderMeshJobs.Enqueue(new RenderMeshDataJob(block, iteration, meshData, colormap, targetPosition, recalculateNormals));
         }
 
         public static void QueueColliderMesh(Block block, int iteration, MeshData meshData)
@@ -326,7 +328,10 @@ namespace JStuff.Generation.Terrain
                     bool redoSeams = false;
                     bool hasAllNeighbors = true;
 
-                    job.block.currentData._meshRendererData.CalculateUnormalizedNormals(ref job.block.currentData._normals);
+                    if (job.recalculateSeams)
+                    {
+                        job.block.currentData._meshRendererData.CalculateUnormalizedNormals(ref job.block.currentData._normals);
+                    }
 
                     for (int direction = 0; direction < 4; direction++)
                     {
@@ -352,7 +357,7 @@ namespace JStuff.Generation.Terrain
                                 Seam.UpdateSeamNormals(otherMesh, ref thisNormals, direction);
                                 Seam.UpdateSeamColormap(ref thisColormap, otherColormap, direction);
 
-                                job.block.neighborSeamSize[direction] = seamSize;
+                                job.block.seamSize[direction] = seamSize;
                             }
                             else
                             {
@@ -363,7 +368,7 @@ namespace JStuff.Generation.Terrain
                         {
                             seamless = false;
                             hasAllNeighbors = false;
-                            job.block.neighborSeamSize[direction] = -1;
+                            job.block.seamSize[direction] = -1;
                         }
                     }
 
@@ -384,7 +389,7 @@ namespace JStuff.Generation.Terrain
 
                     if (redoSeams)
                     {
-                        QueueRenderMesh(job.block, job.blockIteration, job.meshData, job.colormap, job.targetPosition);
+                        QueueRenderMesh(job.block, job.blockIteration, job.meshData, job.colormap, job.targetPosition, true);
                     }
                 }
             }

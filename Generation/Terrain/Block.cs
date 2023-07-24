@@ -28,12 +28,14 @@ namespace JStuff.Generation.Terrain
         public bool newNormals = true;
         //public Vector3[] normals;
         //public Color[] colormap;
-        public int[] neighborSeamSize = new int[] { -1, -1, -1, -1 };
+        public int[] seamSize = new int[] { -1, -1, -1, -1 };
+        public bool[] seamExtrusion = new bool[] { false, false, false, false };
 
         public bool seamless = false;
 
         public GameObject colliderObject;
 
+        public Vector3 centerPositionOfTarget;
         public Vector3 targetPosition;
         public Vector3 oldTargetPosition;
 
@@ -64,9 +66,9 @@ namespace JStuff.Generation.Terrain
 
         public bool RedoSeams(int newMeshLength)
         {
-            for (int i = 0; i < neighborSeamSize.Length; i++)
+            for (int i = 0; i < seamSize.Length; i++)
             {
-                if (neighborSeamSize[i] * neighborSeamSize[i] != newMeshLength && terrain.blockOfCoordinates.ContainsKey(GetCoordinates() + DirectionCoordinate[i]))
+                if (seamSize[i] * seamSize[i] != newMeshLength && terrain.blockOfCoordinates.ContainsKey(GetCoordinates() + DirectionCoordinate[i]))
                 {
                     return true;
                 }
@@ -74,38 +76,6 @@ namespace JStuff.Generation.Terrain
 
             return false;
         }
-
-        //public bool RedoSeams
-        //{
-        //    get
-        //    {
-        //        TerrainCoordinate blockCoordinates = GetCoordinates();
-        //        TerrainCoordinate[] coordinatesInDirection = new TerrainCoordinate[] {
-        //                blockCoordinates + new TerrainCoordinate(1, 0),
-        //                blockCoordinates + new TerrainCoordinate(0, 1),
-        //                blockCoordinates + new TerrainCoordinate(-1, 0),
-        //                blockCoordinates + new TerrainCoordinate(0, -1),
-        //            };
-
-        //        for (int i = 0; i < 4; i++)
-        //        {
-        //            if (terrain.blockOfCoordinates.ContainsKey(coordinatesInDirection[i]))
-        //            {
-        //                if (terrain.blockOfCoordinates[coordinatesInDirection[i]].currentData._seamNormals[(i + 2) % 4].positions.Length > neighborSeamSize[i] &&
-        //                neighborSeamSize[i] < currentData._seamNormals[i].positions.Length)
-        //                {
-
-        //                }
-        //                else
-        //                {
-        //                    return true;
-        //                }
-        //            }
-        //        }
-
-        //        return false;
-        //    }
-        //}
 
         private void Start()
         {
@@ -169,6 +139,7 @@ namespace JStuff.Generation.Terrain
             waitingJobResult = true;
             priority = index;
             targetLOD = LOD;
+            centerPositionOfTarget = centerPosition;
 
             if (iteration != 0 && (LOD == currentMeshLOD && newPosition == oldTargetPosition))
             {
@@ -176,7 +147,7 @@ namespace JStuff.Generation.Terrain
                 int newMeshLength = newSeamLength * newSeamLength;
                 if (RedoSeams(newMeshLength))
                 {
-                    TerrainPool.QueueRenderMesh(this, iteration, currentData._meshRendererData, currentData._colormap, targetPosition);
+                    TerrainPool.QueueRenderMesh(this, iteration, currentData._meshRendererData, currentData._colormap, targetPosition, true);
                 }
                 return;
             }
@@ -301,7 +272,7 @@ namespace JStuff.Generation.Terrain
             if (LOD != currentMeshLOD)
             {
                 //meshFilter.sharedMesh = TerrainMeshGeneration.GenerateMesh(currentData.meshLOD[index], currentData.colormapLOD[index]);
-                TerrainPool.QueueRenderMesh(this, iteration, currentData._meshRendererData, currentData._colormap, targetPosition);
+                TerrainPool.QueueRenderMesh(this, iteration, currentData._meshRendererData, currentData._colormap, targetPosition, false);
                 currentMeshLOD = LOD;
             }
 
@@ -362,6 +333,96 @@ namespace JStuff.Generation.Terrain
         public TerrainCoordinate GetCoordinates()
         {
             return new TerrainCoordinate(terrain.blockSize, targetPosition);
+        }
+
+        public static Vector2 CenterDirection(TerrainCoordinate coordinates, TerrainCoordinate centerCoordinates)
+        {
+            Vector2 retval = new Vector2();
+
+            if (centerCoordinates.x > coordinates.x)
+                retval.x = 1;
+            if (centerCoordinates.y > coordinates.y)
+                retval.y = 1;
+            if (centerCoordinates.x < coordinates.x)
+                retval.x = -1;
+            if (centerCoordinates.y < coordinates.y)
+                retval.y = -1;
+
+            return retval;
+        }
+
+        public static List<int> CenterDirections(TerrainCoordinate coordinates, TerrainCoordinate centerCoordinates)
+        {
+            List<int> retval = new List<int>();
+
+            if (centerCoordinates.x > coordinates.x)
+                retval.Add(0);
+            if (centerCoordinates.y > coordinates.y)
+                retval.Add(1);
+            if (centerCoordinates.x < coordinates.x)
+                retval.Add(2);
+            if (centerCoordinates.y < coordinates.y)
+                retval.Add(3);
+
+            return retval;
+        }
+
+        public static List<int> CenterDirections(Vector3 coordinates, Vector3 centerCoordinates)
+        {
+            List<int> retval = new List<int>();
+
+            if (centerCoordinates.x > coordinates.x)
+                retval.Add(0);
+            if (centerCoordinates.z > coordinates.z)
+                retval.Add(1);
+            if (centerCoordinates.x < coordinates.x)
+                retval.Add(2);
+            if (centerCoordinates.z < coordinates.z)
+                retval.Add(3);
+
+            return retval;
+        }
+
+        public bool IsLODEdge(int direction, TerrainCoordinate centerChunkCoordinates)
+        {
+            TerrainCoordinate coordinate = GetCoordinates();
+
+            TerrainCoordinate targetCoordinates = coordinate + DirectionCoordinate[direction];
+
+            float blockSize = terrain.blockSize;
+
+            float targetDistance = Vector2.Distance(targetCoordinates * blockSize, centerChunkCoordinates * blockSize);
+
+            (int LOD, int index) = terrain.GetTerrainLOD(targetDistance);
+
+            if (LOD > targetLOD)
+            {
+                return true;
+            } else
+            {
+                return false;
+            }
+        }
+
+        public List<int> LODEdgeDirections()
+        {
+            List<int> retval = new List<int>();
+
+            TerrainCoordinate targetCoordinates = GetCoordinates();
+
+            foreach (var direction in CenterDirections(targetPosition, centerPositionOfTarget))
+            {
+                float distance = Vector2.Distance(targetCoordinates * terrain.blockSize, (targetCoordinates + DirectionCoordinate[direction]) * terrain.blockSize);
+
+                (int LOD, int index) = terrain.GetTerrainLOD(distance);
+
+                if (LOD != this.targetLOD)
+                {
+                    retval.Add(direction);
+                }
+            }
+
+            return retval;
         }
 
         //public float HeightAtPoint(float x, float z)

@@ -4,8 +4,8 @@ using UnityEngine;
 
 public struct TerrainCoordinate
 {
-    int x;
-    int y;
+    public int x;
+    public int y;
 
     public TerrainCoordinate(float chunkSize, Vector3 chunkPosition)
     {
@@ -27,6 +27,11 @@ public struct TerrainCoordinate
     public static TerrainCoordinate operator +(TerrainCoordinate a, TerrainCoordinate b)
     {
         return new TerrainCoordinate(a.x + b.x, a.y + b.y);
+    }
+
+    public static Vector2 operator *(TerrainCoordinate a, float scalar)
+    {
+        return new Vector2(a.x, a.y) * scalar;
     }
 
     public override string ToString()
