@@ -243,7 +243,6 @@ public class Seam
         int LOD = (otherMesh.sizeX - 1) / (otherSeamSquareCount - 1);
 
         // Get seam normals of other
-        Vector3[] otherSeamNormals = new Vector3[otherSeamSquareCount];
         for (int i = 0; i < otherSeamSquareCount - 1; i++)
         {
             (int x0, int z0) = (0, 0);
@@ -277,12 +276,15 @@ public class Seam
                 if ((otherDireciton == 0 || otherDireciton == 2) && (x == 0 || x == otherMesh.sizeX - 1))
                 {
                     // Horizontal
-                    otherSeamNormals[z / LOD] += surfaceNormal;
+                    int normalsIndex = SeamToArrayIndex(otherSeamSquareCount, direction, z / LOD);
+                    normals[normalsIndex] += surfaceNormal;
                 }
                 else if ((otherDireciton == 1 || otherDireciton == 3) && (z == 0 || z == otherMesh.sizeZ - 1))
                 {
                     // Vertical
-                    otherSeamNormals[x / LOD] += surfaceNormal;
+                    int normalsIndex = SeamToArrayIndex(otherSeamSquareCount, direction, x / LOD);
+                    normals[normalsIndex] += surfaceNormal;
+
                 }
             }
 
@@ -300,57 +302,34 @@ public class Seam
                 if ((otherDireciton == 0 || otherDireciton == 2) && (x == 0 || x == otherMesh.sizeX - 1))
                 {
                     // Horizontal
-                    otherSeamNormals[z / LOD] += surfaceNormal;
+                    int normalsIndex = SeamToArrayIndex(otherSeamSquareCount, direction, z / LOD);
+                    normals[normalsIndex] += surfaceNormal;
                 }
                 else if ((otherDireciton == 1 || otherDireciton == 3) && (z == 0 || z == otherMesh.sizeZ - 1))
                 {
                     // Vertical
-                    otherSeamNormals[x / LOD] += surfaceNormal;
+                    int normalsIndex = SeamToArrayIndex(otherSeamSquareCount, direction, x / LOD);
+                    normals[normalsIndex] += surfaceNormal;
 
                 }
             }
         }
-
-        // TODO: fix so we can have different size mesh output of terrain graph
-        UpdateNormals(ref normals, otherSeamNormals, direction);
     }
 
     public static void UpdateSeamColormap(ref Color[] colormap, Color[] otherColormap, int direction)
     {
+        int thisSeamLength = Mathf.RoundToInt(Mathf.Sqrt(colormap.Length));
         int otherSeamLength = Mathf.RoundToInt(Mathf.Sqrt(otherColormap.Length));
         int otherDirection = (direction + 2) % 4;
+        int LOD = (otherSeamLength - 1) / (thisSeamLength - 1);
 
-        Color[] seamColors = new Color[otherSeamLength];
-
-        for (int i = 0; i < otherSeamLength; i++)
+        for (int i = 0; i < thisSeamLength; i++)
         {
-            int otherIndex = SeamToArrayIndex(otherSeamLength, otherDirection, i);
+            int otherIndex = SeamToArrayIndex(otherSeamLength, otherDirection, i * LOD);
+            int thisIndex = SeamToArrayIndex(thisSeamLength, direction, i);
 
-            seamColors[i] = otherColormap[otherIndex];
+            colormap[thisIndex] = (colormap[thisIndex] + otherColormap[otherIndex]) / 2;
         }
-
-        UpdateColors(ref colormap, seamColors, direction);
-
-        // TODO: Implement this better solution, but where colormap can be of different size than otherColormap
-        //int seamLength = Mathf.RoundToInt(Mathf.Sqrt(colormap.Length));
-        //int otherDirection = (direction + 2) % 4;
-
-        //for (int i = 0; i < seamLength; i++)
-        //{
-        //    int index = SeamIndex(seamLength, direction, i);
-        //    int otherIndex = SeamIndex(seamLength, otherDirection, i);
-
-        //    Color otherColor = otherColormap[otherIndex];
-
-        //    if (i == 0 || i == seamLength - 1)
-        //    {
-        //        colormap[index] = colormap[index] + otherColor / 4;
-        //    }
-        //    else
-        //    {
-        //        colormap[index] = colormap[i] + otherColor / 2;
-        //    }
-        //}
     }
 
     public static int SeamToArrayIndex(int seamCount, int direction, int i)

@@ -339,28 +339,25 @@ namespace JStuff.Generation.Terrain
 
                             int seamSize = Mathf.RoundToInt(Mathf.Sqrt(thisBlock.currentData._colormap.Length));
 
-                            //if (job.block.neighborSeamSize[direction] != seamSize)
-                            //{
-                                if (otherBlock.currentData != null)
-                                {
-                                    MeshData thisMesh = thisBlock.currentData._meshRendererData;
-                                    MeshData otherMesh = otherBlock.currentData.meshRendererData;
+                            if (otherBlock.currentData != null)
+                            {
+                                MeshData thisMesh = thisBlock.currentData._meshRendererData;
+                                MeshData otherMesh = otherBlock.currentData.meshRendererData;
 
-                                    Color[] thisColormap = thisBlock.currentData._colormap;
-                                    Vector3[] thisNormals = thisBlock.currentData._normals;
+                                Color[] thisColormap = thisBlock.currentData._colormap;
+                                Vector3[] thisNormals = thisBlock.currentData._normals;
 
-                                    Color[] otherColormap = otherBlock.currentData.colormap;
+                                Color[] otherColormap = otherBlock.currentData.colormap;
 
-                                    Seam.UpdateSeamNormals(otherMesh, ref thisNormals, direction);
-                                    Seam.UpdateSeamColormap(ref thisColormap, otherColormap, direction);
+                                Seam.UpdateSeamNormals(otherMesh, ref thisNormals, direction);
+                                Seam.UpdateSeamColormap(ref thisColormap, otherColormap, direction);
 
-                                    job.block.neighborSeamSize[direction] = seamSize;
-                                }
-                                else
-                                {
-                                    redoSeams = true;
-                                }
-                            //}
+                                job.block.neighborSeamSize[direction] = seamSize;
+                            }
+                            else
+                            {
+                                redoSeams = true;
+                            }
                         }
                         else
                         {
