@@ -22,6 +22,7 @@ namespace JStuff.Generation.Terrain
         public bool enableThreading = false;
 
         [Header("Visual Settings")]
+        public float updateOnCameraChangeDistance = 0.5f;
         public float generateDistance = 100;
         public float generateDistanceEditor = 1000;
         [Min(1)] public int terrainHalfsize = 1;
@@ -229,10 +230,14 @@ namespace JStuff.Generation.Terrain
         }
 
         Coroutine coroutine;
+        bool coroutineInProgress = false;
 
         private void Update()
         {
-            if ((new Vector3(cameraTransform.position.x, 0, cameraTransform.position.z) - transform.position).magnitude > blockSize / 2f && !shouldUpdate)
+            if (coroutineInProgress)
+                return;
+
+            if ((new Vector3(cameraTransform.position.x, 0, cameraTransform.position.z) - transform.position).magnitude > updateOnCameraChangeDistance && !shouldUpdate)
             {
                 transform.position = new Vector3(cameraTransform.position.x, 0, cameraTransform.position.z);
                 shouldUpdate = true;
@@ -244,6 +249,7 @@ namespace JStuff.Generation.Terrain
             if (shouldUpdate)
             {
                 shouldUpdate = false;
+                coroutineInProgress = true;
                 if (JobManagerComponent.instance.manager.Pending != 0)
                 {
                     JobManagerComponent.instance.manager.FinishJobs();
@@ -468,6 +474,8 @@ namespace JStuff.Generation.Terrain
             }
 
             centerBlock = newCenterChunk;
+
+            coroutineInProgress = false;
         }
 
         public void UpdateBlock(Block b, Vector3 newCenterChunk, Vector3 newpos)

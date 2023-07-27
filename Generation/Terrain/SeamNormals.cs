@@ -245,26 +245,65 @@ public class Seam
         }
     }
 
-    public static void ExtrudeEdgeVertices(MeshData target, float amount)
+    public static void ExtrudeEdgeVertices(MeshData target, int LOD, int direction)
     {
-        foreach (var direction in new int[] { 0, 1, 2, 3 })
+        int j = 0;
+        for (int i = 0; i < target.sizeX; i++)
         {
-            for (int i = 0; i < target.sizeX; i++)
+            if (i % LOD != 0)
             {
                 int targetIndex = SeamToArrayIndex(target.sizeX, direction, i);
+                int v0Index = SeamToArrayIndex(target.sizeX, direction, j);
+                int v1Index = SeamToArrayIndex(target.sizeX, direction, j + LOD);
 
-                target.vertices[targetIndex] += new Vector3(0, -amount, 0);
+                float t = ((float)i - (float)j) / (float)LOD;
+                float v0 = target.vertices[v0Index].y;
+                float v1 = target.vertices[v1Index].y;
+
+                target.vertices[targetIndex].y = Mathf.Lerp(v0, v1, t);
+            } else
+            {
+                j = i;
             }
         }
     }
 
-    public static void ExtrudeEdgeVertices(MeshData target, float amount, int direction)
-    {
-        for (int i = 0; i < target.sizeX; i++)
-        {
-            int targetIndex = SeamToArrayIndex(target.sizeX, direction, i);
+    //public static void ExtrudeEdgeVertices(MeshData target, float amount)
+    //{
+    //    foreach (var direction in new int[] { 0, 1, 2, 3 })
+    //    {
+    //        for (int i = 0; i < target.sizeX; i++)
+    //        {
+    //            int targetIndex = SeamToArrayIndex(target.sizeX, direction, i);
 
-            target.vertices[targetIndex] += new Vector3(0, -amount, 0);
-        }
-    }
+    //            target.vertices[targetIndex] += new Vector3(0, -amount, 0);
+    //        }
+    //    }
+    //}
+
+    //public static void ExtrudeEdgeVertices(MeshData target, float amount, int direction)
+    //{
+    //    for (int i = 0; i < target.sizeX; i++)
+    //    {
+    //        int targetIndex = SeamToArrayIndex(target.sizeX, direction, i);
+
+    //        target.vertices[targetIndex] += new Vector3(0, -amount, 0);
+    //    }
+    //}
+
+    //public static void ExtrudeCornerVertices(MeshData target, float amount, int direction, int otherDirection)
+    //{
+    //    if ((direction + 2) % 4 == otherDirection || direction == otherDirection)
+    //        throw new System.Exception();
+
+    //    int x = 0;
+    //    int y = 0;
+
+    //    if (direction == 0 || otherDirection == 0)
+    //        x = target.sizeX - 1;
+    //    if (direction == 1 || otherDirection == 1)
+    //        y = target.sizeZ - 1;
+
+    //    target.vertices[x + y * target.sizeX] += new Vector3(0, -amount, 0);
+    //}
 }

@@ -43,9 +43,10 @@ namespace JStuff.Generation.Terrain
             public Color[] colormap;
             public Vector3 targetPosition;
             public bool recalculateSeams;
+            public bool recalculateNormals;
             //public int LOD;
 
-            public RenderMeshDataJob(Block block, int blockIteration, MeshData meshData, Color[] colormap, Vector3 targetPosition, bool recalculateSeams)
+            public RenderMeshDataJob(Block block, int blockIteration, MeshData meshData, Color[] colormap, Vector3 targetPosition, bool recalculateSeams, bool recalculateNormals)
             {
                 this.block = block;
                 this.blockIteration = blockIteration;
@@ -53,6 +54,7 @@ namespace JStuff.Generation.Terrain
                 this.colormap = colormap;
                 this.targetPosition = targetPosition;
                 this.recalculateSeams = recalculateSeams;
+                this.recalculateNormals = recalculateNormals;
                 //this.LOD = LOD;
             }
         }
@@ -239,9 +241,9 @@ namespace JStuff.Generation.Terrain
             destroyJobs.Enqueue(new DestroyJob(go, block, iteration));
         }
 
-        public static void QueueRenderMesh(Block block, int iteration, MeshData meshData, Color[] colormap, Vector3 targetPosition, bool recalculateNormals)
+        public static void QueueRenderMesh(Block block, int iteration, MeshData meshData, Color[] colormap, Vector3 targetPosition, bool recalculateSeams, bool recalculateNormals)
         {
-            renderMeshJobs.Enqueue(new RenderMeshDataJob(block, iteration, meshData, colormap, targetPosition, recalculateNormals));
+            renderMeshJobs.Enqueue(new RenderMeshDataJob(block, iteration, meshData, colormap, targetPosition, recalculateSeams, recalculateNormals));
         }
 
         public static void QueueColliderMesh(Block block, int iteration, MeshData meshData)
@@ -311,11 +313,6 @@ namespace JStuff.Generation.Terrain
 
                 if (job.blockIteration == job.block.iteration)
                 {
-                    Mesh mesh = new Mesh();
-                    mesh.vertices = job.meshData.vertices;
-                    mesh.uv = job.meshData.uv;
-                    mesh.triangles = job.meshData.triangles;
-
                     TerrainCoordinate blockCoordinates = job.block.GetCoordinates();
                     TerrainCoordinate[] coordinatesInDirection = new TerrainCoordinate[] { 
                         blockCoordinates + new TerrainCoordinate(1, 0),
@@ -330,12 +327,60 @@ namespace JStuff.Generation.Terrain
 
                     if (job.recalculateSeams)
                     {
+                        bool hasExtrusions = false;
+                        for (int i = 0; i < 4; i++)
+                        {
+                            if (job.block.seamExtrusion[i])
+                            {
+                                hasExtrusions = true;
+                                job.block.seamExtrusion[i] = false;
+                            }
+                        }
+
+                        if (hasExtrusions)
+                            Seam.ResetExtrusion(job.block.currentData._meshRendererData, job.block.currentData.meshRendererData);
+
+                        // Seam extrusion
+                        for (int i = 0; i < 4; i++)
+                        {
+                            job.block.seamExtrusion[i] = false;
+                        }
+
+                        List<int> extrusionDirections = job.block.GetLODEdgeDirections();
+
+                        foreach (var direction in extrusionDirections)
+                        {
+                            int LOD = job.block.GetNeighborLOD(direction);
+
+                            int LODDiff = LOD / job.block.targetLOD;
+
+                            if (LODDiff <= 0)
+                                continue;
+
+                            job.block.seamExtrusion[direction] = true;
+                            Seam.ExtrudeEdgeVertices(job.block.currentData._meshRendererData, LODDiff, direction);
+                        }
+                    }
+
+                    if (job.recalculateNormals)
+                    {
                         job.block.currentData._meshRendererData.CalculateUnormalizedNormals(ref job.block.currentData._normals);
+
+                        int LOD = ((int)Mathf.Sqrt(job.block.currentData.colormap.Length) - 1) / (int)(Mathf.Sqrt(job.block.currentData._colormap.Length) - 1);
+
+                        job.block.currentData._colormap = TerrainMeshGeneration.GenerateLODColormap(job.block.currentData.colormap, LOD);
+
+                        for (int i = 0; i < 4; i++)
+                        {
+                            job.block.seamSize[i] = -1;
+                        }
                     }
 
                     for (int direction = 0; direction < 4; direction++)
                     {
-                        if (WorldTerrain.instance.blockOfCoordinates.ContainsKey(coordinatesInDirection[direction]) && WorldTerrain.instance.blockOfCoordinates[coordinatesInDirection[direction]])
+                        if (WorldTerrain.instance.blockOfCoordinates.ContainsKey(coordinatesInDirection[direction]) && 
+                            WorldTerrain.instance.blockOfCoordinates[coordinatesInDirection[direction]] &&
+                            job.block.seamSize[direction] < 0)
                         {
                             int oppositeDirection = (direction + 2) % 4;
 
@@ -378,6 +423,11 @@ namespace JStuff.Generation.Terrain
                         job.block.currentData._normals[i] = job.block.currentData._normals[i].normalized;
                     }
 
+                    Mesh mesh = new Mesh();
+                    mesh.vertices = job.meshData.vertices;
+                    mesh.uv = job.meshData.uv;
+                    mesh.triangles = job.meshData.triangles;
+
                     mesh.normals = job.block.currentData._normals;
                     mesh.colors = job.block.currentData._colormap;
 
@@ -389,7 +439,7 @@ namespace JStuff.Generation.Terrain
 
                     if (redoSeams)
                     {
-                        QueueRenderMesh(job.block, job.blockIteration, job.meshData, job.colormap, job.targetPosition, true);
+                        QueueRenderMesh(job.block, job.blockIteration, job.meshData, job.colormap, job.targetPosition, true, true);
                     }
                 }
             }

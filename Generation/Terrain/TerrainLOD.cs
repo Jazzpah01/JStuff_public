@@ -7,4 +7,5 @@ public struct TerrainLOD
 {
     public float distance;
     public int LOD;
+    public float extrusion;
 }

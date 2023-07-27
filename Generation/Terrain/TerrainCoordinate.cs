@@ -29,10 +29,28 @@ public struct TerrainCoordinate
         return new TerrainCoordinate(a.x + b.x, a.y + b.y);
     }
 
-    public static Vector2 operator *(TerrainCoordinate a, float scalar)
+    public static Vector3 operator *(TerrainCoordinate a, float scalar)
     {
-        return new Vector2(a.x, a.y) * scalar;
+        return new Vector3(a.x, 0, a.y) * scalar;
     }
+
+    public static bool operator ==(TerrainCoordinate a, TerrainCoordinate b)
+    {
+        return a.x == b.x && a.y == b.y;
+    }
+
+    public static bool operator !=(TerrainCoordinate a, TerrainCoordinate b)
+    {
+        return a.x != b.x || a.y != b.y;
+    }
+
+    public static TerrainCoordinate[] DirectionCoordinate = new TerrainCoordinate[]
+        {
+            new TerrainCoordinate(1, 0),
+            new TerrainCoordinate(0, 1),
+            new TerrainCoordinate(-1, 0),
+            new TerrainCoordinate(0, -1),
+        };
 
     public override string ToString()
     {

@@ -15,5 +15,7 @@ namespace JStuff.Generation.Terrain
         public Color[] _colormap;
         public Vector3[] _normals;
         public MeshData _meshColliderData;
+
+        public bool[] seamExtrusion;
     }
 }
