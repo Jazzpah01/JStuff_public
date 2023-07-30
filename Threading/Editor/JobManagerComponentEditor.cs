@@ -29,6 +29,8 @@ public class JobManagerComponentEditor : Editor
             {
                 EditorGUILayout.IntField(JobManagerComponent.instance.manager.NumberOfThreads);
             }
+
+            EditorGUILayout.LabelField($"Jobs pending: {JobManagerComponent.instance.manager.Pending}");
             return;
         }
 

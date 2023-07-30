@@ -159,6 +159,7 @@ namespace JStuff.Generation.Terrain
 
             if (waitingJobResult)
             {
+                Debug.Log("Waiting job result!");
                 JobManagerComponent.instance.manager.FinishJobs();
             }
 
@@ -166,7 +167,6 @@ namespace JStuff.Generation.Terrain
             graph.CenterPosition = new Vector2(centerPosition.x, centerPosition.z);
             graph.ChunkPosition = new Vector2(newPosition.x, newPosition.z);
             targetPosition = newPosition;
-            waitingJobResult = true;
             priority = index;
             targetLOD = LOD;
             centerPositionOfTarget = centerPosition;
@@ -184,10 +184,12 @@ namespace JStuff.Generation.Terrain
 
             if (terrain.enableThreading)
             {
+                waitingJobResult = true;
                 JobManagerComponent.instance.manager.AddJob(this, Job, graph);
             }
             else
             {
+                waitingJobResult = true;
                 currentData = Job(graph) as BlockData;
                 ConsumeJob(currentData);
             }
@@ -261,8 +263,8 @@ namespace JStuff.Generation.Terrain
         public void ConsumeJob(object data)
         {
             currentData = (BlockData)data;
-            ApplyData();
             waitingJobResult = false;
+            ApplyData();
         }
 
         public void JobFailed()

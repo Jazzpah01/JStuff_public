@@ -250,132 +250,180 @@ namespace JStuff.Generation.Terrain
         {
             stopwatch.Restart();
 
-            switch (currentUpdateState)
+            if ((new Vector3(cameraTransform.position.x, 0, cameraTransform.position.z) - transform.position).magnitude > updateOnCameraChangeDistance && !shouldUpdate && JobManagerComponent.instance.manager.Pending == 0)
             {
-                case UpdateState.None:
-                    if ((new Vector3(cameraTransform.position.x, 0, cameraTransform.position.z) - transform.position).magnitude > updateOnCameraChangeDistance && !shouldUpdate)
-                    {
-                        transform.position = new Vector3(cameraTransform.position.x, 0, cameraTransform.position.z);
-                        shouldUpdate = true;
-                    }
+                transform.position = new Vector3(cameraTransform.position.x, 0, cameraTransform.position.z);
+                shouldUpdate = true;
+            }
 
-                    Vector3 newCenterChunk = transform.position - new Vector3(transform.position.x % blockSize, 0, transform.position.z % blockSize);
+            Vector3 newCenterChunk = transform.position - new Vector3(transform.position.x % blockSize, 0, transform.position.z % blockSize);
 
-                    if (shouldUpdate)
-                    {
-                        shouldUpdate = false;
-                        coroutineInProgress = true;
-                        if (JobManagerComponent.instance.manager.Pending != 0)
-                        {
-                            JobManagerComponent.instance.manager.FinishJobs();
-                            Debug.Log("Running FinishedJobs!");
-                        }
+            if (shouldUpdate)
+            {
+                shouldUpdate = false;
+                coroutineInProgress = true;
+                if (JobManagerComponent.instance.manager.Pending != 0)
+                {
+                    Debug.Log("Running FinishedJobs!");
+                    JobManagerComponent.instance.manager.FinishJobs();
+                }
 
-                        currentUpdateState = UpdateState.EnqueuePositions;
-                        this.newCenterChunk = newCenterChunk;
-                        centerBlock = newCenterChunk;
-                        i = 0;
-                    }
-                    break;
-                case UpdateState.EnqueuePositions:
-                    int s = (int) Mathf.Pow((terrainHalfsize + 1) * 2, 2);
-                    while (i < s)
-                    {
-                        int x = i % s - (int)(s / 2);
-                        int y = i / s - (int)(s / 2);
-
-                        Vector3 pos = this.newCenterChunk + new Vector3(x, 0, y) * blockSize;
-
-                        if (!oldPositions.Contains(pos) && (pos - this.newCenterChunk).magnitude <= generateDistance)
-                        {
-                            newPositions.Enqueue(pos);
-                        }
-                        i++;
-
-                        if (stopwatch.ElapsedMilliseconds > 2)
-                        {
-                            return;
-                        }
-                    }
-
-                    currentUpdateState = UpdateState.DepricatedBlocks;
-                    i = 0;
-                    break;
-                case UpdateState.DepricatedBlocks:
-                    // Get depricated blocks
-                    while (i < usedBlocks.Count)
-                    {
-                        if (Vector3.Distance(usedBlocks[i].transform.position, this.newCenterChunk) >= generateDistance)
-                        {
-                            oldPositions.Remove(usedBlocks[i].targetPosition);
-                            depricatedBlocks.Push(usedBlocks[i]);
-                            usedBlocks.Remove(usedBlocks[i]);
-                            i--;
-                        }
-                        i++;
-
-                        if (stopwatch.ElapsedMilliseconds > 2)
-                        {
-                            return;
-                        }
-                    }
-
-                    currentUpdateState = UpdateState.SetBlockPositions;
-                    updated = new HashSet<Block>();
-                    break;
-                case UpdateState.SetBlockPositions:
-                    // Match blocks with new positions
-                    while (newPositions.Count > 0)
-                    {
-                        Vector3 p = newPositions.Dequeue();
-
-                        Block b = null;
-
-                        if (depricatedBlocks.Count > 0)
-                        {
-                            b = depricatedBlocks.Pop();
-                        }
-                        else
-                        {
-                            b = NewBlock();
-                        }
-
-                        usedBlocks.Add(b);
-
-                        oldPositions.Add(p);
-
-                        UpdateBlock(b, this.newCenterChunk, p);
-                        updated.Add(b);
-
-                        if (stopwatch.ElapsedMilliseconds > 2)
-                        {
-                            return;
-                        }
-                    }
-
-                    currentUpdateState = UpdateState.UpdateBlocks;
-                    i = 0;
-                    break;
-                case UpdateState.UpdateBlocks:
-                    // Update all blocks
-                    while (i < blocks.Count)
-                    {
-                        Block b = blocks[i];
-                        if (!updated.Contains(b))
-                            UpdateBlock(b, this.newCenterChunk, b.targetPosition);
-                        i++;
-
-                        if (stopwatch.ElapsedMilliseconds > 2)
-                        {
-                            return;
-                        }
-                    }
-
-                    currentUpdateState = UpdateState.None;
-                    centerBlock = this.newCenterChunk;
-                    break;
+                StartCoroutine(UpdateAllCoroutine(newCenterChunk));
+                centerBlock = newCenterChunk;
             }
         }
+
+        //private void Update()
+        //{
+        //    stopwatch.Restart();
+
+        //    switch (currentUpdateState)
+        //    {
+        //        case UpdateState.None:
+        //            if ((new Vector3(cameraTransform.position.x, 0, cameraTransform.position.z) - transform.position).magnitude > updateOnCameraChangeDistance && !shouldUpdate && JobManagerComponent.instance.manager.Pending == 0)
+        //            {
+        //                transform.position = new Vector3(cameraTransform.position.x, 0, cameraTransform.position.z);
+        //                shouldUpdate = true;
+        //            }
+
+        //            Vector3 newCenterChunk = transform.position - new Vector3(transform.position.x % blockSize, 0, transform.position.z % blockSize);
+
+        //            if (shouldUpdate)
+        //            {
+        //                shouldUpdate = false;
+        //                coroutineInProgress = true;
+        //                if (JobManagerComponent.instance.manager.Pending != 0)
+        //                {
+        //                    Debug.Log("Running FinishedJobs!");
+        //                    JobManagerComponent.instance.manager.FinishJobs();
+        //                }
+
+        //                currentUpdateState = UpdateState.EnqueuePositions;
+        //                this.newCenterChunk = newCenterChunk;
+        //                centerBlock = newCenterChunk;
+        //                i = 0;
+        //            }
+        //            break;
+        //        case UpdateState.EnqueuePositions:
+        //            int s = (int) Mathf.Pow((terrainHalfsize + 1) * 2, 2);
+        //            while (i < s)
+        //            {
+        //                int x = i % s - (int)(s / 2);
+        //                int y = i / s - (int)(s / 2);
+
+        //                Vector3 pos = this.newCenterChunk + new Vector3(x, 0, y) * blockSize;
+
+        //                if (!oldPositions.Contains(pos) && (pos - this.newCenterChunk).magnitude <= generateDistance)
+        //                {
+        //                    newPositions.Enqueue(pos);
+        //                }
+        //                i++;
+
+        //                if (stopwatch.ElapsedMilliseconds > 2)
+        //                {
+        //                    if (stopwatch.ElapsedMilliseconds > 150)
+        //                    {
+        //                        Debug.Log($"Big update!!!?! UpdateState.EnqueuePositions: {stopwatch.ElapsedMilliseconds}");
+        //                    }
+        //                    return;
+        //                }
+        //            }
+
+        //            currentUpdateState = UpdateState.DepricatedBlocks;
+        //            i = 0;
+        //            break;
+        //        case UpdateState.DepricatedBlocks:
+        //            // Get depricated blocks
+        //            while (i < usedBlocks.Count)
+        //            {
+        //                if (Vector3.Distance(usedBlocks[i].transform.position, this.newCenterChunk) >= generateDistance)
+        //                {
+        //                    oldPositions.Remove(usedBlocks[i].targetPosition);
+        //                    depricatedBlocks.Push(usedBlocks[i]);
+        //                    usedBlocks.Remove(usedBlocks[i]);
+        //                    i--;
+        //                }
+        //                i++;
+
+        //                if (stopwatch.ElapsedMilliseconds > 2)
+        //                {
+        //                    if (stopwatch.ElapsedMilliseconds > 150)
+        //                    {
+        //                        Debug.Log($"Big update!!!?! UpdateState.DepricatedBlocks: {stopwatch.ElapsedMilliseconds}");
+        //                    }
+        //                    return;
+        //                }
+        //            }
+
+        //            currentUpdateState = UpdateState.SetBlockPositions;
+        //            updated = new HashSet<Block>();
+        //            break;
+        //        case UpdateState.SetBlockPositions:
+        //            // Match blocks with new positions
+        //            while (newPositions.Count > 0)
+        //            {
+        //                Vector3 p = newPositions.Dequeue();
+
+        //                Block b = null;
+
+        //                if (depricatedBlocks.Count > 0)
+        //                {
+        //                    b = depricatedBlocks.Pop();
+        //                }
+        //                else
+        //                {
+        //                    b = NewBlock();
+        //                }
+
+        //                usedBlocks.Add(b);
+
+        //                oldPositions.Add(p);
+
+        //                UpdateBlock(b, this.newCenterChunk, p);
+        //                updated.Add(b);
+
+        //                if (stopwatch.ElapsedMilliseconds > 2)
+        //                {
+        //                    if (stopwatch.ElapsedMilliseconds > 150)
+        //                    {
+        //                        Debug.Log($"Big update!!!?! UpdateState.SetBlockPositions: {stopwatch.ElapsedMilliseconds}");
+        //                    }
+        //                    return;
+        //                }
+        //            }
+
+        //            currentUpdateState = UpdateState.UpdateBlocks;
+        //            i = 0;
+        //            break;
+        //        case UpdateState.UpdateBlocks:
+        //            // Update all blocks
+        //            while (i < blocks.Count)
+        //            {
+        //                Block b = blocks[i];
+        //                if (!updated.Contains(b))
+        //                    UpdateBlock(b, this.newCenterChunk, b.targetPosition);
+        //                i++;
+
+        //                if (stopwatch.ElapsedMilliseconds > 2)
+        //                {
+        //                    if (stopwatch.ElapsedMilliseconds > 150)
+        //                    {
+        //                        Debug.Log($"Big update!!!?! UpdateState.UpdateBlocks: {stopwatch.ElapsedMilliseconds}");
+        //                    }
+        //                    return;
+        //                }
+        //            }
+
+        //            currentUpdateState = UpdateState.None;
+        //            centerBlock = this.newCenterChunk;
+        //            break;
+        //    }
+
+        //    if (stopwatch.ElapsedMilliseconds > 150)
+        //    {
+        //        Debug.Log($"Big update!!!?!: {stopwatch.ElapsedMilliseconds}");
+        //    }
+        //}
 
         public Block NewBlock()
         {
