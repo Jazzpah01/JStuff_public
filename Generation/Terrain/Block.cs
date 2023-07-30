@@ -38,7 +38,6 @@ namespace JStuff.Generation.Terrain
         public Vector3 centerPositionOfTarget;
         public Vector3 targetPosition;
         public Vector3 oldTargetPosition;
-        public float targetExtrusionAmount;
 
         public bool waitingJobResult = false;
         public bool waitingCoroutine = false;
@@ -65,28 +64,40 @@ namespace JStuff.Generation.Terrain
             new TerrainCoordinate(0, -1),
         };
 
-        public bool RedoSeams(int newMeshLength)
+        public bool RedoSeamExtrusions(int newMeshLength)
         {
-            for (int i = 0; i < seamSize.Length; i++)
+            for (int i = 0; i < 4; i++)
             {
-                if (seamSize[i] * seamSize[i] != newMeshLength && terrain.blockOfCoordinates.ContainsKey(GetCoordinates() + DirectionCoordinate[i]))
+                if (terrain.blockOfCoordinates.ContainsKey(GetCoordinates() + DirectionCoordinate[i]))
                 {
-                    return true;
+                    int otherLOD = GetNeighborLOD(i);
+
+                    if (otherLOD <= targetLOD && seamExtrusion[i])
+                    {
+                        // There should be no seam extrusion, but there is
+                        return true;
+                    }
+                    else if (otherLOD > targetLOD && !seamExtrusion[i])
+                    {
+                        // There should be seam extrusion, but there isn't
+                        return true;
+                    }
                 }
+            }
 
-                TerrainCoordinate neighborCoordinates = GetCoordinates() + DirectionCoordinate[i];
-                Vector3 neighborPosition = neighborCoordinates * terrain.blockSize;
+            return false;
+        }
 
-                (int otherLOD, int index) = terrain.GetTerrainLOD(Vector3.Distance(neighborPosition, centerPositionOfTarget));
-
-                if (otherLOD <= targetLOD && seamExtrusion[i])
+        public bool RedoNormals(int newMeshLength)
+        {
+            for (int i = 0; i < 4; i++)
+            {
+                if (terrain.blockOfCoordinates.ContainsKey(GetCoordinates() + DirectionCoordinate[i]))
                 {
-                    // There should be no seam extrusion, but there is
-                    return true;
-                } else if (otherLOD > targetLOD && !seamExtrusion[i])
-                {
-                    // There should be seam extrusion, but there isn't
-                    return true;
+                    if (seamSize[i] * seamSize[i] != newMeshLength)
+                    {
+                        return true;
+                    }
                 }
             }
 
@@ -159,15 +170,14 @@ namespace JStuff.Generation.Terrain
             priority = index;
             targetLOD = LOD;
             centerPositionOfTarget = centerPosition;
-            targetExtrusionAmount = terrain.meshLOD[index].extrusion;
 
             if (iteration != 0 && (LOD == currentMeshLOD && newPosition == oldTargetPosition))
             {
                 int newSeamLength = ((currentData.meshRendererData.sizeX - 1) / targetLOD) + 1;
                 int newMeshLength = newSeamLength * newSeamLength;
-                if (RedoSeams(newMeshLength))
+                if (RedoSeamExtrusions(newMeshLength) || RedoNormals(newMeshLength))
                 {
-                    TerrainPool.QueueRenderMesh(this, iteration, currentData._meshRendererData, currentData._colormap, targetPosition, true, true);
+                    TerrainPool.QueueRenderMesh(this, iteration, currentData._meshRendererData, currentData._colormap, targetPosition, RedoSeamExtrusions(newMeshLength), RedoNormals(newMeshLength), false);
                 }
                 return;
             }
@@ -226,23 +236,22 @@ namespace JStuff.Generation.Terrain
 
             retval._normals = new Vector3[retval._meshRendererData.vertices.Length];
             retval.seamExtrusion = new bool[] { false, false, false, false };
+            retval.seamSize = new int[] { -1, -1, -1, -1 };
 
-            //retval._meshRendererData.CalculateUnormalizedNormals(ref retval._normals);
+            retval._meshRendererData.CalculateUnormalizedNormals(ref retval._normals);
 
-            //List<int> extrusionDirections = GetLODEdgeDirections();
+            foreach (var direction in GetLODEdgeDirections())
+            {
+                int LOD = GetNeighborLOD(direction);
 
-            //foreach (var direction in GetLODEdgeDirections())
-            //{
-            //    int LOD = GetNeighborLOD(direction);
+                int LODDiff = LOD / targetLOD;
 
-            //    int LODDiff = LOD / targetLOD;
+                if (LODDiff == 0)
+                    continue;
 
-            //    if (LODDiff == 0)
-            //        continue;
-
-            //    retval.seamExtrusion[direction] = true;
-            //    Seam.ExtrudeEdgeVertices(retval._meshRendererData, LODDiff, direction);
-            //}
+                retval.seamExtrusion[direction] = true;
+                Seam.ExtrudeEdgeVertices(retval._meshRendererData, LODDiff, direction);
+            }
 
             retval._meshColliderData = TerrainMeshGeneration.GenerateLODMeshData(retval.meshColliderData, terrain.colliderLOD);
 
@@ -273,6 +282,7 @@ namespace JStuff.Generation.Terrain
             //TODO: move most of this into TerrainPool and just send the job data there - less copying of data
             bool newPos = false;
             seamExtrusion = currentData.seamExtrusion;
+            seamSize = currentData.seamSize;
 
             if (targetPosition != oldTargetPosition)
             {
@@ -316,11 +326,17 @@ namespace JStuff.Generation.Terrain
                 SetPosition(targetPosition);
             }
 
-            if (targetLOD != currentMeshLOD || RedoSeams(currentData._meshRendererData.vertices.Length))
+            if (targetLOD != currentMeshLOD)
             {
                 //meshFilter.sharedMesh = TerrainMeshGeneration.GenerateMesh(currentData.meshLOD[index], currentData.colormapLOD[index]);
-                TerrainPool.QueueRenderMesh(this, iteration, currentData._meshRendererData, currentData._colormap, targetPosition, true, true);
+                TerrainPool.QueueRenderMesh(this, iteration, currentData._meshRendererData, currentData._colormap, targetPosition, false, false, true);
                 currentMeshLOD = targetLOD;
+            } else if (RedoSeamExtrusions(currentData._meshRendererData.vertices.Length) || RedoNormals(currentData._meshRendererData.vertices.Length))
+            {
+                TerrainPool.QueueRenderMesh(this, iteration, currentData._meshRendererData, currentData._colormap, targetPosition, 
+                    RedoSeamExtrusions(currentData._meshRendererData.vertices.Length), 
+                    RedoNormals(currentData._meshRendererData.vertices.Length),
+                    false);
             }
 
             // Mesh collider

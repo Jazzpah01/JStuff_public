@@ -44,9 +44,10 @@ namespace JStuff.Generation.Terrain
             public Vector3 targetPosition;
             public bool recalculateSeams;
             public bool recalculateNormals;
+            public bool remakeMesh;
             //public int LOD;
 
-            public RenderMeshDataJob(Block block, int blockIteration, MeshData meshData, Color[] colormap, Vector3 targetPosition, bool recalculateSeams, bool recalculateNormals)
+            public RenderMeshDataJob(Block block, int blockIteration, MeshData meshData, Color[] colormap, Vector3 targetPosition, bool recalculateSeams, bool recalculateNormals, bool remakeMesh)
             {
                 this.block = block;
                 this.blockIteration = blockIteration;
@@ -55,6 +56,7 @@ namespace JStuff.Generation.Terrain
                 this.targetPosition = targetPosition;
                 this.recalculateSeams = recalculateSeams;
                 this.recalculateNormals = recalculateNormals;
+                this.remakeMesh = remakeMesh;
                 //this.LOD = LOD;
             }
         }
@@ -102,40 +104,40 @@ namespace JStuff.Generation.Terrain
 
         private void Start()
         {
-            // TESTING array seam index
-            int[] testArray = new int[] {
-                5, 3, 5,
-                2, 5, 0,
-                5, 1, 5,
-            };
+            //// TESTING array seam index
+            //int[] testArray = new int[] {
+            //    5, 3, 5,
+            //    2, 5, 0,
+            //    5, 1, 5,
+            //};
 
-            for (int i = 0; i < 4; i++)
-            {
-                string s = "";
-                for (int j = 0; j < 3; j++)
-                {
-                    int arrayIndex = Seam.SeamToArrayIndex(3, i, j);
-                    s += testArray[arrayIndex];
-                }
-                UnityEngine.Debug.Log($"TESTING SEAM INDEX {i}: {s}");
-            }
+            //for (int i = 0; i < 4; i++)
+            //{
+            //    string s = "";
+            //    for (int j = 0; j < 3; j++)
+            //    {
+            //        int arrayIndex = Seam.SeamToArrayIndex(3, i, j);
+            //        s += testArray[arrayIndex];
+            //    }
+            //    UnityEngine.Debug.Log($"TESTING SEAM INDEX {i}: {s}");
+            //}
 
-            // TESTING mesh GetXZ
-            float[,] testFArray = new float[,]
-            {
-                { 0.5f, 0.5f, 0.5f },
-                { 0.5f, 0.5f, 0.5f },
-                { 0.5f, 0.5f, 0.5f }
-            };
+            //// TESTING mesh GetXZ
+            //float[,] testFArray = new float[,]
+            //{
+            //    { 0.5f, 0.5f, 0.5f },
+            //    { 0.5f, 0.5f, 0.5f },
+            //    { 0.5f, 0.5f, 0.5f }
+            //};
 
-            HeightMap hm = new HeightMap(testFArray);
+            //HeightMap hm = new HeightMap(testFArray);
 
-            var meshdata = TerrainMeshGeneration.GenerateMeshData(hm, 10);
+            //var meshdata = TerrainMeshGeneration.GenerateMeshData(hm, 10);
 
-            UnityEngine.Debug.Log($"TESTING MESH GetXZ: index {0} has {meshdata.GetXZ(0)}");
-            UnityEngine.Debug.Log($"TESTING MESH GetXZ: index {2} has {meshdata.GetXZ(2)}");
-            UnityEngine.Debug.Log($"TESTING MESH GetXZ: index {4} has {meshdata.GetXZ(4)}");
-            UnityEngine.Debug.Log($"TESTING MESH GetXZ: index {8} has {meshdata.GetXZ(8)}");
+            //UnityEngine.Debug.Log($"TESTING MESH GetXZ: index {0} has {meshdata.GetXZ(0)}");
+            //UnityEngine.Debug.Log($"TESTING MESH GetXZ: index {2} has {meshdata.GetXZ(2)}");
+            //UnityEngine.Debug.Log($"TESTING MESH GetXZ: index {4} has {meshdata.GetXZ(4)}");
+            //UnityEngine.Debug.Log($"TESTING MESH GetXZ: index {8} has {meshdata.GetXZ(8)}");
         }
 
         public static Vector3[] GetSeamNormals(int length)
@@ -241,9 +243,9 @@ namespace JStuff.Generation.Terrain
             destroyJobs.Enqueue(new DestroyJob(go, block, iteration));
         }
 
-        public static void QueueRenderMesh(Block block, int iteration, MeshData meshData, Color[] colormap, Vector3 targetPosition, bool recalculateSeams, bool recalculateNormals)
+        public static void QueueRenderMesh(Block block, int iteration, MeshData meshData, Color[] colormap, Vector3 targetPosition, bool recalculateSeams, bool recalculateNormals, bool remakeMesh)
         {
-            renderMeshJobs.Enqueue(new RenderMeshDataJob(block, iteration, meshData, colormap, targetPosition, recalculateSeams, recalculateNormals));
+            renderMeshJobs.Enqueue(new RenderMeshDataJob(block, iteration, meshData, colormap, targetPosition, recalculateSeams, recalculateNormals, remakeMesh));
         }
 
         public static void QueueColliderMesh(Block block, int iteration, MeshData meshData)
@@ -325,6 +327,10 @@ namespace JStuff.Generation.Terrain
                     bool redoSeams = false;
                     bool hasAllNeighbors = true;
 
+                    bool changedVertices = false;
+                    bool changedNormals = false;
+
+                    // Recalculate extrusions
                     if (job.recalculateSeams)
                     {
                         bool hasExtrusions = false;
@@ -334,13 +340,13 @@ namespace JStuff.Generation.Terrain
                             {
                                 hasExtrusions = true;
                                 job.block.seamExtrusion[i] = false;
+                                changedVertices = true;
                             }
                         }
 
                         if (hasExtrusions)
                             Seam.ResetExtrusion(job.block.currentData._meshRendererData, job.block.currentData.meshRendererData);
 
-                        // Seam extrusion
                         for (int i = 0; i < 4; i++)
                         {
                             job.block.seamExtrusion[i] = false;
@@ -357,11 +363,13 @@ namespace JStuff.Generation.Terrain
                             if (LODDiff <= 0)
                                 continue;
 
+                            changedVertices = true;
                             job.block.seamExtrusion[direction] = true;
                             Seam.ExtrudeEdgeVertices(job.block.currentData._meshRendererData, LODDiff, direction);
                         }
                     }
 
+                    // Recalculate normals
                     if (job.recalculateNormals)
                     {
                         job.block.currentData._meshRendererData.CalculateUnormalizedNormals(ref job.block.currentData._normals);
@@ -376,6 +384,7 @@ namespace JStuff.Generation.Terrain
                         }
                     }
 
+                    // Calculate normals on seams
                     for (int direction = 0; direction < 4; direction++)
                     {
                         if (WorldTerrain.instance.blockOfCoordinates.ContainsKey(coordinatesInDirection[direction]) && 
@@ -403,6 +412,8 @@ namespace JStuff.Generation.Terrain
                                 Seam.UpdateSeamColormap(ref thisColormap, otherColormap, direction);
 
                                 job.block.seamSize[direction] = seamSize;
+
+                                changedNormals = true;
                             }
                             else
                             {
@@ -423,23 +434,41 @@ namespace JStuff.Generation.Terrain
                         job.block.currentData._normals[i] = job.block.currentData._normals[i].normalized;
                     }
 
-                    Mesh mesh = new Mesh();
-                    mesh.vertices = job.meshData.vertices;
-                    mesh.uv = job.meshData.uv;
-                    mesh.triangles = job.meshData.triangles;
+                    if (job.remakeMesh)
+                    {
+                        Mesh mesh = new Mesh();
+                        mesh.vertices = job.meshData.vertices;
+                        mesh.uv = job.meshData.uv;
+                        mesh.triangles = job.meshData.triangles;
 
-                    mesh.normals = job.block.currentData._normals;
-                    mesh.colors = job.block.currentData._colormap;
+                        mesh.normals = job.block.currentData._normals;
+                        mesh.colors = job.block.currentData._colormap;
 
+                        job.block.meshFilter.sharedMesh = mesh;
+                    }
+                    else
+                    {
+                        Mesh mesh = job.block.meshFilter.sharedMesh;
+
+                        if (changedVertices)
+                        {
+                            mesh.vertices = job.meshData.vertices;
+                        }
+
+                        if (changedNormals)
+                        {
+                            mesh.normals = job.block.currentData._normals;
+                            mesh.colors = job.block.currentData._colormap;
+                        }
+                    }
+                    
                     job.block.seamless = seamless;
-
-                    job.block.meshFilter.sharedMesh = mesh;
 
                     job.block.SetPosition(job.targetPosition);
 
                     if (redoSeams)
                     {
-                        QueueRenderMesh(job.block, job.blockIteration, job.meshData, job.colormap, job.targetPosition, true, true);
+                        QueueRenderMesh(job.block, job.blockIteration, job.meshData, job.colormap, job.targetPosition, true, true, false);
                     }
                 }
             }

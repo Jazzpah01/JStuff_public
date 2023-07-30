@@ -245,6 +245,25 @@ public class Seam
         }
     }
 
+    public static void ResetExtrusion(Vector3[] target, Vector3[] original)
+    {
+        int targetSeamSize = (int)Mathf.Sqrt(target.Length);
+        int originalSeamSize = (int)Mathf.Sqrt(original.Length);
+
+        int LOD = (originalSeamSize - 1) / (targetSeamSize - 1);
+
+        foreach (var direction in new int[] { 0, 1, 2, 3 })
+        {
+            for (int i = 0; i < targetSeamSize; i++)
+            {
+                int targetIndex = SeamToArrayIndex(targetSeamSize, direction, i);
+                int originalIndex = SeamToArrayIndex(originalSeamSize, direction, i * LOD);
+
+                target[targetIndex] = original[originalIndex];
+            }
+        }
+    }
+
     public static void ExtrudeEdgeVertices(MeshData target, int LOD, int direction)
     {
         int j = 0;

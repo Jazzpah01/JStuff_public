@@ -17,5 +17,6 @@ namespace JStuff.Generation.Terrain
         public MeshData _meshColliderData;
 
         public bool[] seamExtrusion;
+        public int[] seamSize;
     }
 }
