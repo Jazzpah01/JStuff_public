@@ -15,9 +15,9 @@ namespace JStuff.Generation.Terrain
 
         protected override void SetupPorts()
         {
-            layer1 = AddInputLink<HeightMap>();
-            layer2 = AddInputLink<HeightMap>();
-            layerMask = AddInputLink<HeightMap>();
+            layer1 = AddInputLink<HeightMap>(portName: "Layer 1 (HM)");
+            layer2 = AddInputLink<HeightMap>(portName: "Layer 2 (HM)");
+            layerMask = AddInputLink<HeightMap>(portName: "Layer Mask (HM)");
             AddOutputLink<HeightMap>(Evaluate);
         }
 

@@ -97,15 +97,31 @@ namespace JStuff.Generation.Terrain
             if (g == null)
                 return null;
 
-            if (visualizationSeed != g.seed || heightmapTexture == null)
+            if (targetVisualizationSeed == -1)
             {
-                visualizationSeed = g.seed;
+                if (visualizationSeed != g.seed || heightmapTexture == null)
+                {
+                    visualizationSeed = g.seed;
 
-                RightTriangle rightTriangle = new RightTriangle(visualizationSeed, 129, h, d, 1, Vector2.zero);
-                HeightMap hm = rightTriangle.GetHeightMap(15);
+                    RightTriangle rightTriangle = new RightTriangle(visualizationSeed, 129, h, d, 1, Vector2.zero);
+                    HeightMap hm = rightTriangle.GetHeightMap(15);
 
-                heightmapTexture = hm.ToTexture();
+                    heightmapTexture = hm.ToTexture();
+                }
+            } else
+            {
+                if (visualizationSeed != targetVisualizationSeed || heightmapTexture == null)
+                {
+                    visualizationSeed = targetVisualizationSeed;
+
+                    RightTriangle rightTriangle = new RightTriangle(visualizationSeed, 129, h, d, 1, Vector2.zero);
+                    HeightMap hm = rightTriangle.GetHeightMap(15);
+
+                    heightmapTexture = hm.ToTexture();
+                }
             }
+
+            
 
             return heightmapTexture;
         }

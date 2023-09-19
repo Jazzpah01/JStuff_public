@@ -8,6 +8,7 @@ namespace JStuff.Generation.Terrain
     {
         [Header("Visualization")]
         public int visualizationSeed = -1;
+        public int targetVisualizationSeed = -1;
         public Texture2D heightmapTexture;
 
         public abstract Texture2D GetTexture();
