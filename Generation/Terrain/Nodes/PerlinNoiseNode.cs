@@ -14,7 +14,9 @@ namespace JStuff.Generation.Terrain
         [Min(1)]
         public int octaves = 1;
         [Range(0, 1)]
+        [Tooltip("Change in amplitude for each octaves. (a_n+1 = a_n * persistence)")]
         public float persistance = 0.5f;
+        [Tooltip("Change in frequency for each octaves. (f_n+1 = f_n * lacunarity)")]
         [Min(1)]
         public float lacunarity = 2;
 
@@ -45,8 +47,7 @@ namespace JStuff.Generation.Terrain
             if (offsetInput.LinkedPort != null)
                 offset = offsetInput.Evaluate();
 
-            //HeightMap retval = new HeightMap(PerlinNoise.GenerateNoiseMap(size, size, seedInput.Evaluate(), scale, octaves, persistance, lacunarity, offset / chunkSize + position / chunkSize));
-            HeightMap retval = PerlinNoise.GenerateNoiseMap(size, size, seedInput.Evaluate(), scale, offset / chunkSize + position / chunkSize);
+            HeightMap retval = new HeightMap(PerlinNoise.GenerateNoiseMap(size, size, seedInput.Evaluate(), scale, octaves, persistance, lacunarity, offset / chunkSize + position / chunkSize));
             return retval;
         }
 
