@@ -66,7 +66,7 @@ namespace JStuff.GraphCreator
             ICollapsable c = ((ICollapsable)connectedLink);
 
             if (c == null)
-                return true;
+                return false;
 
             return c.IsConstant();
         }

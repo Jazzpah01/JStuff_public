@@ -15,6 +15,8 @@ namespace JStuff.Generation.Terrain
             Grayscale
         }
 
+        
+
         // Member fields
         public Texture2D texture;
         public TextureType textureType = TextureType.Grayscale;

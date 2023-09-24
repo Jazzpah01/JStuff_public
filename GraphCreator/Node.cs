@@ -522,7 +522,7 @@ namespace JStuff.GraphCreator
             }
         }
 
-        public void Collapse()
+        public virtual void Collapse()
         {
             foreach (Link item in links)
             {
