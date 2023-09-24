@@ -31,7 +31,7 @@ namespace JStuff.Generation.Terrain
         {
             System.Random rng = new System.Random(seedInput.Evaluate());
 
-            float chunkSize = chunkSizePropertyInput.Evaluate() - 1;
+            float chunkSize = chunkSizePropertyInput.Evaluate();
             int points = (int)((chunkSize) * density); // -1???
             float distance = chunkSize / points;
             float offset = distance / 2f;
@@ -42,9 +42,11 @@ namespace JStuff.Generation.Terrain
             {
                 for (int x = 0; x < points; x++)
                 {
+                    float r0 = ((float)rng.NextDouble() * 2 - 1) * randomness;
+                    float r1 = ((float)rng.NextDouble() * 2 - 1) * randomness;
                     retval.Add(new Vector2(
-                        Mathf.Clamp(x * distance + offset + (float)rng.NextDouble() * randomness * offset, 0, chunkSize), 
-                        Mathf.Clamp(y * distance + offset + (float)rng.NextDouble() * randomness * offset, 0, chunkSize)
+                        Mathf.Clamp(x * distance + offset + r0 * offset, 0, chunkSize), 
+                        Mathf.Clamp(y * distance + offset + r1 * offset, 0, chunkSize)
                         )
                     );
                     Vector2 p = retval[retval.Count - 1];

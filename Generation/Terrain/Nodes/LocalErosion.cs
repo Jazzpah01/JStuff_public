@@ -16,6 +16,8 @@ namespace JStuff.Generation.Terrain
         InputLink<HeightMap> input;
         OutputLink<HeightMap> output;
 
+        public override bool CacheOutput => true;
+
         protected override void SetupPorts()
         {
             input = AddInputLink<HeightMap>();

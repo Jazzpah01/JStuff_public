@@ -13,7 +13,7 @@ namespace JStuff.Generation.Terrain
 
         InputLink<MeshData> meshRendererData;
         InputLink<Color[]> colormap;
-        InputLink<List<TerrainObject>> terrainObjects;
+        InputLink<TerrainObjectCollection> terrainObjects;
 
         [System.Flags]
         public enum BlockDataType
@@ -29,30 +29,40 @@ namespace JStuff.Generation.Terrain
         {
             meshRendererData = AddInputLink<MeshData>();
             colormap = AddInputLink<Color[]>(portName: "Colormap");
-            terrainObjects = AddInputLink<List<TerrainObject>>(portName: "TerrainObjects");
+            terrainObjects = AddInputLink<TerrainObjectCollection>(portName: "TerrainObjects");
         }
 
         public BlockData Evaluate(BlockDataType toEvaluate = BlockDataType.All)
         {
             iteration++;
             BlockData blockData = new BlockData();
-            if (meshRendererData.connectedLink != null && toEvaluate.HasFlag(BlockDataType.RenderMesh))
-            {
-                blockData.meshRendererData = meshRendererData.Evaluate();
-            } else
+
+            if (meshRendererData.connectedLink == null)
             {
                 throw new System.Exception("ERROR: No mesh renderer data connection.");
             }
+
+            if (toEvaluate.HasFlag(BlockDataType.RenderMesh) || toEvaluate.HasFlag(BlockDataType.ColliderMesh))
+            {
+                blockData.meshRendererData = meshRendererData.Evaluate();
+            }
                 
-            if (meshRendererData.connectedLink != null && toEvaluate.HasFlag(BlockDataType.ColliderMesh))
+            if (toEvaluate.HasFlag(BlockDataType.ColliderMesh))
             {
                 blockData.meshColliderData = TerrainMeshGeneration.GenerateLODMeshData(blockData.meshRendererData, colliderLOD);
             }
                 
             if (colormap.connectedLink != null && toEvaluate.HasFlag(BlockDataType.RenderMesh))
                 blockData.colormap = colormap.Evaluate();
+
             if (terrainObjects.connectedLink != null && toEvaluate.HasFlag(BlockDataType.TerrainObjects))
-                blockData.terrainObjects = terrainObjects.Evaluate();
+            {
+                var terrainObjectCollection = terrainObjects.Evaluate();
+
+                blockData.terrainObjects = terrainObjectCollection.terrainObjects;
+                blockData.foliage = terrainObjectCollection.foliage;
+            }
+                
             return blockData;
         }
 

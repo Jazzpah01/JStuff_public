@@ -10,6 +10,7 @@ namespace JStuff.Generation.Terrain
         public MeshData meshColliderData;
         public Color[] colormap;
         public List<TerrainObject> terrainObjects;
+        public List<(FoliageObject, List<List<Matrix4x4>>)> foliage;
 
         public MeshData _meshRendererData;
         public Color[] _colormap;

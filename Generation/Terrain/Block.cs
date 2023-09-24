@@ -24,6 +24,8 @@ namespace JStuff.Generation.Terrain
         BlockData oldData;
         public BlockData currentData;
 
+        public FoliageInstancing foliageInstancing;
+
         // For calculating seam normals
         public bool newNormals = true;
         //public Vector3[] normals;
@@ -48,10 +50,12 @@ namespace JStuff.Generation.Terrain
         public int iteration = 0;
         int terrainObjectsAmount = 0;
 
-        Mesh[] meshLOD;
-        MeshRenderer[] meshRendererLOD;
-        int currentMeshLOD = -1;
-        public int targetLOD = -1;
+        public int currentMeshLOD = -1;
+        public int currentTerrainObjectLOD = -1;
+        public int targetMeshLOD = -1;
+        public int targetTerrainObjectLOD = -1;
+        public bool targetHasCollider = false;
+        public bool currentHasCollider = false;
 
         public int Priority => priority;
         int priority = 0;
@@ -72,12 +76,12 @@ namespace JStuff.Generation.Terrain
                 {
                     int otherLOD = GetNeighborLOD(i);
 
-                    if (otherLOD <= targetLOD && seamExtrusion[i])
+                    if (otherLOD <= targetMeshLOD && seamExtrusion[i])
                     {
                         // There should be no seam extrusion, but there is
                         return true;
                     }
-                    else if (otherLOD > targetLOD && !seamExtrusion[i])
+                    else if (otherLOD > targetMeshLOD && !seamExtrusion[i])
                     {
                         // There should be seam extrusion, but there isn't
                         return true;
@@ -132,9 +136,12 @@ namespace JStuff.Generation.Terrain
 
             initialized = true;
 
-            oldTargetPosition = new Vector3(0, 0, float.MinValue);
+            oldTargetPosition = new Vector3(float.MinValue, float.MinValue, float.MinValue);
 
-            meshLOD = new Mesh[worldTerrain.meshLOD.Length];
+            foliageInstancing = gameObject.AddComponent<FoliageInstancing>();
+            foliageInstancing.SetSettings(terrain.foliageLODSettings, worldTerrain.blockSize, worldTerrain.cameraTransform);
+
+            //meshLOD = new Mesh[worldTerrain.meshLOD.Length];
         }
 
 #if UNITY_EDITOR
@@ -155,7 +162,12 @@ namespace JStuff.Generation.Terrain
 
         public void UpdateBlock(Vector3 centerPosition, Vector3 newPosition)
         {
-            (int LOD, int index) = terrain.GetTerrainLOD(Vector3.Distance(newPosition, centerPosition));
+            //(int LOD, int index) = terrain.GetTerrainLOD(Vector3.Distance(newPosition, centerPosition));
+
+            float distance = Vector3.Distance(centerPosition, newPosition);
+
+            int meshLOD = terrain.LODSettings.GetLOD(distance, TerrainLODSettings.LODTypes.Mesh);
+            int terrainObjectLOD = terrain.LODSettings.GetLOD(distance, TerrainLODSettings.LODTypes.TerrainObjects);
 
             if (waitingJobResult)
             {
@@ -163,17 +175,22 @@ namespace JStuff.Generation.Terrain
                 JobManagerComponent.instance.manager.FinishJobs();
             }
 
-            graph.LOD = LOD;
-            graph.CenterPosition = new Vector2(centerPosition.x, centerPosition.z);
-            graph.ChunkPosition = new Vector2(newPosition.x, newPosition.z);
-            targetPosition = newPosition;
-            priority = index;
-            targetLOD = LOD;
-            centerPositionOfTarget = centerPosition;
+            //graph.LOD = LOD;
+            //graph.CenterPosition = new Vector2(centerPosition.x, centerPosition.z);
+            //graph.ChunkPosition = new Vector2(newPosition.x, newPosition.z);
 
-            if (iteration != 0 && (LOD == currentMeshLOD && newPosition == oldTargetPosition))
+            graph.SetChunk(new Vector2(newPosition.x, newPosition.z), new Vector2(centerPosition.x, centerPosition.z), meshLOD, terrainObjectLOD);
+
+            targetPosition = newPosition;
+            //priority = index;
+            targetMeshLOD = meshLOD;
+            targetTerrainObjectLOD = terrainObjectLOD;
+            centerPositionOfTarget = centerPosition;
+            targetHasCollider = Vector3.Distance(terrain.GetCenterChunkPosition(), targetPosition) < terrain.colliderAtDistance;
+
+            if (iteration != 0 && (meshLOD == currentMeshLOD && newPosition == oldTargetPosition) && currentTerrainObjectLOD == terrainObjectLOD)
             {
-                int newSeamLength = ((currentData.meshRendererData.sizeX - 1) / targetLOD) + 1;
+                int newSeamLength = ((currentData.meshRendererData.sizeX - 1) / targetMeshLOD) + 1;
                 int newMeshLength = newSeamLength * newSeamLength;
                 if (RedoSeamExtrusions(newMeshLength) || RedoNormals(newMeshLength))
                 {
@@ -195,67 +212,90 @@ namespace JStuff.Generation.Terrain
             }
         }
 
-        //IEnumerator DelayedStuff()
-        //{
-        //    yield return null;
-
-        //    int newSeamLength = ((currentData.meshRendererData.sizeX - 1) / targetLOD) + 1;
-        //    int newMeshLength = newSeamLength * newSeamLength;
-        //    if (RedoSeams(newMeshLength))
-        //    {
-        //        TerrainPool.QueueRenderMesh(this, iteration, currentData._meshRendererData, currentData._colormap, targetPosition, true);
-        //    }
-        //}
-
         public object Job(object graph)
         {
-            BlockData retval = ((TerrainGraph)graph).EvaluateGraph();
+            TerrainRoot.BlockDataType jobFlags = TerrainRoot.BlockDataType.None;
 
-            retval._meshRendererData = TerrainMeshGeneration.GenerateLODMeshData(retval.meshRendererData, targetLOD);
-            retval._colormap = TerrainMeshGeneration.GenerateLODColormap(retval.colormap, targetLOD);
-
-            //for (int i = 0; i < retval._colormap.Length; i++)
-            //{
-            //    (int x, int z) = retval._meshRendererData.GetXZ(i);
-
-            //    if (x == 0 || x == retval._meshRendererData.sizeX - 1)
-            //        retval._colormap[i] = retval._colormap[i] / 2; // get average color
-
-            //    if (z == 0 || z == retval._meshRendererData.sizeZ - 1)
-            //        retval._colormap[i] = retval._colormap[i] / 2; // get average color
-            //}
-
-            //for (int i = 0; i < retval.colormap.Length; i++)
-            //{
-            //    (int x, int z) = retval.meshRendererData.GetXZ(i);
-
-            //    if (x == 0 || x == retval.meshRendererData.sizeX - 1)
-            //        retval.colormap[i] = retval.colormap[i] / 2; // get average color
-
-            //    if (z == 0 || z == retval.meshRendererData.sizeZ - 1)
-            //        retval.colormap[i] = retval.colormap[i] / 2; // get average color
-            //}
-
-            retval._normals = new Vector3[retval._meshRendererData.vertices.Length];
-            retval.seamExtrusion = new bool[] { false, false, false, false };
-            retval.seamSize = new int[] { -1, -1, -1, -1 };
-
-            retval._meshRendererData.CalculateUnormalizedNormals(ref retval._normals);
-
-            foreach (var direction in GetLODEdgeDirections())
+            if (targetPosition == oldTargetPosition)
             {
-                int LOD = GetNeighborLOD(direction);
+                if (targetTerrainObjectLOD != currentTerrainObjectLOD && targetTerrainObjectLOD > -1)
+                    jobFlags = jobFlags | TerrainRoot.BlockDataType.TerrainObjects;
 
-                int LODDiff = LOD / targetLOD;
+                if (currentMeshLOD < 0 && targetMeshLOD > -1)
+                {
+                    jobFlags = jobFlags | TerrainRoot.BlockDataType.RenderMesh;
+                }
 
-                if (LODDiff == 0)
-                    continue;
+                if (targetHasCollider && !currentHasCollider)
+                    jobFlags = jobFlags | TerrainRoot.BlockDataType.ColliderMesh;
 
-                retval.seamExtrusion[direction] = true;
-                Seam.ExtrudeEdgeVertices(retval._meshRendererData, LODDiff, direction);
+            } else
+            {
+                if (targetMeshLOD > -1)
+                {
+                    jobFlags = jobFlags | TerrainRoot.BlockDataType.RenderMesh;
+                }
+
+                if (targetTerrainObjectLOD > -1)
+                    jobFlags = jobFlags | TerrainRoot.BlockDataType.TerrainObjects;
+
+                if (targetHasCollider)
+                    jobFlags = jobFlags | TerrainRoot.BlockDataType.ColliderMesh;
             }
 
-            retval._meshColliderData = TerrainMeshGeneration.GenerateLODMeshData(retval.meshColliderData, terrain.colliderLOD);
+            BlockData retval = ((TerrainGraph)graph).EvaluateGraph(jobFlags);
+
+            if (targetPosition == oldTargetPosition)
+            {
+                // Reuse
+                if (!jobFlags.HasFlag(TerrainRoot.BlockDataType.TerrainObjects))
+                {
+                    retval.foliage = currentData.foliage;
+                    retval.terrainObjects = currentData.terrainObjects;
+                }
+
+                if (!jobFlags.HasFlag(TerrainRoot.BlockDataType.RenderMesh))
+                {
+                    retval.meshRendererData = currentData.meshRendererData;
+                    retval.colormap = currentData.colormap;
+                }
+
+                if (!jobFlags.HasFlag(TerrainRoot.BlockDataType.ColliderMesh))
+                    retval.meshColliderData = currentData.meshColliderData;
+            }
+
+            //TODO: Make color of mesh corners correct. They are incorrect right now!
+
+            if (targetMeshLOD > -1)
+            {
+                // Set changable data
+                retval._meshRendererData = TerrainMeshGeneration.GenerateLODMeshData(retval.meshRendererData, targetMeshLOD);
+                retval._colormap = TerrainMeshGeneration.GenerateLODColormap(retval.colormap, targetMeshLOD);
+
+                retval._normals = new Vector3[retval._meshRendererData.vertices.Length];
+                retval.seamExtrusion = new bool[] { false, false, false, false };
+                retval.seamSize = new int[] { -1, -1, -1, -1 };
+
+                retval._meshRendererData.CalculateUnormalizedNormals(ref retval._normals);
+
+                foreach (var direction in GetLODEdgeDirections())
+                {
+                    int LOD = GetNeighborLOD(direction);
+
+                    int LODDiff = LOD / targetMeshLOD;
+
+                    if (LODDiff == 0)
+                        continue;
+
+                    retval.seamExtrusion[direction] = true;
+                    Seam.ExtrudeEdgeVertices(retval._meshRendererData, LODDiff, direction);
+                }
+            }
+
+            if (targetHasCollider)
+            {
+                retval._meshColliderData = TerrainMeshGeneration.GenerateLODMeshData(retval.meshColliderData, terrain.colliderLOD);
+            }
 
             return retval;
         }
@@ -323,16 +363,14 @@ namespace JStuff.Generation.Terrain
 
             if (newPos)
             {
-                currentMeshLOD = -1;
-
                 SetPosition(targetPosition);
             }
 
-            if (targetLOD != currentMeshLOD)
+            if (targetMeshLOD != currentMeshLOD || newPos)
             {
                 //meshFilter.sharedMesh = TerrainMeshGeneration.GenerateMesh(currentData.meshLOD[index], currentData.colormapLOD[index]);
                 TerrainPool.QueueRenderMesh(this, iteration, currentData._meshRendererData, currentData._colormap, targetPosition, false, false, true);
-                currentMeshLOD = targetLOD;
+                currentMeshLOD = targetMeshLOD;
             } else if (RedoSeamExtrusions(currentData._meshRendererData.vertices.Length) || RedoNormals(currentData._meshRendererData.vertices.Length))
             {
                 TerrainPool.QueueRenderMesh(this, iteration, currentData._meshRendererData, currentData._colormap, targetPosition, 
@@ -342,14 +380,14 @@ namespace JStuff.Generation.Terrain
             }
 
             // Mesh collider
-            if (oldData == null || currentData.meshColliderData != oldData.meshColliderData)
+            if (oldData == null || newPos || targetHasCollider != currentHasCollider)
             {
-                if (currentData.meshColliderData != null && Vector3.Distance(terrain.GetCenterChunkPosition(), targetPosition) < terrain.colliderAtDistance)
+                if (currentData.meshColliderData != null && targetHasCollider)
                 {
                     TerrainPool.QueueColliderMesh(
                         this, iteration, currentData.meshColliderData);
                 }
-                else
+                else if (colliderObject.activeInHierarchy)
                 {
                     colliderObject.SetActive(false);
                 }
@@ -371,6 +409,11 @@ namespace JStuff.Generation.Terrain
                 }
             }
 
+            if (currentTerrainObjectLOD != targetTerrainObjectLOD || (newPos && currentTerrainObjectLOD > -1))
+            {
+                TerrainPool.QueueFoliage(currentData.foliage, this, iteration);
+            }
+
             if (terrain.blockOfCoordinates.ContainsKey(new TerrainCoordinate(terrain.blockSize, oldTargetPosition)) &&
                 terrain.blockOfCoordinates[new TerrainCoordinate(terrain.blockSize, oldTargetPosition)] == this)
             {
@@ -386,6 +429,8 @@ namespace JStuff.Generation.Terrain
                 terrain.blockOfCoordinates.Add(GetCoordinates(), this);
             }
 
+            currentTerrainObjectLOD = targetTerrainObjectLOD;
+            currentHasCollider = targetHasCollider;
             oldTargetPosition = targetPosition;
             oldData = currentData;
         }
@@ -453,7 +498,7 @@ namespace JStuff.Generation.Terrain
             TerrainCoordinate otherCoordinate = TerrainCoordinate.DirectionCoordinate[direction] + GetCoordinates();
 
             float distance = Vector3.Distance(otherCoordinate * terrain.blockSize, centerPositionOfTarget);
-            (int otherLOD, int index) = terrain.GetTerrainLOD(distance);
+            int otherLOD = terrain.LODSettings.GetLOD(distance, TerrainLODSettings.LODTypes.Mesh);
 
             //if (!terrain.blockOfCoordinates.ContainsKey(otherCoordinate))
             //{
@@ -462,7 +507,7 @@ namespace JStuff.Generation.Terrain
 
             //int otherLOD = terrain.blockOfCoordinates[otherCoordinate].targetLOD;
 
-            return otherLOD > targetLOD;
+            return otherLOD > targetMeshLOD;
         }
 
         public int GetNeighborLOD(int direction)
@@ -470,7 +515,8 @@ namespace JStuff.Generation.Terrain
             TerrainCoordinate otherCoordinate = TerrainCoordinate.DirectionCoordinate[direction] + GetCoordinates();
 
             float distance = Vector3.Distance(otherCoordinate * terrain.blockSize, centerPositionOfTarget);
-            (int LOD, int index) = terrain.GetTerrainLOD(distance);
+            int LOD = terrain.LODSettings.GetLOD(distance, TerrainLODSettings.LODTypes.Mesh);
+            //(int LOD, int index) = terrain.GetTerrainLOD(distance);
 
             return LOD;
 

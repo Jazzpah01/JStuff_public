@@ -10,36 +10,19 @@ namespace JStuff.Generation.Terrain
     [CreateNodePath("Terrain/Terrain Objects/New Biome")]
     public class BiomeNode : TerrainNode
     {
-        public List<TerrainObjectType> biome;
-        private List<IWeightedPrefab> prefabs;
+        public TerrainBiome biome;
 
         protected override void SetupPorts()
         {
-            AddOutputLink<List<IWeightedPrefab>>(() => prefabs, portName: "Biome");
-        }
-
-        public override void Initialize()
-        {
-            prefabs = new List<IWeightedPrefab>();
-
-            foreach (TerrainObjectType item in biome)
-            {
-                prefabs.Add(item);
-            }
+            AddOutputLink<TerrainBiome>(() => biome, portName: "Biome");
         }
 
         public override Node Clone()
         {
             var retval = base.Clone() as BiomeNode;
 
-            List<TerrainObjectType> biomeClone = new List<TerrainObjectType>();
+            retval.biome = biome.Clone();
 
-            foreach (var item in biome)
-            {
-                biomeClone.Add(item);
-            }
-
-            retval.biome = biomeClone;
             return retval;
         }
     }

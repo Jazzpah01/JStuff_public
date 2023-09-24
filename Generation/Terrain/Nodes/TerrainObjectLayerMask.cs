@@ -40,52 +40,54 @@ namespace JStuff.Generation.Terrain
 
         List<TerrainObject> Evaluate()
         {
-            List<TerrainObject> retval = new List<TerrainObject>();
+            throw new System.Exception();
+            // TODO: DO
+            //List<TerrainObject> retval = new List<TerrainObject>();
 
-            HeightMap hm = heightmapInput.Evaluate();
-            float meshSize = sizeInput.Evaluate();
-            float s = (hm.Width - 1) / (sizeInput.Evaluate());
-            float scale = scaleInput.Evaluate();
+            //HeightMap hm = heightmapInput.Evaluate();
+            //float meshSize = sizeInput.Evaluate();
+            //float s = (hm.Width - 1) / (sizeInput.Evaluate());
+            //float scale = scaleInput.Evaluate();
 
-            System.Random rng = new System.Random(seedInput.Evaluate());
+            //System.Random rng = new System.Random(seedInput.Evaluate());
 
-            HeightMap[] layerMask = layerMaskInput.EvaluateAll();
+            //HeightMap[] layerMask = layerMaskInput.EvaluateAll();
 
-            List<IWeightedPrefab>[] biome = biome0Input.EvaluateAll();
+            //List<IWeightedPrefab>[] biome = biome0Input.EvaluateAll();
 
-            foreach (Vector2 v in pointsInput.Evaluate())
-            {
-                int x = (int)(v.x * s);
-                int y = (int)(v.y * s);
+            //foreach (Vector2 v in pointsInput.Evaluate())
+            //{
+            //    int x = (int)(v.x * s);
+            //    int y = (int)(v.y * s);
 
-                float slope = hm.GetSlope(Mathf.FloorToInt(v.x * s), Mathf.FloorToInt(v.y * s)) * scale / meshSize * hm.Width;
-                float height = hm.GetContinousHeight(v.x * s, v.y * s) * scale;
+            //    float slope = hm.GetSlope(Mathf.FloorToInt(v.x * s), Mathf.FloorToInt(v.y * s)) * scale / meshSize * hm.Width;
+            //    float height = hm.GetContinousHeight(v.x * s, v.y * s) * scale;
 
-                float p = -1;
+            //    float p = -1;
 
-                TerrainObjectType typeToSpawn = (TerrainObjectType)biome[0].GetWeightedPrefab(rng);
+            //    TerrainObjectType typeToSpawn = (TerrainObjectType)biome[0].GetWeightedPrefab(rng);
 
-                for (int i = 0; i < layerMaskInput.outputLinks.Count; i++)
-                {
-                    p = layerMask[i].GetContinousHeight(v.x * s, v.y * s) + ((float)rng.NextDouble()).Remap(0f, 1f, -1f, 1f) * randomness;
+            //    for (int i = 0; i < layerMaskInput.outputLinks.Count; i++)
+            //    {
+            //        p = layerMask[i].GetContinousHeight(v.x * s, v.y * s) + ((float)rng.NextDouble()).Remap(0f, 1f, -1f, 1f) * randomness;
 
-                    typeToSpawn = (p > 0) ? (TerrainObjectType)biome[i+1].GetWeightedPrefab(rng) : typeToSpawn;
-                }
+            //        typeToSpawn = (p > 0) ? (TerrainObjectType)biome[i+1].GetWeightedPrefab(rng) : typeToSpawn;
+            //    }
 
-                if (slope > typeToSpawn.maxSlope || height < typeToSpawn.minHeight || height > typeToSpawn.maxHeight)
-                    continue;
+            //    if (slope > typeToSpawn.maxSlope || height < typeToSpawn.minHeight || height > typeToSpawn.maxHeight)
+            //        continue;
 
-                float rot = (float)rng.NextDouble() * 360f;
+            //    float rot = (float)rng.NextDouble() * 360f;
 
-                retval.Add(new TerrainObject(
-                    typeToSpawn.prefab,
-                    new Vector3(v.x, hm[x, y] * scale, v.y),
-                    typeToSpawn.objectRadius,
-                    1 + typeToSpawn.scaleChange * (1 + typeToSpawn.scaleVar * ((float)rng.NextDouble() * 2 - 1)),
-                    Quaternion.Euler(0, rot, 0)));
-            }
+            //    retval.Add(new TerrainObject(
+            //        typeToSpawn.prefab,
+            //        new Vector3(v.x, hm[x, y] * scale, v.y),
+            //        typeToSpawn.objectRadius,
+            //        1 + typeToSpawn.scaleChange * (1 + typeToSpawn.scaleVar * ((float)rng.NextDouble() * 2 - 1)),
+            //        Quaternion.Euler(0, rot, 0)));
+            //}
 
-            return retval;
+            //return retval;
         }
 
         public override Node Clone()

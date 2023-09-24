@@ -21,6 +21,9 @@ namespace JStuff.Generation.Terrain
         PropertyLink<float> scaleProperty;
         PropertyLink<float> zoomProperty;
         PropertyLink<int> LODProperty;
+        PropertyLink<int> meshLODProperty;
+        PropertyLink<int> terrainObjectLODProperty;
+        PropertyLink<int> foliageLODProperty;
 
         public float Zoom
         {
@@ -102,6 +105,17 @@ namespace JStuff.Generation.Terrain
                     throw new System.Exception("Cannot get center position of uninitialized graph!");
                 return centerPositionProperty.cachedValue;
             }
+        }
+
+        public void SetChunk(Vector2 chunkPosition, Vector2 centerPosition, int meshLOD, int terrainObjectLOD)
+        {
+            if (!initialized)
+                throw new System.Exception("Cannot set chunk position of uninitialized graph!");
+
+            chunkPositionProperty.cachedValue = chunkPosition;
+            centerPositionProperty.cachedValue = centerPosition;
+            meshLODProperty.cachedValue = meshLOD;
+            terrainObjectLODProperty.cachedValue = terrainObjectLOD;
         }
 
         public float ChunkSize
@@ -196,6 +210,10 @@ namespace JStuff.Generation.Terrain
             scaleProperty = AddProperty<float>(scale, "scale", PropertyContext.Shared, true);
             zoomProperty = AddProperty<float>(zoom, "zoom", PropertyContext.Shared, true);
             LODProperty = AddProperty<int>(1, "lod", PropertyContext.Unique, false);
+
+            meshLODProperty = AddProperty<int>(1, "meshLOD", PropertyContext.Unique);
+            terrainObjectLODProperty = AddProperty<int>(1, "terrainObjectLOD", PropertyContext.Unique);
+            foliageLODProperty = AddProperty(1, "foliageLOD", PropertyContext.Unique);
         }
 
         public override Graph Clone()

@@ -21,6 +21,20 @@ namespace JStuff.Generation.Terrain
             }
         }
 
+        public struct FoliageInstantiationJob
+        {
+            public List<(FoliageObject, List<List<Matrix4x4>>)> foliage;
+            public Block block;
+            public int blockIteration;
+
+            public FoliageInstantiationJob(List<(FoliageObject, List<List<Matrix4x4>>)> foliage, Block block, int blockIteration)
+            {
+                this.foliage = foliage;
+                this.block = block;
+                this.blockIteration = blockIteration;
+            }
+        }
+
         public struct DestroyJob
         {
             public GameObject gameObject;
@@ -77,18 +91,29 @@ namespace JStuff.Generation.Terrain
             }
         }
 
-        public float budget_ms = 2f;
-        public float max_budged_ms = 4f;
-        public float workload = 0f;
+        public WorldTerrain worldTerrain;
+        public TerrainLODSettings terrainLODSettings;
+
+        [Header("Debug")]
+        public float budget_ms = 0;
+        public float max_budged_ms = 0;
+
+        public AnimationCurve budget_curve;
+
+        public float distanceToUpdate;
+        public float jobWorkload = 0f;
         public float elapsed_ms = 0f;
+        public float max_elapsed_ms = 0f;
+        public int initializing = 10;
 
         private int current = 0;
         private int changed = 0;
 
-        private int initializing = 10;
+        private float updateDistance;
 
         private static Queue<InstantiationJob> instantiationJobs = new Queue<InstantiationJob>();
         private static Queue<DestroyJob> destroyJobs = new Queue<DestroyJob>();
+        private static Queue<FoliageInstantiationJob> foliageInstantiationJobs = new Queue<FoliageInstantiationJob>();
         private static Queue<RenderMeshDataJob> renderMeshJobs = new Queue<RenderMeshDataJob>();
         private static Queue<ColliderMeshDataJob> colliderMeshJobs = new Queue<ColliderMeshDataJob>();
 
@@ -102,42 +127,17 @@ namespace JStuff.Generation.Terrain
         static Dictionary<int, Stack<Vector3[]>> unusedSeamNormals = new Dictionary<int, Stack<Vector3[]>>();
         static Dictionary<int, Stack<Color[]>> unusedSeamColormaps = new Dictionary<int, Stack<Color[]>>();
 
+        
+
         private void Start()
         {
-            //// TESTING array seam index
-            //int[] testArray = new int[] {
-            //    5, 3, 5,
-            //    2, 5, 0,
-            //    5, 1, 5,
-            //};
+            if (terrainLODSettings == null)
+                throw new System.Exception("Settings are not defined in TerrainPool component.");
 
-            //for (int i = 0; i < 4; i++)
-            //{
-            //    string s = "";
-            //    for (int j = 0; j < 3; j++)
-            //    {
-            //        int arrayIndex = Seam.SeamToArrayIndex(3, i, j);
-            //        s += testArray[arrayIndex];
-            //    }
-            //    UnityEngine.Debug.Log($"TESTING SEAM INDEX {i}: {s}");
-            //}
-
-            //// TESTING mesh GetXZ
-            //float[,] testFArray = new float[,]
-            //{
-            //    { 0.5f, 0.5f, 0.5f },
-            //    { 0.5f, 0.5f, 0.5f },
-            //    { 0.5f, 0.5f, 0.5f }
-            //};
-
-            //HeightMap hm = new HeightMap(testFArray);
-
-            //var meshdata = TerrainMeshGeneration.GenerateMeshData(hm, 10);
-
-            //UnityEngine.Debug.Log($"TESTING MESH GetXZ: index {0} has {meshdata.GetXZ(0)}");
-            //UnityEngine.Debug.Log($"TESTING MESH GetXZ: index {2} has {meshdata.GetXZ(2)}");
-            //UnityEngine.Debug.Log($"TESTING MESH GetXZ: index {4} has {meshdata.GetXZ(4)}");
-            //UnityEngine.Debug.Log($"TESTING MESH GetXZ: index {8} has {meshdata.GetXZ(8)}");
+            budget_ms = terrainLODSettings.terrainPoolWorkloadTarget_Ms;
+            max_budged_ms = terrainLODSettings.terrainPoolWorkloadMax_Ms;
+            budget_curve = terrainLODSettings.terrainPoolWorkloadCurve;
+            updateDistance = terrainLODSettings.worldTerrainUpdateDistance;
         }
 
         public static Vector3[] GetSeamNormals(int length)
@@ -197,6 +197,7 @@ namespace JStuff.Generation.Terrain
 
         private void Awake()
         {
+            initializing = 10;
             freeObjects = new Dictionary<GameObject, Stack<GameObject>>();
             usedObjects = new Dictionary<GameObject, GameObject>();
             instance = this;
@@ -241,6 +242,11 @@ namespace JStuff.Generation.Terrain
         public static void QueueDestroyTerrainObject(GameObject go, Block block, int iteration)
         {
             destroyJobs.Enqueue(new DestroyJob(go, block, iteration));
+        }
+
+        public static void QueueFoliage(List<(FoliageObject, List<List<Matrix4x4>>)> foliage, Block block, int iteration)
+        {
+            foliageInstantiationJobs.Enqueue(new FoliageInstantiationJob(foliage, block, iteration));
         }
 
         public static void QueueRenderMesh(Block block, int iteration, MeshData meshData, Color[] colormap, Vector3 targetPosition, bool recalculateSeams, bool recalculateNormals, bool remakeMesh)
@@ -291,12 +297,19 @@ namespace JStuff.Generation.Terrain
 
         private void Update()
         {
-            stopwatch.Restart();
+            Transform cameraTransform = worldTerrain.cameraTransform;
 
-            float b = Mathf.Min(budget_ms + budget_ms * Mathf.Max(workload - 1, 0), max_budged_ms);
+            distanceToUpdate = (new Vector3(cameraTransform.position.x, 0, cameraTransform.position.z) - worldTerrain.transform.position).magnitude;
+            float t = Mathf.Clamp01(distanceToUpdate / updateDistance);
+
+            float v = budget_curve.Evaluate(t);
+
+            float b = Mathf.Clamp((1 - v) * budget_ms + v * max_budged_ms, budget_ms, max_budged_ms);
 
             if (initializing > 0)
                 b = 1000f;
+
+            stopwatch.Restart();
 
             while (stopwatch.Elapsed.TotalMilliseconds < b && destroyJobs.Count > 0)
             {
@@ -358,7 +371,7 @@ namespace JStuff.Generation.Terrain
                         {
                             int LOD = job.block.GetNeighborLOD(direction);
 
-                            int LODDiff = LOD / job.block.targetLOD;
+                            int LODDiff = LOD / job.block.targetMeshLOD;
 
                             if (LODDiff <= 0)
                                 continue;
@@ -498,14 +511,27 @@ namespace JStuff.Generation.Terrain
                 }
             }
 
-            changed = renderMeshJobs.Count + colliderMeshJobs.Count + instantiationJobs.Count - current;
-            current = renderMeshJobs.Count + colliderMeshJobs.Count + instantiationJobs.Count;
+            while (stopwatch.Elapsed.TotalMilliseconds < b && foliageInstantiationJobs.Count > 0)
+            {
+                FoliageInstantiationJob job = foliageInstantiationJobs.Dequeue();
 
-            workload += (float)changed;
+                if (job.blockIteration == job.block.iteration)
+                {
+                    job.block.foliageInstancing.SetInstancedFoliage(job.foliage);
+                }
+            }
+
+            jobWorkload = renderMeshJobs.Count + colliderMeshJobs.Count + instantiationJobs.Count;
             elapsed_ms = (float)stopwatch.Elapsed.TotalMilliseconds;
 
             if (renderMeshJobs.Count + colliderMeshJobs.Count + instantiationJobs.Count == 0 && initializing > 0)
+            {
                 initializing--;
+            } else
+            {
+                if (elapsed_ms > max_elapsed_ms)
+                    max_elapsed_ms = elapsed_ms;
+            }
         }
 
         private static void SetGameObjectValues(TerrainObject terrainObject, GameObject go, Block block)

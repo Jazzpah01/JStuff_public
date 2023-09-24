@@ -8,9 +8,9 @@ namespace JStuff.Generation.Terrain
     public struct TerrainObject
     {
         public GameObject prefab;
+        public float radius;
         public Vector3 position;
         public Quaternion rotation;
-        public float radius;
         public float scale;
 
         public TerrainObject(GameObject prefab, Vector3 position, float radius, float scale, Quaternion rotation)

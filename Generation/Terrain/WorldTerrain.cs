@@ -17,18 +17,19 @@ namespace JStuff.Generation.Terrain
         [Header("Graph Settings")]
         public TerrainGraph graphData;
         public Material material;
-        public string blockLayer;
+        public string blockLayer = "Default";
         public bool raymarchingTerrain = false;
         public bool enableThreading = false;
 
         [Header("Visual Settings")]
-        public float updateOnCameraChangeDistance = 0.5f;
         public float generateDistance = 100;
         public float generateDistanceEditor = 1000;
-        [Min(1)] public int terrainHalfsize = 1;
+        [Min(1)] public int terrainHalfsize = 50;
         public Transform cameraTransform;
 
-        public TerrainLOD[] meshLOD;
+        public TerrainLODSettings LODSettings;
+        public FoliageLODSettings foliageLODSettings;
+
         public int colliderLOD = 2;
         public float colliderAtDistance = 200;
 
@@ -44,6 +45,7 @@ namespace JStuff.Generation.Terrain
         // Coordinate to block
         public Dictionary<TerrainCoordinate, Block> blockOfCoordinates;
 
+        private float updateOnCameraChangeDistance = 150f;
 
         private Block[] savedBlocks;
 
@@ -139,6 +141,7 @@ namespace JStuff.Generation.Terrain
         private void Awake()
         {
             instance = this;
+            updateOnCameraChangeDistance = LODSettings.worldTerrainUpdateDistance;
         }
 
         private void Start()
@@ -784,20 +787,20 @@ namespace JStuff.Generation.Terrain
             return transform.position - new Vector3(transform.position.x % blockSize, 0, transform.position.z % blockSize);
         }
 
-        public (int LOD, int index) GetTerrainLOD(float distance)
-        {
-            if (meshLOD == null || meshLOD.Length == 0)
-            {
-                return (1, 0);
-            }
+        //public (int LOD, int index) GetTerrainLOD(float distance)
+        //{
+        //    if (meshLOD == null || meshLOD.Length == 0)
+        //    {
+        //        return (1, 0);
+        //    }
 
-            for (int i = meshLOD.Length - 1; i >= 0; i--)
-            {
-                if (distance >= meshLOD[i].distance)
-                    return (meshLOD[i].LOD, i);
-            }
+        //    for (int i = meshLOD.Length - 1; i >= 0; i--)
+        //    {
+        //        if (distance >= meshLOD[i].distance)
+        //            return (meshLOD[i].LOD, i);
+        //    }
 
-            return (1, 0);
-        }
+        //    return (1, 0);
+        //}
     }
 }
