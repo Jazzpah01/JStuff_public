@@ -127,7 +127,7 @@ namespace JStuff.Generation.Terrain
         static Dictionary<int, Stack<Vector3[]>> unusedSeamNormals = new Dictionary<int, Stack<Vector3[]>>();
         static Dictionary<int, Stack<Color[]>> unusedSeamColormaps = new Dictionary<int, Stack<Color[]>>();
 
-        
+
 
         private void Start()
         {
@@ -145,7 +145,8 @@ namespace JStuff.Generation.Terrain
             if (unusedSeamNormals.ContainsKey(length) && unusedSeamNormals[length].Count > 0)
             {
                 return unusedSeamNormals[length].Pop();
-            } else
+            }
+            else
             {
                 return new Vector3[length];
             }
@@ -280,7 +281,8 @@ namespace JStuff.Generation.Terrain
                 usedObjects.Add(go, terrainObject.prefab);
 
                 return go;
-            } else
+            }
+            else
             {
                 GameObject go = freeObjects[terrainObject.prefab].Pop();
                 //go.tag = "Spawned";
@@ -309,6 +311,11 @@ namespace JStuff.Generation.Terrain
             if (initializing > 0)
                 b = 1000f;
 
+            float jobPenalty_terrainObjects = terrainLODSettings.jobPenalty_terrainObjects;
+            float jobPenalty_renderMesh = terrainLODSettings.jobPenalty_renderMesh;
+            float jobPenalty_collider = terrainLODSettings.jobPenalty_collider;
+            float jobPenalty_foliage = terrainLODSettings.jobPenalty_foliage;
+
             stopwatch.Restart();
 
             while (stopwatch.Elapsed.TotalMilliseconds < b && destroyJobs.Count > 0)
@@ -324,12 +331,13 @@ namespace JStuff.Generation.Terrain
 
             while (stopwatch.Elapsed.TotalMilliseconds < b && renderMeshJobs.Count > 0)
             {
+                b -= jobPenalty_renderMesh;
                 RenderMeshDataJob job = renderMeshJobs.Dequeue();
 
                 if (job.blockIteration == job.block.iteration)
                 {
                     TerrainCoordinate blockCoordinates = job.block.GetCoordinates();
-                    TerrainCoordinate[] coordinatesInDirection = new TerrainCoordinate[] { 
+                    TerrainCoordinate[] coordinatesInDirection = new TerrainCoordinate[] {
                         blockCoordinates + new TerrainCoordinate(1, 0),
                         blockCoordinates + new TerrainCoordinate(0, 1),
                         blockCoordinates + new TerrainCoordinate(-1, 0),
@@ -400,7 +408,7 @@ namespace JStuff.Generation.Terrain
                     // Calculate normals on seams
                     for (int direction = 0; direction < 4; direction++)
                     {
-                        if (WorldTerrain.instance.blockOfCoordinates.ContainsKey(coordinatesInDirection[direction]) && 
+                        if (WorldTerrain.instance.blockOfCoordinates.ContainsKey(coordinatesInDirection[direction]) &&
                             WorldTerrain.instance.blockOfCoordinates[coordinatesInDirection[direction]] &&
                             job.block.seamSize[direction] < 0)
                         {
@@ -474,7 +482,7 @@ namespace JStuff.Generation.Terrain
                             mesh.colors = job.block.currentData._colormap;
                         }
                     }
-                    
+
                     job.block.seamless = seamless;
 
                     job.block.SetPosition(job.targetPosition);
@@ -488,6 +496,8 @@ namespace JStuff.Generation.Terrain
 
             while (stopwatch.Elapsed.TotalMilliseconds < b && colliderMeshJobs.Count > 0)
             {
+                b -= jobPenalty_collider;
+
                 ColliderMeshDataJob job = colliderMeshJobs.Dequeue();
 
                 if (job.blockIteration == job.block.iteration)
@@ -502,6 +512,8 @@ namespace JStuff.Generation.Terrain
 
             while (stopwatch.Elapsed.TotalMilliseconds < b && instantiationJobs.Count > 0)
             {
+                b -= jobPenalty_terrainObjects;
+
                 InstantiationJob job = instantiationJobs.Dequeue();
 
                 if (job.blockIteration == job.block.iteration)
@@ -513,6 +525,8 @@ namespace JStuff.Generation.Terrain
 
             while (stopwatch.Elapsed.TotalMilliseconds < b && foliageInstantiationJobs.Count > 0)
             {
+                b -= jobPenalty_foliage;
+
                 FoliageInstantiationJob job = foliageInstantiationJobs.Dequeue();
 
                 if (job.blockIteration == job.block.iteration)
@@ -527,7 +541,8 @@ namespace JStuff.Generation.Terrain
             if (renderMeshJobs.Count + colliderMeshJobs.Count + instantiationJobs.Count == 0 && initializing > 0)
             {
                 initializing--;
-            } else
+            }
+            else
             {
                 if (elapsed_ms > max_elapsed_ms)
                     max_elapsed_ms = elapsed_ms;

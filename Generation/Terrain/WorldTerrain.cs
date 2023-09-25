@@ -64,6 +64,8 @@ namespace JStuff.Generation.Terrain
 
         bool shouldUpdate = false;
 
+        float maxWorkLoad;
+
 
         System.Diagnostics.Stopwatch stopwatch = new Stopwatch();
 
@@ -94,6 +96,9 @@ namespace JStuff.Generation.Terrain
             oldPositions = new HashSet<Vector3>();
             blocks = new List<Block>();
             usedBlocks = new List<Block>();
+
+            maxWorkLoad = LODSettings.worldTerrainMaxWorkload_Ms;
+            generateDistance = LODSettings.worldTerrainDistance;
 
             savedCoordinates = new HashSet<TerrainCoordinate>();
 
@@ -544,7 +549,7 @@ namespace JStuff.Generation.Terrain
                         halted = false;
                         stopwatch.Restart();
                     }
-                    else if (stopwatch.ElapsedMilliseconds > 5)
+                    else if (stopwatch.ElapsedMilliseconds > maxWorkLoad)
                     {
                         halted = true;
                         yield return null;
@@ -568,7 +573,7 @@ namespace JStuff.Generation.Terrain
                     halted = false;
                     stopwatch.Restart();
                 }
-                else if (stopwatch.ElapsedMilliseconds > 5)
+                else if (stopwatch.ElapsedMilliseconds > maxWorkLoad)
                 {
                     halted = true;
                     yield return null;
@@ -594,7 +599,7 @@ namespace JStuff.Generation.Terrain
                 {
                     halted = false;
                     stopwatch.Restart();
-                } else if (stopwatch.ElapsedMilliseconds > 5)
+                } else if (stopwatch.ElapsedMilliseconds > maxWorkLoad)
                 {
                     halted = true;
                     yield return null;
@@ -628,7 +633,7 @@ namespace JStuff.Generation.Terrain
                     halted = false;
                     stopwatch.Restart();
                 }
-                else if (stopwatch.ElapsedMilliseconds > 5)
+                else if (stopwatch.ElapsedMilliseconds > maxWorkLoad)
                 {
                     halted = true;
                     yield return null;

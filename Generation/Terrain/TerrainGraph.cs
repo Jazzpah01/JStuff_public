@@ -23,7 +23,7 @@ namespace JStuff.Generation.Terrain
         PropertyLink<int> LODProperty;
         PropertyLink<int> meshLODProperty;
         PropertyLink<int> terrainObjectLODProperty;
-        PropertyLink<int> foliageLODProperty;
+        PropertyLink<float> foliageCutoff;
 
         public float Zoom
         {
@@ -213,7 +213,7 @@ namespace JStuff.Generation.Terrain
 
             meshLODProperty = AddProperty<int>(1, "meshLOD", PropertyContext.Unique);
             terrainObjectLODProperty = AddProperty<int>(1, "terrainObjectLOD", PropertyContext.Unique);
-            foliageLODProperty = AddProperty(1, "foliageLOD", PropertyContext.Unique);
+            foliageCutoff = AddProperty<float>(1f, "foliageLOD", PropertyContext.Unique);
         }
 
         public override Graph Clone()

@@ -16,6 +16,8 @@ namespace JStuff.Generation.Terrain
         public float h = 0.1f;
         public float d = 0.55f;
 
+        public float outOfBoundsConstant = -1;
+
         // Input links
         InputLink<int> seedInput;
         InputLink<HeightMap> heightmapInput;
@@ -71,7 +73,7 @@ namespace JStuff.Generation.Terrain
                 {
                     for (int j = 0; j < size; j++)
                     {
-                        retval[j, i] = -1;
+                        retval[j, i] = outOfBoundsConstant;
                     }
                 }
 

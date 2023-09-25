@@ -61,11 +61,12 @@ public class FoliageInstancing : MonoBehaviour
 
     private void Update()
     {
-        if (!hasSettings)
+        if (!hasSettings || !hasFoliage)
             return;
 
         
         Vector3 cameraPosition = camera.transform.position;
+        cameraPosition.y = 0;
 
         //Vector3 pos0 = transform.position;
         //Vector3 pos1 = transform.position + new Vector3(chunkSize, 0, 0);
@@ -89,30 +90,27 @@ public class FoliageInstancing : MonoBehaviour
         //    }
         //}
 
-        if (hasFoliage)
+        if (foliageLODSettings.cullChunkOnDistance)
         {
-            if (foliageLODSettings.cullChunkOnDistance)
-            {
-                int cullCount = 0;
+            int cullCount = 0;
 
-                if (foliageLODSettings.GetLOD(Vector3.Distance(transform.position, cameraPosition)) < 0)
-                    cullCount++;
-                if (foliageLODSettings.GetLOD(Vector3.Distance(transform.position + new Vector3(chunkSize, 0, 0), cameraPosition)) < 0)
-                    cullCount++;
-                if (foliageLODSettings.GetLOD(Vector3.Distance(transform.position + new Vector3(0, 0, chunkSize), cameraPosition)) < 0)
-                    cullCount++;
-                if (foliageLODSettings.GetLOD(Vector3.Distance(transform.position + new Vector3(chunkSize, 0, chunkSize), cameraPosition)) < 0)
-                    cullCount++;
+            if (foliageLODSettings.GetLOD(Vector3.Distance(transform.position, cameraPosition)) < 0)
+                cullCount++;
+            if (foliageLODSettings.GetLOD(Vector3.Distance(transform.position + new Vector3(chunkSize, 0, 0), cameraPosition)) < 0)
+                cullCount++;
+            if (foliageLODSettings.GetLOD(Vector3.Distance(transform.position + new Vector3(0, 0, chunkSize), cameraPosition)) < 0)
+                cullCount++;
+            if (foliageLODSettings.GetLOD(Vector3.Distance(transform.position + new Vector3(chunkSize, 0, chunkSize), cameraPosition)) < 0)
+                cullCount++;
 
-                if (cullCount < 4 && renderer.isVisible)
-                {
-                    RenderFoliage(cameraPosition);
-                }
-            }
-            else if (renderer.isVisible)
+            if (cullCount < 4 && renderer.isVisible)
             {
                 RenderFoliage(cameraPosition);
             }
+        }
+        else if (renderer.isVisible)
+        {
+            RenderFoliage(cameraPosition);
         }
     }
 

@@ -12,6 +12,8 @@ public class FoliageLODSettings : ScriptableObject
     public int defaultFoliageLOD = -1;
 
     public bool cullChunkOnDistance = true;
+
+    
     //public bool cullInstanceOnDistance = true; TODO: Make the system for this!
 
     public List<FoliageLODElement> foliageLOD;
